@@ -44,7 +44,6 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   double *sw_c = REAL(sw);
   double b_c = REAL(b)[0];
   double lambda0_c = REAL(lambda0)[0];
-  fprintf(stdout, "lambda0_c = %f\n", lambda0_c);
 
   // Define variables
   double *cw_new = (double *)malloc(n * sizeof(double));
@@ -123,8 +122,17 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   // Copy values to result SEXP
   for (int i = 0; i < n; ++i) {
     REAL(VECTOR_ELT(result, 0))[i] = cw_new[i];
-    REAL(VECTOR_ELT(result, 2))[i] = cw_c[i];
+    REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
   }
+
+  // Set names for the list elements
+  SEXP names = PROTECT(allocVector(STRSXP, 5));
+  SET_STRING_ELT(names, 0, mkChar("cw.new"));
+  SET_STRING_ELT(names, 1, mkChar("b.new"));
+  SET_STRING_ELT(names, 2, mkChar("c.new"));
+  SET_STRING_ELT(names, 3, mkChar("zw.new"));
+  SET_STRING_ELT(names, 4, mkChar("sw.new"));
+  setAttrib(result, R_NamesSymbol, names);
 
   // Free dynamically allocated memory
   free(cw_new);
@@ -184,6 +192,13 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   SET_VECTOR_ELT(out, 0, lambda_theta);
   SET_VECTOR_ELT(out, 1, gamma);
   SET_VECTOR_ELT(out, 2, theta_new);
+
+  // Set names for the list elements
+  SEXP names = PROTECT(allocVector(STRSXP, 5));
+  SET_STRING_ELT(names, 0, mkChar("lambda_theta"));
+  SET_STRING_ELT(names, 1, mkChar("gamma"));
+  SET_STRING_ELT(names, 2, mkChar("theta.new"));
+  setAttrib(out, R_NamesSymbol, names);
 
   UNPROTECT(2);
 

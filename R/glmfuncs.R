@@ -2,13 +2,6 @@
 # mscale = init.theta/wt^2
 # cand.lambda = lambda0
 
-sspline_c <- function(zw, Rw, cw, sw, b, lambda0) {
-  if (!is.loaded("Csspline")) dyn.load("src/temp.dll")
-  result <- .Call("Csspline",
-                  zw, Rw, cw, sw, b, lambda0)
-  return(result)
-}
-
 cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
 {
   n <- length(y)
@@ -78,10 +71,10 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
         # sspline_fit = sspline_c(zw, Rw, cw, sw, b, cand.lambda[k])
 
         sspline_fit = .Call("Csspline", zw, Rw, cw, sw, b, cand.lambda[k])
-        print(sspline_fit)
+        # print(sspline_fit)
         b.new = sspline_fit$b.new
-        c.new = (sspline_fit$c.new)
-        cw.new = (sspline_fit$cw.new)
+        c.new = sspline_fit$c.new
+        cw.new = sspline_fit$cw.new
         # print(b.new)
       }
 
@@ -163,7 +156,7 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
 
     # sspline_fit = sspline.cd(Rtheta, y, optlambda, obj, c.init)
     # fit = sspline_cpp(zw, Rw, cw, sw, b, optlambda)
-    fit = sspline_c(zw, Rw, cw, sw, b, optlambda)
+    fit = .Call("Csspline", zw, Rw, cw, sw, b, optlambda)
     out = list(IDmat = IDmat, measure = measure, R = R, zw.new = fit$zw.new, b.new = fit$b.new, sw.new = fit$sw.new,
                cw.new = fit$cw.new, c.new = fit$c.new, w.new = fit$sw.new^2, optlambda = optlambda)
   }
@@ -272,14 +265,6 @@ sspline.QP = function (R, y, lambda0, obj, c.init)
 # mscale = wt
 # lambda0 = optlambda0
 
-nng_c <- function(Gw, uw, theta, lambda_theta, gamma) {
-  # if(!is.loaded("Cnng")) dyn.load("src/temp.dll")
-  result <- .C("Cnng",
-               as.double(Gw), as.double(uw), as.double(theta), as.double(lambda_theta), as.double(gamma),
-               as.integer(length(theta)), PACKAGE = "cdcosso")
-  return(result)
-}
-
 cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gamma, nfolds, obj, one.std, algo)
 {
   n = length(y)
@@ -318,7 +303,7 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
         uw = model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
 
         # theta.new = nng_cpp(Gw, uw, init.theta, lambda_theta[k], gamma)
-        theta.new = nng_c(Gw, uw, init.theta, lambda_theta[k], gamma)
+        theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
 
         # print(theta_new)
         if(sum(theta.new == 0) == d){
@@ -414,7 +399,7 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
     # theta.new = nng_cpp(Gw, uw, init.theta, optlambda, gamma)
     # nng.fit = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
     #                theta = init.theta, lambda0, optlambda, gamma, obj)
-    theta.new = nng_c(Gw, uw, init.theta, optlambda, gamma)
+    theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
 
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   }
