@@ -350,7 +350,7 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
   # measure = measure[,mid]
   # if(algo == "CD") lambda_theta = lambda_theta[mid]
   # if(algo == "QP") M = M[mid]
-
+  print(measure)
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
   # selm = floor(apply(sel, 2, mean))
@@ -359,7 +359,7 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
 
   if(one.std){
     st1_err = cvm[id] + cvsd[id] # minimum cv err
-    std.id = max(which(cvm[id:d] <= st1_err & cvm[id] <= cvm[id:d]))
+    std.id = max(which(cvm[id:len] <= st1_err & cvm[id] <= cvm[id:len]))
     std.id = ifelse(std.id > id, std.id, id)
     if(algo == "CD") optlambda = lambda_theta[std.id]
     if(algo == "QP") optM = M[std.id]
