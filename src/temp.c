@@ -126,13 +126,13 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   }
 
   // Set names for the list elements
-  SEXP names = PROTECT(allocVector(STRSXP, 5));
-  SET_STRING_ELT(names, 0, mkChar("cw.new"));
-  SET_STRING_ELT(names, 1, mkChar("b.new"));
-  SET_STRING_ELT(names, 2, mkChar("c.new"));
-  SET_STRING_ELT(names, 3, mkChar("zw.new"));
-  SET_STRING_ELT(names, 4, mkChar("sw.new"));
-  setAttrib(result, R_NamesSymbol, names);
+  SEXP name_ssp = PROTECT(allocVector(STRSXP, 5));
+  SET_STRING_ELT(name_ssp, 0, mkChar("cw.new"));
+  SET_STRING_ELT(name_ssp, 1, mkChar("b.new"));
+  SET_STRING_ELT(name_ssp, 2, mkChar("c.new"));
+  SET_STRING_ELT(name_ssp, 3, mkChar("zw.new"));
+  SET_STRING_ELT(name_ssp, 4, mkChar("sw.new"));
+  setAttrib(result, R_NamesSymbol, name_ssp);
 
   // Free dynamically allocated memory
   free(cw_new);
@@ -154,7 +154,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   double lambda_theta_c = REAL(lambda_theta)[0];
   double gamma_c = REAL(gamma)[0];
   double r = lambda_theta_c * gamma_c / 2;
-  SEXP out = PROTECT(allocVector(REALSXP, 3));
+  SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
   double *theta_new = (double *)malloc(d * sizeof(double));
@@ -202,8 +202,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     }
 
   } // end iteration
-
-  PROTECT(out = allocVector(VECSXP, 3));
   SET_VECTOR_ELT(out, 0, lambda_theta);
   SET_VECTOR_ELT(out, 1, gamma);
   SET_VECTOR_ELT(out, 2, allocVector(REALSXP, d));
@@ -215,14 +213,15 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
 
 
   // Set names for the list elements
-  SEXP names = PROTECT(allocVector(STRSXP, 3));
-  SET_STRING_ELT(names, 0, mkChar("lambda_theta"));
-  SET_STRING_ELT(names, 1, mkChar("gamma"));
-  SET_STRING_ELT(names, 2, mkChar("theta.new"));
-  setAttrib(out, R_NamesSymbol, names);
+  SEXP name_nng = PROTECT(allocVector(STRSXP, 3));
+  SET_STRING_ELT(name_nng, 0, mkChar("lambda_theta"));
+  SET_STRING_ELT(name_nng, 1, mkChar("gamma"));
+  SET_STRING_ELT(name_nng, 2, mkChar("theta.new"));
+  setAttrib(out, R_NamesSymbol, name_nng);
 
-  UNPROTECT(2);
+  UNPROTECT(4);
   free(theta_new);
+  free(pow_j);
 
   return out;
 }
