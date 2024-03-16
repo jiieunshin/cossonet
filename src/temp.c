@@ -72,8 +72,8 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
 
     // Scale cw_new
     scale(cw_new, n);
-    double max_diff = 0.0;
 
+    double max_diff = 0.0;
     for (int j = 0; j < n; ++j) {
       max_diff = fmax(max_diff, fabs(cw_c[j] - cw_new[j]));
     }
@@ -145,62 +145,84 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
 }
 
 SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
+  // Convert R vectors to C arrays
   int d = ncols(Gw);
-  double r = REAL(lambda_theta)[0] * REAL(gamma)[0] / 2;
-  SEXP theta_new = PROTECT(allocVector(REALSXP, d));
-  SEXP out;
-  int i, j, k;
-  double sum_value;
+  int n = nrows(Gw);
+  double *uw_c = REAL(uw);
+  double *Gw_c = REAL(Gw);
+  double *theta_c = REAL(theta);
+  double lambda_theta_c = REAL(lambda_theta)[0];
+  double gamma_c = REAL(gamma)[0];
+  double r = lambda_theta_c * gamma_c / 2;
+  SEXP out = PROTECT(allocVector(REALSXP, 3));
 
-  for(i = 0; i < 10; i++) {
-    for(j = 0; j < d; j++) {
-      sum_value = 0;
-      for(k = 0; k < d; k++) {
-        if(k != j) {
-          sum_value += (REAL(uw)[k] - REAL(Gw)[j + k * d] * REAL(theta)[k]) * REAL(Gw)[j + k * d];
+  // Define variables
+  double *theta_new = (double *)malloc(d * sizeof(double));
+  double *pow_j = (double *)malloc(d * sizeof(double));
+
+  for(int i = 0; i < 10; i++) {
+
+    for(int j = 0; j < d; j++) { // iterate by column
+      double udt = 0.0;
+      double pow_udt = 0.0;
+      for(int k = 0; k < n; k++) { // iterate by row
+        double GT = 0.0;
+        for(int l = 0; l < d; l++) { // iterate by column except j
+          if(k != j) {
+            GT += Gw_c[l * n + k] * theta_c[l];
+          }
         }
+        udt += (uw_c[k] - GT) * Gw_c[j * n + k];
+        pow_udt += Gw_c[j * n + j];
       }
-      REAL(theta_new)[j] = sum_value;
+      theta_new[j] += udt;
+      pow_j[j] += pow_udt;
     }
 
-    for(j = 0; j < d; j++) {
-      if(REAL(theta_new)[j] > 0 && r < fabs(REAL(theta_new)[j])) {
-        REAL(theta_new)[j] = REAL(theta_new)[j];
+    for(int j = 0; j < d; j++) {
+      if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
+        theta_new[j] = theta_new[j];
       } else {
-        REAL(theta_new)[j] = 0;
+        theta_new[j] = theta_new[j] / (pow_j[j] + lambda_theta_c * (1 - gamma_c));
       }
-      double sum_sq = 0;
-      for(k = 0; k < d; k++) {
-        sum_sq += pow(REAL(Gw)[j + k * d], 2);
-      }
-      REAL(theta_new)[j] = REAL(theta_new)[j] / (sum_sq + REAL(lambda_theta)[0] * (1 - REAL(gamma)[0]));
     }
 
     double max_diff = 0.0;
     for (int j = 0; j < d; ++j) {
-      max_diff = fmax(max_diff, fabs(REAL(theta)[j] - REAL(theta_new)[j]));
+      max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
     }
 
     // If convergence criteria are met, break the loop
     if (max_diff < 1e-5) {
       break;
     }
+    // Update cw_c with cw_new values
+    for (int j = 0; j < d; ++j) {
+      theta_c[j] = theta_new[j];
+    }
 
-  }
+  } // end iteration
 
   PROTECT(out = allocVector(VECSXP, 3));
   SET_VECTOR_ELT(out, 0, lambda_theta);
   SET_VECTOR_ELT(out, 1, gamma);
-  SET_VECTOR_ELT(out, 2, theta_new);
+  SET_VECTOR_ELT(out, 2, allocVector(REALSXP, d));
+
+  // Copy values to result SEXP
+  for (int i = 0; i < d; ++i) {
+    REAL(VECTOR_ELT(out, 2))[i] = theta_new[i];
+  }
+
 
   // Set names for the list elements
-  SEXP names = PROTECT(allocVector(STRSXP, 5));
+  SEXP names = PROTECT(allocVector(STRSXP, 3));
   SET_STRING_ELT(names, 0, mkChar("lambda_theta"));
   SET_STRING_ELT(names, 1, mkChar("gamma"));
   SET_STRING_ELT(names, 2, mkChar("theta.new"));
   setAttrib(out, R_NamesSymbol, names);
 
   UNPROTECT(2);
+  free(theta_new);
 
   return out;
 }

@@ -442,7 +442,7 @@ nng.cd = function (zw, b, sw, cw, w, G, theta, lambda0, lambda_theta, gamma, obj
   theta.new = theta.new / (diag(t(Gw) %*% Gw) + lambda_theta * (1-gamma))
 
   if(max(abs(theta-theta.new)) < 1e-5) break
-  theta = theta.new
+    theta = theta.new
   }
 
   out = list(lambda_theta = lambda_theta, gamma = gamma, theta.new = theta.new)
