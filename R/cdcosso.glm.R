@@ -53,12 +53,12 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, 
     theta.new = nng_fit$theta.new
   }
 
-  # if(algo == "CD")
-  #   Rtheta <- wsGram(sspline_cvfit$R, scale(theta.new)/wt^2)
-  #
-  # if(algo == "QP")
-  #   Rtheta <- wsGram(sspline_cvfit$R, theta.new/wt^2)
-  Rtheta <- wsGram(sspline_cvfit$R, theta.new/wt^2)
+  if(algo == "CD")
+    Rtheta <- wsGram(sspline_cvfit$R, scale(theta.new)/wt^2)
+
+  if(algo == "QP")
+    Rtheta <- wsGram(sspline_cvfit$R, theta.new/wt^2)
+  # Rtheta <- wsGram(sspline_cvfit$R, theta.new/wt^2)
   sspline_cvfit = cv.sspline.cd(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 
   par(mfrow = c(1,1))
