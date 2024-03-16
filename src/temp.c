@@ -154,7 +154,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   double lambda_theta_c = REAL(lambda_theta)[0];
   double gamma_c = REAL(gamma)[0];
   double r = lambda_theta_c * gamma_c / 2;
-  SEXP out = PROTECT(allocVector(VECSXP, 3));
+  // SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
   double *theta_new = (double *)malloc(d * sizeof(double));
@@ -196,32 +196,19 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     if (max_diff < 1e-5) {
       break;
     }
-    // Update cw_c with cw_new values
-    for (int j = 0; j < d; ++j) {
-      theta_c[j] = theta_new[j];
-    }
-
   } // end iteration
-  SET_VECTOR_ELT(out, 0, lambda_theta);
-  SET_VECTOR_ELT(out, 1, gamma);
-  SET_VECTOR_ELT(out, 2, allocVector(REALSXP, d));
 
-  // Copy values to result SEXP
-  for (int i = 0; i < d; ++i) {
-    REAL(VECTOR_ELT(out, 2))[i] = theta_new[i];
+
+  // Convert theta_new to an R numeric vector
+  SEXP theta_new_r = PROTECT(allocVector(REALSXP, d));
+  for(int i = 0; i < d; ++i) {
+    REAL(theta_new_r)[i] = theta_new[i];
   }
 
-
-  // Set names for the list elements
-  SEXP name_nng = PROTECT(allocVector(STRSXP, 3));
-  SET_STRING_ELT(name_nng, 0, mkChar("lambda_theta"));
-  SET_STRING_ELT(name_nng, 1, mkChar("gamma"));
-  SET_STRING_ELT(name_nng, 2, mkChar("theta.new"));
-  setAttrib(out, R_NamesSymbol, name_nng);
-
-  UNPROTECT(4);
   free(theta_new);
   free(pow_j);
 
-  return out;
+  UNPROTECT(1);
+
+  return theta_new_r;
 }

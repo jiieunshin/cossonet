@@ -41,6 +41,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, 
 
   # solve (theta) - 1st
   sspline_cvfit = cv.sspline.cd(x, y, init.theta/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  print(sspline_cvfit)
   optlambda0 = sspline_cvfit$optlambda
 
   # solve (b, c) - 1st
