@@ -228,24 +228,6 @@ combine_kernel = function(anova_kernel, theta = rep(1, anova_kernel$numK))
   return(K)
 }
 
-train_test_split = function(y, test_percent){
-  y = as.numeric(as.factor(y))
-  tb = table(y)
-  uniq_label = as.numeric(names(tb))
-  num = floor(tb * test_percent)
-
-  test_id = c()
-  for(i in 1:length(tb)){
-    test_id = c(test_id, sort(sample(which(y == i), num[i], replace = FALSE)))
-  }
-
-  out = list()
-  out$train_id = which(!((1:length(y)) %in% test_id))
-  out$test_id = which((1:length(y)) %in% test_id)
-
-  return(out)
-}
-
 rescale = function (x)
 {
   if (length(unique(x)) > 6)
