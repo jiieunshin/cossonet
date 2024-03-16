@@ -160,7 +160,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   double *theta_new = (double *)malloc(d * sizeof(double));
   double *pow_j = (double *)malloc(d * sizeof(double));
 
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < 20; i++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
       double udt = 0.0;

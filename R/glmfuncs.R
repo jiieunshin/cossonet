@@ -112,10 +112,10 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
   id = which.min(cvm)[1]
   optlambda = cand.lambda[id]
   # if(one.std){
-    st1_err = cvm[id] + cvsd[id] # minimum cv err
-    std.id = max(which(cvm[1:id] <= st1_err & cvm[1:id] <= cvm[id]))
-    std.id = ifelse(std.id > id, std.id, id)
-    optlambda = cand.lambda[std.id]
+    # st1_err = cvm[id] + cvsd[id] # minimum cv err
+    # std.id = max(which(cvm[1:id] <= st1_err & cvm[1:id] <= cvm[id]))
+    # std.id = ifelse(std.id > id, std.id, id)
+    # optlambda = cand.lambda[std.id]
   # } else{
   #   optlambda = cand.lambda[id]
   # }
@@ -137,7 +137,7 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
   try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
   points(log(cand.lambda), cvm, pch = 15, col = 'red')
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
-  abline(v = log(cand.lambda)[std.id], col = 'darkgrey', lty = 2)
+  # abline(v = log(cand.lambda)[std.id], col = 'darkgrey', lty = 2)
 
   # c.init = runif(n, -1e-5, 1e-5)
 
