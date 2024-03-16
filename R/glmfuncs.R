@@ -305,7 +305,7 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
         # theta.new = nng_cpp(Gw, uw, init.theta, lambda_theta[k], gamma)
         theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
 
-        # print(theta_new)
+        print(theta.new)
         if(sum(theta.new == 0) == d){
           theta.new = rep(1e-10, d)
         } else{
