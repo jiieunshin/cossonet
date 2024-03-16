@@ -181,7 +181,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
 
     for(int j = 0; j < d; j++) {
       if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-        theta_new[j] = theta_new[j];
+        theta_new[j] = 0;
       } else {
         theta_new[j] = theta_new[j] / (pow_j[j] + lambda_theta_c * (1 - gamma_c));
       }
