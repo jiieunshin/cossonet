@@ -30,7 +30,7 @@ predict.cdcosso = function(object, testx)
   if(sum(object$theta_step$theta.new == 0) == d){
     t.new = rep(1e-10, d)
   } else{
-    if(object$algorithm == "CD") t.new = scale(object$theta_step$theta.new)
+    if(object$algorithm == "CD") t.new = object$theta_step$theta.new
     if(object$algorithm == "QP") t.new = object$theta_step$theta.new
     # t.new = object$theta_step$theta.new
   }
