@@ -77,7 +77,7 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
 
         # sspline_fit = sspline_c(zw, Rw, cw, sw, b, cand.lambda[k])
 
-        sspline_fit = .C("Csspline", zw, Rw, cw, sw, b, cand.lambda[k])
+        sspline_fit = .Call("Csspline", zw, Rw, cw, sw, b, cand.lambda[k])
         print(sspline_fit)
         b.new = sspline_fit$b.new
         c.new = (sspline_fit$c.new)

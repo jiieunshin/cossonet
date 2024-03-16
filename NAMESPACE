@@ -8,6 +8,7 @@ import(mvtnorm)
 import(quadprog)
 import(graphics)
 
+export(data_generation)
 export(cdcosso)
 export(predict.cdcosso)
 export(cdcosso.glm)

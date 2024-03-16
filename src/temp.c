@@ -49,13 +49,11 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   // Define variables
   double *cw_new = (double *)malloc(n * sizeof(double));
   double *c_new = (double *)malloc(n * sizeof(double));
-  double *Rj = (double *)malloc(n * sizeof(double));
   double *L = (double *)malloc(n * sizeof(double));
   double *R = (double *)malloc(n * sizeof(double));
-  int iter = 0;
 
   // Main loop
-  while (iter < 20) {
+  for (int iter = 0; iter < 20; ++iter) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
@@ -73,7 +71,10 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
       cw_new[j] = L / R;
     }
 
+    // Scale cw_new
+    scale(cw_new, n);
     double max_diff = 0.0;
+
     for (int j = 0; j < n; ++j) {
       max_diff = fmax(max_diff, fabs(cw_c[j] - cw_new[j]));
     }
@@ -88,11 +89,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
       cw_c[j] = cw_new[j];
     }
 
-    // Scale cw_new
-    scale(cw_new, n);
-
     // Update iteration
-    ++iter;
   }
 
   // Apply scaling to cw_new
@@ -131,7 +128,6 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
 
   // Free dynamically allocated memory
   free(cw_new);
-  free(Rj);
   free(L);
   free(R);
   free(c_new);
