@@ -228,24 +228,6 @@ combine_kernel = function(anova_kernel, theta = rep(1, anova_kernel$numK))
   return(K)
 }
 
-metric = function(true, est){
-  result_tab = table(true, est)
-  if(dim(result_tab)[2] == 1){
-    result_tab = cbind(0, result_tab)}
-
-  # result.tab = table(te$Y, pred$Yhat)
-  prec_class = diag(result_tab)/colSums(result_tab)
-  prec_class[is.na(prec_class)] = 0
-  precision =  mean(prec_class)
-
-  recal_class = diag(result_tab)/rowSums(result_tab)
-  recall = mean(recal_class)
-  f1_score = 2 * (precision * recall) / (precision + recall)
-
-  return(list(precision = precision, recall = recall, f1_score = f1_score))
-}
-
-
 train_test_split = function(y, test_percent){
   y = as.numeric(as.factor(y))
   tb = table(y)
