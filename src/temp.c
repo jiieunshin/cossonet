@@ -173,7 +173,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
           }
         }
         udt += (uw_c[k] - GT) * Gw_c[j * n + k];
-        pow_udt += Gw_c[j * n + j];
+        pow_udt += pow(Gw_c[j * n + j], 2);
       }
       theta_new[j] += udt;
       pow_j[j] += pow_udt;
