@@ -73,9 +73,9 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
     double max_diff = 1e-5;
     for (int j = 0; j < n; ++j) {
       max_diff = fmax(max_diff, fabs(cw_c[j] - cw_new[j]));
-      if (max_diff <= 1e-5) {
-        break;
-      }
+    }
+    if (max_diff <= 1e-3) {
+      break;
     }
 
     // Scale cw_new
@@ -187,9 +187,9 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     double max_diff = 1e-5;
     for (int j = 0; j < d; ++j) {
       max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
-      if (max_diff <= 1e-5) {
-        break;
-      }
+    }
+    if (max_diff <= 1e-5) {
+      break;
     }
 
     // Update cw_c with cw_new values
