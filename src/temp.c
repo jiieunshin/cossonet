@@ -54,19 +54,28 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
-      double V1 = 0.0, V2 = 0.0, V3 = 0.0;
+      double V1 = 0.0, V3 = 0.0, V4 = 0.0;
       for (int k = 0; k < n; ++k) { // iterate by row
-        double Rc = 0.0;
+        double Rc1 = 0.0;
         for (int l = 0; l < n; ++l) {
           if (l != j) {
-            Rc += Rw_c[l * n + k] * cw_c[l];
+            Rc1 += Rw_c[l * n + k] * cw_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc - b_c * sw_c[k]) * Rw_c[j * n + k];
-        V2 += Rw_c[j * n + k];
+        V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * n + k];
         V3 += pow(Rw_c[j * n + k], 2);
+        V4 += Rw_c[j * n + j];
       }
-      cw_new[j] = V1 / (n * lambda0_c * V2 + V3);
+
+      double V2 = 0.0, Rc2 = 0.0;
+      for (int l = 0; l < n; ++l) {
+        if (l != j) {
+          Rc2 += Rw_c[j * n + l] * cw_c[l];
+        }
+      }
+      V2 += n * lambda0_c * Rc2;
+
+      cw_new[j] = (V1 - V2) / (V3 + V4);
     }
 
     // If convergence criteria are met, break the loop
@@ -86,8 +95,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
       cw_c[j] = cw_new[j];
     }
 
-    // Update iteration
-  }
+  } // Update iteration
 
   // Apply scaling to cw_new
   scale(cw_new, n);
