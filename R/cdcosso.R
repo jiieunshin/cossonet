@@ -23,7 +23,16 @@
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
-#'
+
+# x = tr_x
+# y = tr_y
+# family = 'binomial'
+# gamma = 0.8
+# kernel = "gaussian"
+# one.std = TRUE
+# scale = T
+# wt = rep(1, ncol(x))
+
 cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin", "svm", "Cox"),
                     kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "gaussian2"),
                     algo = c("CD", "QP"), wt = rep(1, ncol(x)),
