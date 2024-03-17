@@ -296,19 +296,18 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
       # if(sum(is.nan(init.theta)) == d) init.theta = rep(0, d)
 
       if(algo == "CD") {
-        nng.fit = nng.cd(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
-                         theta = init.theta, lambda0, lambda_theta[k], gamma)
+        # nng.fit = nng.cd(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
+        #                  theta = init.theta, lambda0, lambda_theta[k], gamma)
 
         Gw = tr_G * sqrt(model$w.new[trainID])
         uw = c(scale(model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]))
 
-        # theta.new = nng_cpp(Gw, uw, init.theta, lambda_theta[k], gamma)
-        # theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
+        theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
 
-        if(sum(nng.fit$theta.new == 0) == d){
+        if(sum(theta.new == 0) == d){
           theta.new = rep(1e-10, d)
         } else{
-          theta.new = scale(nng.fit$theta.new)
+          theta.new = scale(theta.new)
         }
       }
 
@@ -393,14 +392,14 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
 
   if(algo == "CD"){
     Gw = G * sqrt(model$w.new)
-    uw = model$zw.new - model$b.new * model$sw.new - (n/2) * lambda0 * model$cw.new
+    uw = c(scale(model$zw.new - model$b.new * model$sw.new - (n/2) * lambda0 * model$cw.new))
 
     # theta.new = nng_cpp(Gw, uw, init.theta, optlambda, gamma)
-    nng.fit = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
-                   theta = init.theta, lambda0, optlambda, gamma)
-    # theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
+    # nng.fit = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
+    #                  theta = init.theta, lambda0, optlambda, gamma)
+    theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
 
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = nng.fit$theta.new)
+    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   }
 
   if(algo == "QP"){
