@@ -71,7 +71,7 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
         # sspline_fit = sspline_c(zw, Rw, cw, sw, b, cand.lambda[k])
 
         sspline_fit = .Call("Csspline", zw, Rw, cw, sw, b, cand.lambda[k])
-        print(sspline_fit)
+
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
         cw.new = sspline_fit$cw.new
@@ -304,7 +304,7 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
 
         # theta.new = nng_cpp(Gw, uw, init.theta, lambda_theta[k], gamma)
         theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
-
+        print(theta.new)
         if(sum(theta.new == 0) == d){
           theta.new = rep(1e-10, d)
         } else{
