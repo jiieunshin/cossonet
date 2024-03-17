@@ -48,15 +48,13 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   // Define variables
   double *cw_new = (double *)malloc(n * sizeof(double));
   double *c_new = (double *)malloc(n * sizeof(double));
-  double *L = (double *)malloc(n * sizeof(double));
-  double *R = (double *)malloc(n * sizeof(double));
 
   // Main loop
   for (int iter = 0; iter < 20; ++iter) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
-      double L = 0.0, R = 0.0;
+      double V1 = 0.0, V2 = 0.0, V3 = 0.0;
       for (int k = 0; k < n; ++k) { // iterate by row
         double Rc = 0.0;
         for (int l = 0; l < n; ++l) {
@@ -64,10 +62,11 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
             Rc += Rw_c[l * n + k] * cw_c[l];
           }
         }
-        L += 2 * (zw_c[k] - Rc - b_c * sw_c[k]) * Rw_c[j * n + k] - lambda0_c * Rc;
-        R += 2 * Rw_c[j * n + k] * Rw_c[j * n + k] + lambda0_c * cw_c[j] * Rw_c[j * n + j];
+        V1 += (zw_c[k] - Rc - b_c * sw_c[k]) * Rw_c[j * n + k];
+        V2 += Rw_c[j * n + k];
+        V3 += pow(Rw_c[j * n + k], 2);
       }
-      cw_new[j] = L / R;
+      cw_new[j] = V1 / (n * lambda0_c * V2 + V3);
     }
 
     // Scale cw_new
@@ -136,8 +135,6 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
 
   // Free dynamically allocated memory
   free(cw_new);
-  free(L);
-  free(R);
   free(c_new);
 
   UNPROTECT(1); // Unprotect result
@@ -163,20 +160,20 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   for(int i = 0; i < 20; i++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
-      double udt = 0.0;
-      double pow_udt = 0.0;
+      double V1 = 0.0;
+      double V2 = 0.0;
       for(int k = 0; k < n; k++) { // iterate by row
         double GT = 0.0;
         for(int l = 0; l < d; l++) { // iterate by column except j
-          if(k != j) {
+          if(l != j) {
             GT += Gw_c[l * n + k] * theta_c[l];
           }
         }
-        udt += (uw_c[k] - GT) * Gw_c[j * n + k];
-        pow_udt += pow(Gw_c[j * n + j], 2);
+        V1 += (uw_c[k] - GT) * Gw_c[j * n + k];
+        V2 += pow(Gw_c[j * n + k], 2);
       }
-      theta_new[j] += udt;
-      pow_j[j] += pow_udt;
+      theta_new[j] += V1;
+      pow_j[j] += V2;
     }
 
     for(int j = 0; j < d; j++) {
