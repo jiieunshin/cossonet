@@ -174,6 +174,12 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     pow_theta[j] += V2;
   }
 
+  printf("pow_theta = ");
+  for (int j = 0; j < d; ++j) {
+    printf("%f ", pow_theta[j]);
+  }
+  printf("\n");
+
   for(int iter = 0; iter < 10; iter++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
@@ -211,12 +217,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     for (int j = 0; j < d; ++j) {
       theta_c[j] = theta_new[j];
     }
-
-    printf("theta_new = ");
-    for (int i = 0; i < d; ++i) {
-      printf("%f ", theta_new[i]);
-    }
-    printf("\n");
 
   } // end iteration
 
