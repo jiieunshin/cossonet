@@ -193,6 +193,12 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     if (max_diff < 1e-5) {
       break;
     }
+
+    // Update cw_c with cw_new values
+    for (int j = 0; j < d; ++j) {
+      theta_c[j] = theta_new[j];
+    }
+
   } // end iteration
 
 

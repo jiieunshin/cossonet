@@ -48,3 +48,5 @@ predict.cdcosso = function(object, testx)
 
   return(list(f.new = f.new, mu.new = mu.new))
 }
+
+
