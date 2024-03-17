@@ -295,7 +295,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
       # if(sum(is.nan(init.theta)) == d) init.theta = rep(0, d)
 
       if(algo == "CD") {
-        nng.fit = nng.cd(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
+        theta.new = nng.cd(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
                          theta = init.theta, lambda0, lambda_theta[k], gamma)
 
         Gw = tr_G * sqrt(model$w.new[trainID])
@@ -394,7 +394,7 @@ print(theta.new)
     uw = model$zw.new - model$b.new * model$sw.new - (n/2) * lambda0 * model$cw.new
 
     # theta.new = nng_cpp(Gw, uw, init.theta, optlambda, gamma)
-    nng.fit = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
+    theta.new = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
                      theta = init.theta, lambda0, optlambda, gamma)
     # theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
 
