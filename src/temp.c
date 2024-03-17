@@ -221,7 +221,19 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
       }
     }
 
-    scale_theta(theta_new, d);
+    int all_zero = 1;
+    for (int i = 0; i < d; ++i) {
+      if (theta_new[i] != 0) {
+        all_zero = 0;
+        break;
+      }
+    }
+
+    if (all_zero == 0) {
+      for (int i = 0; i < d; ++i) {
+        scale_theta(theta_new, d); // This will make each element 1
+      }
+    }
 
     // If convergence criteria are met, break the loop
     double max_diff = 1e-5;
