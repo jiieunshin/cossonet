@@ -54,7 +54,8 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
-      double V1 = 0.0, V3 = 0.0, V4 = 0.0;
+
+      double V1 = 0.0, V3 = 0.0;
       for (int k = 0; k < n; ++k) { // iterate by row
         double Rc1 = 0.0;
         for (int l = 0; l < n; ++l) {
@@ -64,7 +65,6 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
         }
         V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * n + k];
         V3 += pow(Rw_c[j * n + k], 2);
-        V4 += Rw_c[j * n + j];
       }
 
       double V2 = 0.0, Rc2 = 0.0;
@@ -74,6 +74,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
         }
       }
       V2 += n * lambda0_c * Rc2;
+      double V4 = Rw_c[j * n + j];
 
       cw_new[j] = (V1 - V2) / (V3 + V4);
     }
