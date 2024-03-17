@@ -444,9 +444,7 @@ nng.cd = function (zw, b, sw, cw, w, G, theta, lambda0, lambda_theta, gamma)
   theta = theta.new
   }
 
-  out = list(lambda_theta = lambda_theta, gamma = gamma, theta.new = theta.new)
-
-  return(out)
+  return(theta.new)
 }
 
 nng.QP = function (zw, b, sw, cw, w, G, theta, lambda0, M, gamma, obj)
