@@ -70,7 +70,17 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
     }
 
     // Scale cw_new
+    for (int i = 0; i < n; ++i) {
+      printf("%f ", cw_new[i]);
+    }
+    printf("\n");
+
     scale(cw_new, n);
+
+    for (int i = 0; i < n; ++i) {
+      printf("%f ", cw_new[i]);
+    }
+    printf("\n");
 
     double max_diff = 1e-5;
     for (int j = 0; j < n; ++j) {
