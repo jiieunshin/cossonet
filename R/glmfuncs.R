@@ -301,8 +301,8 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
         # nng.fit = nng.cd(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
         #                  theta = init.theta, lambda0, lambda_theta[k], gamma)
 
-        Gw = tr_G * sqrt(model$w.new[trainID])
-        uw = model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
+        Gw = apply(tr_G * sqrt(model$w.new[trainID]), 2, rescale)
+        uw = c(scale(model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]))
 
         theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
 print(theta.new)

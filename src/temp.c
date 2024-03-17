@@ -11,7 +11,7 @@ void R_init_markovchain(DllInfo *dll) {
 }
 
 // Define the scale function
-void scale_c(double *arr, int n) {
+void scale(double *arr, int n) {
   double mean = 0.0, std_dev = 0.0;
 
   // Calculate mean
@@ -29,28 +29,6 @@ void scale_c(double *arr, int n) {
   // Apply scaling
   for (int i = 0; i < n; ++i) {
     arr[i] = (arr[i] - mean) / std_dev;
-  }
-}
-
-// Define the scale function
-void scale_theta(double *arr, int n) {
-  double mean = 0.0, std_dev = 0.0;
-
-  // Calculate mean
-  for (int i = 0; i < n; ++i) {
-    mean += arr[i];
-  }
-  mean /= n;
-
-  // Calculate standard deviation
-  for (int i = 0; i < n; ++i) {
-    std_dev += pow(arr[i] - mean, 2);
-  }
-  std_dev = sqrt(std_dev / n);
-
-  // Apply scaling
-  for (int i = 0; i < n; ++i) {
-    arr[i] = arr[i] / std_dev;
   }
 }
 
@@ -112,7 +90,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
     }
 
     // Scale cw_new
-    scale_c(cw_new, n);
+    scale(cw_new, n);
 
     // Update cw_c with cw_new values
     for (int j = 0; j < n; ++j) {
@@ -122,7 +100,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   } // Update iteration
 
   // Apply scaling to cw_new
-  scale_c(cw_new, n);
+  scale(cw_new, n);
 
   // Calculate c_new
   for (int i = 0; i < n; ++i) {
@@ -218,20 +196,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
         theta_new[j] = theta_new[j] / (pow_theta[j] + lambda_theta_c * (1 - gamma_c));
       } else {
         theta_new[j] = 0;
-      }
-    }
-
-    int all_zero = 1;
-    for (int i = 0; i < d; ++i) {
-      if (theta_new[i] != 0) {
-        all_zero = 0;
-        break;
-      }
-    }
-
-    if (all_zero == 0) {
-      for (int i = 0; i < d; ++i) {
-        scale_theta(theta_new, d); // This will make each element 1
       }
     }
 
