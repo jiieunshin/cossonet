@@ -67,10 +67,9 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
         cw = c.init[trainID] / sqrt(w)
         sw = sqrt(w)
 
-        # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], cand.lambda[k], obj, c.init[trainID])
+        # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
         # sspline_fit = sspline_cpp(zw, Rw, cw, sw, b, cand.lambda[k])
 
-        # sspline_fit = sspline_c(zw, Rw, cw, sw, b, cand.lambda[k])
 
         sspline_fit = .Call("Csspline", zw, Rw, cw, sw, b, cand.lambda[k], PACKAGE = "cdcosso")
 
@@ -81,7 +80,7 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
       }
 
       if(algo == "QP"){
-        sspline_fit = sspline.QP(tr_Rtheta, y[trainID], cand.lambda[k], obj, c.init[trainID])
+        sspline_fit = sspline.QP(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new / sdx[trainID]
         cw.new = sspline_fit$cw.new / sdx[trainID]
@@ -178,12 +177,11 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
 # R = tr_R
 # y = y[trainID]
 
-sspline.cd = function (R, y, lambda0, obj, c.init, algo)
+sspline.cd = function (R, y, f, lambda0, obj, c.init, algo)
 {
   n = dim(R)[1]
 
   # initialize
-  f = rep(mean(y), n)
   mu = obj$linkinv(f)
   w = obj$variance(mu)
   z = f + (y - mu) / w
@@ -223,12 +221,11 @@ sspline.cd = function (R, y, lambda0, obj, c.init, algo)
   return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = cw.new))
 }
 
-sspline.QP = function (R, y, lambda0, obj, c.init)
+sspline.QP = function (R, y, f, lambda0, obj, c.init)
 {
   n = dim(R)[1]
 
   # initialize
-  f = rep(mean(y), n)
   mu = obj$linkinv(f)
   w = obj$variance(mu)
   z = f + (y - mu) / w
@@ -298,18 +295,18 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
       # if(sum(is.nan(init.theta)) == d) init.theta = rep(0, d)
 
       if(algo == "CD") {
-        # nng.fit = nng.cd(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
-        #                  theta = init.theta, lambda0, lambda_theta[k], gamma)
+        nng.fit = nng.cd(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
+                         theta = init.theta, lambda0, lambda_theta[k], gamma)
 
         Gw = tr_G * sqrt(model$w.new[trainID])
         uw = model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
         # uw = uw / sd(uw)
-        theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
-
+        # theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
+print(theta.new)
         if(sum(theta.new == 0) == d){
           theta.new = rep(1e-10, d)
         } else{
-          theta.new = scale(theta.new)
+          theta.new = theta.new
         }
       }
 
@@ -397,9 +394,9 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
     uw = model$zw.new - model$b.new * model$sw.new - (n/2) * lambda0 * model$cw.new
 
     # theta.new = nng_cpp(Gw, uw, init.theta, optlambda, gamma)
-    # nng.fit = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
-    #                  theta = init.theta, lambda0, optlambda, gamma)
-    theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
+    nng.fit = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
+                     theta = init.theta, lambda0, optlambda, gamma)
+    # theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
 
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   }
@@ -440,7 +437,7 @@ nng.cd = function (zw, b, sw, cw, w, G, theta, lambda0, lambda_theta, gamma)
 
   theta.new = ifelse(theta.new > 0 & r < abs(theta.new), theta.new, 0)
   theta.new = theta.new / (diag(t(Gw) %*% Gw) + lambda_theta * (1-gamma))
-  # theta.new = theta.new / sd(theta.new)
+  if(sum(theta.new == 0) < d) theta.new = theta.new / sd(theta.new)
 
   if(max(abs(theta-theta.new)) < 1e-5) break
 
