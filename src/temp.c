@@ -163,13 +163,21 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
 
   // Define variables
   double *theta_new = (double *)malloc(d * sizeof(double));
-  double *pow_j = (double *)malloc(d * sizeof(double));
+  double *pow_theta = (double *)malloc(d * sizeof(double));
 
-  for(int i = 0; i < 10; i++) {
+  for(int j = 0; j < d; j++) { // iterate by column
+    double V2 = 0.0;
+    for(int k = 0; k < n; k++) { // iterate by row
+      double GT = 0.0;
+      V2 += pow(Gw_c[j * n + k], 2);
+    }
+    pow_theta[j] += V2;
+  }
+
+  for(int iter = 0; iter < 10; iter++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
       double V1 = 0.0;
-      double V2 = 0.0;
       for(int k = 0; k < n; k++) { // iterate by row
         double GT = 0.0;
         for(int l = 0; l < d; l++) { // iterate by column except j
@@ -178,15 +186,13 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
           }
         }
         V1 += (uw_c[k] - GT) * Gw_c[j * n + k];
-        V2 += pow(Gw_c[j * n + k], 2);
       }
       theta_new[j] += V1;
-      pow_j[j] += V2;
     }
 
     for(int j = 0; j < d; j++) {
       if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-        theta_new[j] = theta_new[j] / (pow_j[j] + lambda_theta_c * (1 - gamma_c));
+        theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + lambda_theta_c * (1 - gamma_c));
       } else {
         theta_new[j] = 0;
       }
@@ -197,14 +203,20 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     for (int j = 0; j < d; ++j) {
       max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
     }
-    if (max_diff <= 1e-5) {
+    if (max_diff <= 1e-3) {
       break;
     }
 
-    // Update cw_c with cw_new values
+    // Update theta_c with cw_new values
     for (int j = 0; j < d; ++j) {
       theta_c[j] = theta_new[j];
     }
+
+    printf("theta_new = ");
+    for (int i = 0; i < d; ++i) {
+      printf("%f ", theta_new[i]);
+    }
+    printf("\n");
 
   } // end iteration
 
@@ -216,7 +228,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   }
 
   free(theta_new);
-  free(pow_j);
+  free(pow_theta);
 
   UNPROTECT(1);
 
