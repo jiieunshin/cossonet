@@ -2,7 +2,7 @@
 # mscale = init.theta/wt^2
 # cand.lambda = lambda0
 
-cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
+cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
 {
   n <- length(y)
   IDmat <- cvsplitID(n, nfolds)
@@ -20,6 +20,8 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
   sdx <- sqrt(drop(rep(1, n) %*% (Rtheta^2))/(n - 1))
 
   c.init = as.vector(glmnet(Rtheta, y, family = "bin", lambda = cand.lambda[1], alpha = 0)$beta) / sdx
+
+  if(missing(f.init)) f.init = rep(mean(y), n)
 
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   for (f in 1:nfolds) {
@@ -53,7 +55,7 @@ cv.sspline.cd = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type,
       if(algo == "CD"){
 
         # initialize
-        ff = rep(mean(y[trainID]), tr_n)
+        ff = f.init[trainID]
         mu = obj$linkinv(ff)
         w = obj$variance(mu)
         z = ff + (y[trainID] - mu) / w
@@ -265,7 +267,7 @@ sspline.QP = function (R, y, lambda0, obj, c.init)
 # mscale = wt
 # lambda0 = optlambda0
 
-cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gamma, nfolds, obj, one.std, algo)
+cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gamma, nfolds, obj, one.std, algo)
 {
   n = length(y)
   d = length(mscale)
@@ -300,14 +302,14 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
         #                  theta = init.theta, lambda0, lambda_theta[k], gamma)
 
         Gw = tr_G * sqrt(model$w.new[trainID])
-        uw = c(scale(model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]))
+        uw = model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
 
         theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
 
         if(sum(theta.new == 0) == d){
           theta.new = rep(1e-10, d)
         } else{
-          theta.new = scale(theta.new)
+          theta.new = theta.new
         }
       }
 
@@ -392,7 +394,7 @@ cv.nng.cd = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, 
 
   if(algo == "CD"){
     Gw = G * sqrt(model$w.new)
-    uw = c(scale(model$zw.new - model$b.new * model$sw.new - (n/2) * lambda0 * model$cw.new))
+    uw = model$zw.new - model$b.new * model$sw.new - (n/2) * lambda0 * model$cw.new
 
     # theta.new = nng_cpp(Gw, uw, init.theta, optlambda, gamma)
     # nng.fit = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
@@ -426,21 +428,23 @@ nng.cd = function (zw, b, sw, cw, w, G, theta, lambda0, lambda_theta, gamma)
   d = ncol(G)
 
   Gw = G * sqrt(w)
-  uw = c(scale(zw - b * sw - (n/2) * lambda0 * cw))
+  uw = zw - b * sw - (n/2) * lambda0 * cw
   r = lambda_theta * gamma / 2
 
   # print(algo)
-  for(i in 1:10){
+  for(i in 1:20){
 
   theta.new = sapply(1:d, function(j) {
     sum((uw - Gw[,-j] %*% theta[-j]) %*% Gw[,j])
     })
 
   theta.new = ifelse(theta.new > 0 & r < abs(theta.new), theta.new, 0)
-  theta.new = (theta.new - r) / (diag(t(Gw) %*% Gw) + lambda_theta * (1-gamma))
+  theta.new = theta.new / (diag(t(Gw) %*% Gw) + lambda_theta * (1-gamma))
+  theta.new = theta.new / sd(theta.new)
 
   if(max(abs(theta-theta.new)) < 1e-5) break
-    theta = theta.new
+
+  theta = theta.new
   }
 
   out = list(lambda_theta = lambda_theta, gamma = gamma, theta.new = theta.new)

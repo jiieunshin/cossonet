@@ -32,7 +32,8 @@
 # one.std = TRUE
 # scale = T
 # wt = rep(1, ncol(x))
-
+# kparam = 1
+# nfolds =5
 cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin", "svm", "Cox"),
                     kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "gaussian2"),
                     algo = c("CD", "QP"), wt = rep(1, ncol(x)),
