@@ -50,7 +50,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   double *c_new = (double *)malloc(n * sizeof(double));
 
   // Main loop
-  for (int iter = 0; iter < 20; ++iter) {
+  for (int iter = 0; iter < 10; ++iter) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
@@ -72,13 +72,13 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
     // Scale cw_new
     scale(cw_new, n);
 
-    double max_diff = 0.0;
+    double max_diff = 1e-5;
     for (int j = 0; j < n; ++j) {
       max_diff = fmax(max_diff, fabs(cw_c[j] - cw_new[j]));
     }
 
     // If convergence criteria are met, break the loop
-    if (max_diff < 1e-5) {
+    if (max_diff <= 1e-5) {
       break;
     }
 
@@ -157,7 +157,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   double *theta_new = (double *)malloc(d * sizeof(double));
   double *pow_j = (double *)malloc(d * sizeof(double));
 
-  for(int i = 0; i < 20; i++) {
+  for(int i = 0; i < 10; i++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
       double V1 = 0.0;
@@ -184,13 +184,13 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
       }
     }
 
-    double max_diff = 0.0;
+    double max_diff = 1e-5;
     for (int j = 0; j < d; ++j) {
       max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
     }
 
     // If convergence criteria are met, break the loop
-    if (max_diff < 1e-5) {
+    if (max_diff <= 1e-5) {
       break;
     }
 
