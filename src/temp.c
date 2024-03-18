@@ -214,13 +214,23 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
 
     for(int j = 0; j < d; j++) {
       if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-        theta_new[j] = theta_new[j] / (pow_theta[j] + lambda_theta_c * (1 - gamma_c));
+        theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + lambda_theta_c * (1 - gamma_c));
       } else {
         theta_new[j] = 0;
       }
     }
 
-    scale_theta(theta_new, d);
+    int all_zero = 1;
+    for (int j = 0; j < d; ++j) {
+      if (theta_new[j] != 0) {
+        all_zero = 0;
+        break;
+      }
+    }
+
+    if(all_zero == 0){
+      scale_theta(theta_new, d);
+    }
 
     // If convergence criteria are met, break the loop
     double max_diff = 1e-5;
@@ -241,8 +251,8 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
 
   // Convert theta_new to an R numeric vector
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, d));
-  for(int i = 0; i < d; ++i) {
-    REAL(theta_new_r)[i] = theta_new[i];
+  for(int j = 0; j < d; ++j) {
+    REAL(theta_new_r)[j] = theta_new[j];
   }
 
   free(theta_new);

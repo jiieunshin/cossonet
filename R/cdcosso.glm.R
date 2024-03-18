@@ -29,15 +29,8 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, 
   par(mfrow = c(1,2))
 
   # initiation
-  sdx <- sqrt(drop(rep(1, n) %*% (x^2))/(n - 1))
-  # init.theta = (as.vector(glmnet(x, y, family = "binomial", lambda = lambda_theta[10], gamma = 0)$beta) + .1) / (sdx + .1)
   init.theta = as.vector(glmnet(x, y, family = "binomial", lambda = lambda_theta[2], gamma = 0)$beta)
-
-  if(sum(init.theta == 0) == d){
-    init.theta = rep(1e-10, d)
-  } else{
-    init.theta = c(scale(init.theta))
-  }
+  init.theta = rescale_theta(init.theta)
 
   # solve (theta) - 1st
   sspline_cvfit = cv.sspline(x, y, init.theta/wt^2, rep(mean(y), n), nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
@@ -47,14 +40,10 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, 
   nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, optlambda0, lambda_theta, M, gamma, nfolds, obj, one.std, algo)
 
   # solve (theta) - 2nd
-  # if(sum(nng_fit$theta.new == 0) == d){
-  #   theta.new = rep(1e-10, d)
-  # } else{
-  #   theta.new = nng_fit$theta.new
-  # }
-  #
+  # theta.new = rescale_theta(nng_fit$theta.new)
+
   # Rtheta <- wsGram(sspline_cvfit$R, theta.new/wt^2)
-  # f.init <- sspline_cvfit$b.new + Rtheta %*% sspline_cvfit$c.new
+  # f.init <- c(sspline_cvfit$b.new + Rtheta %*% sspline_cvfit$c.new)
   # f.init <- f.init / sd(f.init)
   # sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, f.init, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 

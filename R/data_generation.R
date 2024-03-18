@@ -125,7 +125,7 @@ data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "addi
       mu = ifelse(mu > 100, 100, mu)
       y = rpois(n, mu)
     }
-    return(list(x = x, y = y))
+    return(list(x = x, f = f, y = y))
 
   }else if(type == 'survival'){
 

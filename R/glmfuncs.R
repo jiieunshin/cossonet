@@ -18,7 +18,6 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
   Rtheta <- wsGram(R, mscale)
 
   sdx <- sqrt(drop(rep(1, n) %*% (Rtheta^2))/(n - 1))
-
   c.init = as.vector(glmnet(Rtheta, y, family = "bin", lambda = cand.lambda[1], alpha = 0)$beta) / sdx
 
   if(missing(f.init)) f.init = rep(mean(y), n)
@@ -163,7 +162,7 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
   }
 
   if(algo == "QP"){
-    fit = sspline.QP(Rtheta, y, optlambda, obj, c.init)
+    fit = sspline.QP(Rtheta, y, f.init, optlambda, obj, c.init)
     out = list(IDmat = IDmat, measure = measure, R = R, zw.new = fit$zw.new, b.new = fit$b.new, sw.new = fit$sw.new,
                cw.new = fit$cw.new, c.new = fit$c.new, w.new = fit$w.new, optlambda = optlambda)
   }
@@ -302,25 +301,16 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
         uw = model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
         # uw = uw / sd(uw)
         # theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
-print(theta.new)
-        if(sum(theta.new == 0) == d){
-          theta.new = rep(1e-10, d)
-        } else{
-          theta.new = theta.new
-        }
+
+        theta.new = rescale_theta(theta.new)
       }
 
       if(algo == "QP") {
-        nng.fit = nng.QP(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
+        theta.new = nng.QP(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
                          theta = init.theta, lambda0, M[k], gamma)
         # print(nng.fit)
-        if(sum(nng.fit$theta.new == 0) == d){
-          theta.new = rep(1e-10, d)
-        } else{
-          theta.new = nng.fit$theta.new
-        }
+        theta.new = rescale_theta(theta.new)
       }
-
       # sel[f, k] = sum(theta.new > 0)
       # print(nng.fit$theta.new)
       testfhat = c(te_G %*% theta.new)
@@ -402,9 +392,9 @@ print(theta.new)
   }
 
   if(algo == "QP"){
-    nng.fit = nng.QP(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
+    theta.new = nng.QP(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
                      init.theta, lambda0, optM, gamma, obj)
-    out = list(cv_error = measure, optlambda_theta = optM, gamma = gamma, theta.new = nng.fit$theta.new)
+    out = list(cv_error = measure, optM = optM, gamma = gamma, theta.new = theta.new)
   }
 
   return(out)
@@ -435,7 +425,7 @@ nng.cd = function (zw, b, sw, cw, w, G, theta, lambda0, lambda_theta, gamma)
     sum((uw - Gw[,-j] %*% theta[-j]) %*% Gw[,j])
     })
 
-  theta.new = ifelse(theta.new > 0 & r < abs(theta.new), theta.new, 0)
+  theta.new = ifelse(theta.new > 0 & r < abs(theta.new), theta.new - r, 0)
   theta.new = theta.new / (diag(t(Gw) %*% Gw) + lambda_theta * (1-gamma))
   if(sum(theta.new == 0) < d) theta.new = theta.new / sd(theta.new)
 
@@ -468,12 +458,13 @@ nng.QP = function (zw, b, sw, cw, w, G, theta, lambda0, M, gamma, obj)
     # theta.new = c(ginv(Dmat) %*% dvec)
     theta.new <- solve.QP(Dmat, dvec, t(Amat), bvec)$solution
     theta.new[theta.new < 1e-10] <- 0
+    if(sum(theta.new == 0) < d) theta.new = theta.new / sd(theta.new)
 
     if(max(abs(theta-theta.new)) < 1e-5) break
     theta = theta.new
   }
-    out = list(M = M, gamma = gamma, theta.new = theta.new)
-  return(out)
+
+  return(theta.new)
 }
 
 

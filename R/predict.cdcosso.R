@@ -27,21 +27,18 @@ predict.cdcosso = function(object, testx)
 
   wt = rep(1, d)
 
-  if(sum(object$theta_step$theta.new == 0) == d){
-    t.new = rep(1e-10, d)
-  } else{
-    t.new = object$theta_step$theta.new
-  }
+  t.new = rescale_theta(object$theta_step$theta.new)
 
   Rtheta <- wsGram(R, t.new/wt^2)
-  sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(tr_n - 1))
 
-  if(object$algorithm == "QP"){
+  # if(object$algorithm == "QP"){
+  #   sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(tr_n - 1))
+  #   c.new = object$c_step$c.new / sdx
+  # } else if(object$algorithm == "CD"){
+  sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(te_n - 1))
     c.new = object$c_step$c.new / sdx
-  } else if(object$algorithm == "CD"){
-    c.new = object$c_step$c.new
-  }
-  f.new = Rtheta %*% c.new + object$c_step$b.new
+  # }
+  f.new = scale(Rtheta %*% c.new + object$c_step$b.new)
   mu.new = object$object$linkinv(f.new)
 
   return(list(f.new = f.new, mu.new = mu.new))

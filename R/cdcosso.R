@@ -68,7 +68,7 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
     type = match.arg(kernel)
 
   if(missing(algo))
-    algo = "CD"
+    algo = "QP"
 
   if(missing(lambda0)){
     lambda0 = exp(seq(log(2^{-20}), log(2^{20}), length.out = 40))
