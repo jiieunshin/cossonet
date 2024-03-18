@@ -84,7 +84,7 @@ data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "addi
       # plot(x[,6], g6(x[,6]), cex = .6, pch = 16, xlab = 'x6', ylab = 'f6')
       # par(mfrow = c(1,1))
 
-      f = 3*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]) + g6(x[,6])) + rnorm(n, 0, .1)
+      f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]) + g6(x[,6])) + rnorm(n, 0, 1)
 
     }
 

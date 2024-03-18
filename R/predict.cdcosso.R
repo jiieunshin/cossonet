@@ -35,9 +35,11 @@ predict.cdcosso = function(object, testx)
   #   sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(tr_n - 1))
   #   c.new = object$c_step$c.new / sdx
   # } else if(object$algorithm == "CD"){
-  sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(te_n - 1))
-    c.new = object$c_step$c.new / sdx
   # }
+
+  sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(te_n - 1))
+  c.new = object$c_step$c.new / sdx
+
   f.new = scale(Rtheta %*% c.new + object$c_step$b.new)
   mu.new = object$object$linkinv(f.new)
 
