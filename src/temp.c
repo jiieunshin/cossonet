@@ -228,6 +228,15 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
       }
     }
 
+    printf("theta_new: [");
+    for (int i = 0; i < d; ++i) {
+      printf("%d", theta_new[i]);
+      if (i < d - 1) {
+        printf(", ");
+      }
+    }
+    printf("]\n");
+
     if(all_zero == 0){
       scale_theta(theta_new, d);
     }

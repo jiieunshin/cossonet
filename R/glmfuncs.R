@@ -313,7 +313,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
       }
       # sel[f, k] = sum(theta.new > 0)
       # print(nng.fit$theta.new)
-      testfhat = c(te_G %*% theta.new)
+      testfhat = c(scale(te_G %*% theta.new))
 
       testmu = obj$linkinv(testfhat)
       testw = obj$variance(testmu)
