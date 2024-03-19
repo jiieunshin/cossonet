@@ -27,8 +27,8 @@ predict.cdcosso = function(object, testx)
 
   wt = rep(1, d)
 
-  # t.new = rescale_theta(object$theta_step$theta.new)
-  t.new = object$theta_step$theta.new
+  t.new = rescale_theta(object$theta_step$theta.new)
+  # t.new = object$theta_step$theta.new
   Rtheta <- wsGram(R, t.new/wt^2)
 
   # if(object$algorithm == "QP"){

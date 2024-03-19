@@ -148,14 +148,25 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
     # sspline_fit = sspline.cd(Rtheta, y, optlambda, obj, c.init)
 
     fit = .Call("Csspline", zw, Rw, cw, sw, optlambda, PACKAGE = "cdcosso")
-    out = list(IDmat = IDmat, measure = measure, R = R, zw.new = fit$zw.new, b.new = fit$b.new, sw.new = fit$sw.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, w.new = fit$sw.new^2, optlambda = optlambda)
+
+    f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
+    mu.new = obj$linkinv(f.new)
+    w.new = obj$variance(mu.new)
+    z.new = f.new + (y - mu.new) / w.new
+
+    out = list(IDmat = IDmat, measure = measure, R = R, zw.new = z.new * w.new, b.new = fit$b.new,
+               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda)
   }
 
   if(algo == "QP"){
     fit = sspline.QP(Rtheta, y, f.init, optlambda, obj, c.init)
-    out = list(IDmat = IDmat, measure = measure, R = R, zw.new = fit$zw.new, b.new = fit$b.new, sw.new = fit$sw.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, w.new = fit$w.new, optlambda = optlambda)
+    f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
+    mu.new = obj$linkinv(f.new)
+    w.new = obj$variance(mu.new)
+    z.new = f.new + (y - mu.new) / w.new
+
+    out = list(IDmat = IDmat, measure = measure, R = R, zw.new = z.new * w.new, b.new = fit$b.new,
+               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda)
   }
 
   rm(K)
@@ -253,6 +264,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
   d = length(mscale)
   IDmat = model$IDmat
 
+  # solve theta
   sdx <- sqrt(drop(rep(1, n) %*% (x^2))/(n - 1))
 
   G <- matrix(0, nrow(model$R[, ,1]), d)
@@ -282,13 +294,13 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
         #                  theta = init.theta, lambda0, lambda_theta[k], gamma)
 
         Gw = tr_G * sqrt(model$w.new[trainID])
-        uw = model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
+        uw = model$zw.new[trainID] - model$b.new * model$w.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
 
         theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
       }
 
       if(algo == "QP") {
-        theta.new = nng.QP(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
+        theta.new = nng.QP(model$zw.new[trainID], model$b.new, model$cw.new[trainID], model$w.new[trainID], tr_G,
                          theta = init.theta, lambda0, M[k], gamma)
       }
 
@@ -353,19 +365,20 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
 
   if(algo == "CD"){
     Gw = G * sqrt(model$w.new)
-    uw = model$zw.new - model$b.new * model$sw.new - (n/2) * lambda0 * model$cw.new
+    uw = model$zw.new - model$b.new * model$w.new - (n/2) * lambda0 * model$cw.new
 
     # theta.new = nng.cd(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
     #                  theta = init.theta, lambda0, optlambda, gamma)
     theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
-
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
+    f.new = c(G %*% as.matrix(theta.new))
+    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new, f.new = f.new)
   }
 
   if(algo == "QP"){
-    theta.new = nng.QP(model$zw.new, model$b.new, model$sw.new, model$cw.new, model$w.new, G,
+    theta.new = nng.QP(model$zw.new, model$b.new, model$cw.new, model$w.new, G,
                      init.theta, lambda0, optM, gamma, obj)
-    out = list(cv_error = measure, optM = optM, gamma = gamma, theta.new = theta.new)
+    f.new = c(G %*% as.matrix(theta.new))
+    out = list(cv_error = measure, optM = optM, gamma = gamma, theta.new = theta.new, f.new = f.new)
   }
 
   return(out)
@@ -409,7 +422,7 @@ nng.cd = function (zw, b, sw, cw, w, G, theta, lambda0, lambda_theta, gamma)
   return(theta.new)
 }
 
-nng.QP = function (zw, b, sw, cw, w, G, theta, lambda0, M, gamma, obj)
+nng.QP = function (zw, b, cw, w, G, theta, lambda0, M, gamma, obj)
 {
   n = nrow(G)
   d = ncol(G)
@@ -417,7 +430,7 @@ nng.QP = function (zw, b, sw, cw, w, G, theta, lambda0, M, gamma, obj)
   Gw = G * sqrt(w)
   # theta = rep(1, d)
   # print(theta)
-  uw = zw - b * sw - (n/2) * lambda0 * cw
+  uw = zw - b * w - (n/2) * lambda0 * cw
 
   # print(algo)
   Amat = rbind(diag(1, d), rep(-1, d))
@@ -441,7 +454,6 @@ nng.QP = function (zw, b, sw, cw, w, G, theta, lambda0, M, gamma, obj)
 
   return(theta.new)
 }
-
 
 
 ######################

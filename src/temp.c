@@ -127,7 +127,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
   free(cw_new);
   free(c_new);
 
-  UNPROTECT(1); // Unprotect result
+  UNPROTECT(2); // Unprotect result
   return result;
 }
 
@@ -185,19 +185,12 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
       }
     }
 
-    int all_zero = 1;
-    for (int j = 0; j < d; ++j) {
-      if (theta_new[j] != 0) {
-        all_zero = 0;
-        break;
-      }
-    }
-
     // If convergence criteria are met, break the loop
     double max_diff = 1e-3;
     for (int j = 0; j < d; ++j) {
       max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
     }
+
     if (max_diff <= 1e-3) {
       break;
     }

@@ -40,14 +40,14 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, 
   nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, optlambda0, lambda_theta, M, gamma, nfolds, obj, one.std, algo)
 
   # solve (theta) - 2nd
-  # theta.new = rescale_theta(nng_fit$theta.new)
+  theta.new = rescale_theta(nng_fit$theta.new)
   # Rtheta <- wsGram(sspline_cvfit$R, theta.new/wt^2)
-
+  #
   # sdx <- sqrt(drop(rep(1, n) %*% (Rtheta^2))/(n - 1))
   # c.upt = sspline_cvfit$c.new / sdx
   # f.init <- c(sspline_cvfit$b.new + Rtheta %*% sspline_cvfit$c.new)
   #
-  # sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, f.init, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, nng_fit$f.new, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 
   par(mfrow = c(1,1))
 
