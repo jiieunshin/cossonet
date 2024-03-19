@@ -182,17 +182,6 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init, algo)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
 
-  # iteration
-  # cw.new = sapply(1:n, function(j){
-  #   L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * sum(Rw[,-j] %*% cw[-j])
-  #   R = 2 * sum(Rw[,j]^2) +  n * lambda0 * cw[j] * Rw[j,j]
-  #   L/R
-  # })
-  #
-  # cw.new = c(scale(cw.new))
-  # c.new = cw.new * sqrt(w)
-  # b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-
   for(i in 1:20){
     cw.new = sapply(1:n, function(j){
       L = 2 * mean((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
@@ -222,7 +211,6 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   w = obj$variance(mu)
   z = f + (y - mu) / w
   b = mean(z - R %*% c.init)
-  # print(b)
 
   zw = z * sqrt(w)
   Rw = R * w
@@ -245,10 +233,10 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   }
 
   # cw.new = c(scale(cw.new))
-  c.new = cw.new * sqrt(w)
+  c.new = c(cw.new * sqrt(w))
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
   # cat("convergence", conv, "iteration", i, "\n")
-  return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = cw.new))
+  return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = c(cw.new)))
 }
 
 # LHS = t(R1) %*% R1 + 2 * n * lambda0 * R2
