@@ -220,11 +220,11 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
       }
     }
 
-    printf("before scaling: ");
     for (int j = 0; j < d; ++j) {
-      printf("%lf ", theta_new[j]);
+      if (isnan(theta_new[j])) {
+        theta_new[j] = 0.0;
+      }
     }
-    printf("\n");
 
     int all_zero = 1;
     for (int j = 0; j < d; ++j) {
@@ -237,12 +237,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     if(all_zero == 0){
       scale_theta(theta_new, d);
     }
-
-    printf("after scaling: ");
-    for (int j = 0; j < d; ++j) {
-      printf("%lf ", theta_new[j]);
-    }
-    printf("\n");
 
     if(all_zero == 1){
       break;
