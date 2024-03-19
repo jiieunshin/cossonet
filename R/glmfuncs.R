@@ -145,9 +145,9 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
     cw = c.init / sqrt(w)
     sw = sqrt(w)
 
-    sspline_fit = sspline.cd(Rtheta, y, optlambda, obj, c.init)
+    # sspline_fit = sspline.cd(Rtheta, y, optlambda, obj, c.init)
 
-    # fit = .Call("Csspline", zw, Rw, cw, sw, optlambda)
+    fit = .Call("Csspline", zw, Rw, cw, sw, optlambda, PACKAGE = "cdcosso")
     out = list(IDmat = IDmat, measure = measure, R = R, zw.new = fit$zw.new, b.new = fit$b.new, sw.new = fit$sw.new,
                cw.new = fit$cw.new, c.new = fit$c.new, w.new = fit$sw.new^2, optlambda = optlambda)
   }

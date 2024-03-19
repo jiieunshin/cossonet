@@ -276,7 +276,7 @@ rescale_theta = function(theta){
   if(sum(theta == 0) == d){
     theta = rep(1e-10, d)
   } else{
-    theta = c(scale(theta))
+    theta = theta
   }
   return(theta)
 }

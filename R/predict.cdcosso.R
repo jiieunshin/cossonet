@@ -40,7 +40,7 @@ predict.cdcosso = function(object, testx)
   sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(te_n - 1))
   # c.new = object$c_step$c.new / sdx
   c.new = object$c_step$c.new
-  f.new = scale(Rtheta %*% c.new + object$c_step$b.new)
+  f.new = Rtheta %*% c.new + object$c_step$b.new
   mu.new = object$object$linkinv(f.new)
 
   return(list(f.new = f.new, mu.new = mu.new))

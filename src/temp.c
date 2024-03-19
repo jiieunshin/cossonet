@@ -31,7 +31,6 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
   for(int j = 0; j < n; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < n; k++) { // iterate by row
-      double GT = 0.0;
       add += pow(Rw_c[j * n + k], 2);
     }
     pow_Rc[j] += 2 * add;
@@ -151,13 +150,12 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   for(int j = 0; j < d; j++) { // iterate by column
     double V2 = 0.0;
     for(int k = 0; k < n; k++) { // iterate by row
-      double GT = 0.0;
       V2 += pow(Gw_c[j * n + k], 2);
     }
     pow_theta[j] += V2;
   }
 
-  for(int iter = 0; iter < 10; iter++) {
+  for(int iter = 0; iter < 20; iter++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
       double V1 = 0.0;
