@@ -10,52 +10,8 @@ void R_init_markovchain(DllInfo *dll) {
   R_useDynamicSymbols(dll, TRUE);
 }
 
-// Define the scale function
-void scale_c(double *arr, int n) {
-  double mean = 0.0, std_dev = 0.0;
-
-  // Calculate mean
-  for (int i = 0; i < n; ++i) {
-    mean += arr[i];
-  }
-  mean /= n;
-
-  // Calculate standard deviation
-  for (int i = 0; i < n; ++i) {
-    std_dev += pow(arr[i] - mean, 2);
-  }
-  std_dev = sqrt(std_dev / n);
-
-  // Apply scaling
-  for (int i = 0; i < n; ++i) {
-    arr[i] = (arr[i] - mean) / std_dev;
-  }
-}
-
-void scale_theta(double *arr, int n) {
-  double mean = 0.0, std_dev = 0.0;
-
-  // Calculate mean
-  for (int i = 0; i < n; ++i) {
-    mean += arr[i];
-  }
-  mean /= n;
-
-  // Calculate standard deviation
-  for (int i = 0; i < n; ++i) {
-    std_dev += pow(arr[i] - mean, 2);
-  }
-  std_dev = sqrt(std_dev / n);
-
-  // Apply scaling
-  for (int i = 0; i < n; ++i) {
-    arr[i] = arr[i] / std_dev;
-  }
-}
-
-
 // Define the sspline_cd function
-SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
+SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
   int n = length(zw);
   SEXP result = PROTECT(allocVector(VECSXP, 5)); // Extra space for b_new
 
@@ -64,20 +20,30 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
   double *Rw_c = REAL(Rw);
   double *cw_c = REAL(cw);
   double *sw_c = REAL(sw);
-  double b_c = REAL(b)[0];
   double lambda0_c = REAL(lambda0)[0];
 
   // Define variables
+  double b_c = 0;
   double *cw_new = (double *)malloc(n * sizeof(double));
   double *c_new = (double *)malloc(n * sizeof(double));
+  double *pow_Rc = (double *)malloc(n * sizeof(double));
+
+  for(int j = 0; j < n; j++) { // iterate by column
+    double add = 0.0;
+    for(int k = 0; k < n; k++) { // iterate by row
+      double GT = 0.0;
+      add += pow(Rw_c[j * n + k], 2);
+    }
+    pow_Rc[j] += 2 * add;
+  }
 
   // Main loop
-  for (int iter = 0; iter < 10; ++iter) {
+  for (int iter = 0; iter < 20; ++iter) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
 
-      double V1 = 0.0, V3 = 0.0;
+      double V1 = 0.0;
       for (int k = 0; k < n; ++k) { // iterate by row
         double Rc1 = 0.0;
         for (int l = 0; l < n; ++l) {
@@ -86,19 +52,20 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
           }
         }
         V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * n + k];
-        V3 += pow(Rw_c[j * n + k], 2);
       }
+      V1 = 2 * V1 / n;
 
-      double V2 = 0.0, Rc2 = 0.0;
+      double V2 = 0.0;
       for (int l = 0; l < n; ++l) {
         if (l != j) {
-          Rc2 += Rw_c[j * n + l] * cw_c[l];
+          V2 += Rw_c[l * n + j] * cw_c[l];
         }
       }
-      V2 += n * lambda0_c * Rc2;
-      double V4 = Rw_c[j * n + j];
+      V2 = n * lambda0_c * V2;
 
-      cw_new[j] = (V1 - V2) / (V3 + V4);
+      double V4 = n * lambda0_c * Rw_c[j * n + j];
+
+      cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
     }
 
     // If convergence criteria are met, break the loop
@@ -110,18 +77,12 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP b, SEXP lambda0) {
       break;
     }
 
-    // Scale cw_new
-    scale_c(cw_new, n);
-
     // Update cw_c with cw_new values
     for (int j = 0; j < n; ++j) {
       cw_c[j] = cw_new[j];
     }
 
   } // Update iteration
-
-  // Apply scaling to cw_new
-  scale_c(cw_new, n);
 
   // Calculate c_new
   for (int i = 0; i < n; ++i) {
@@ -209,7 +170,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
         }
         V1 += (uw_c[k] - GT) * Gw_c[j * n + k];
       }
-      theta_new[j] += V1;
+      theta_new[j] += V1 / n;
     }
 
     for(int j = 0; j < d; j++) {
@@ -232,14 +193,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
         all_zero = 0;
         break;
       }
-    }
-
-    if(all_zero == 0){
-      scale_theta(theta_new, d);
-    }
-
-    if(all_zero == 1){
-      break;
     }
 
     // If convergence criteria are met, break the loop

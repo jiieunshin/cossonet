@@ -44,13 +44,6 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
 
     for (k in 1:length(cand.lambda)) {
 
-      # print(c.init)
-      # print(c.init)
-      # b.new = fit[1]
-      # c.new = fit[-1]
-      # cw.new = fit[-1]
-      # print(as.vector(coef(glmnet(tr_Rtheta, y[trainID], family = "bin", lambda = cand.lambda[k], alpha = 0))))
-
       if(algo == "CD"){
 
         # initialize
@@ -58,7 +51,7 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
         mu = obj$linkinv(ff)
         w = obj$variance(mu)
         z = ff + (y[trainID] - mu) / w
-        b = mean(z - tr_Rtheta %*% c.init[trainID])
+        b = 0
         # print(b)
 
         zw = z * sqrt(w)
@@ -67,10 +60,8 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
         sw = sqrt(w)
 
         # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
-        # sspline_fit = sspline_cpp(zw, Rw, cw, sw, b, cand.lambda[k])
 
-
-        sspline_fit = .Call("Csspline", zw, Rw, cw, sw, b, cand.lambda[k], PACKAGE = "cdcosso")
+        sspline_fit = .Call("Csspline", zw, Rw, cw, sw, cand.lambda[k], PACKAGE = "cdcosso")
 
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
@@ -81,8 +72,8 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
       if(algo == "QP"){
         sspline_fit = sspline.QP(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
         b.new = sspline_fit$b.new
-        c.new = sspline_fit$c.new / sdx[trainID]
-        cw.new = sspline_fit$cw.new / sdx[trainID]
+        c.new = sspline_fit$c.new
+        cw.new = sspline_fit$cw.new
       }
 
       testfhat = c(b.new + te_Rtheta %*% c.new)
@@ -146,7 +137,7 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
     mu = obj$linkinv(ff)
     w = obj$variance(mu)
     z = ff + (y - mu) / w
-    b = mean(z - Rtheta %*% c.init)
+    # b = mean(z - Rtheta %*% c.init)
     # print(b)
 
     zw = z * sqrt(w)
@@ -154,9 +145,9 @@ cv.sspline = function (x, y, mscale, f.init, nfolds, cand.lambda, obj, one.std, 
     cw = c.init / sqrt(w)
     sw = sqrt(w)
 
-    # sspline_fit = sspline.cd(Rtheta, y, optlambda, obj, c.init)
-    # fit = sspline_cpp(zw, Rw, cw, sw, b, optlambda)
-    fit = .Call("Csspline", zw, Rw, cw, sw, b, optlambda)
+    sspline_fit = sspline.cd(Rtheta, y, optlambda, obj, c.init)
+
+    # fit = .Call("Csspline", zw, Rw, cw, sw, optlambda)
     out = list(IDmat = IDmat, measure = measure, R = R, zw.new = fit$zw.new, b.new = fit$b.new, sw.new = fit$sw.new,
                cw.new = fit$cw.new, c.new = fit$c.new, w.new = fit$sw.new^2, optlambda = optlambda)
   }
@@ -184,8 +175,7 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init, algo)
   mu = obj$linkinv(f)
   w = obj$variance(mu)
   z = f + (y - mu) / w
-  b = mean(z - R %*% c.init)
-  # print(b)
+  b = 0
 
   zw = z * sqrt(w)
   Rw = R * w
@@ -205,15 +195,18 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init, algo)
 
   for(i in 1:20){
     cw.new = sapply(1:n, function(j){
-      L = 2*sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * sum(Rw[,-j] %*% cw[-j])
-      R = 2*sum(Rw[,j]^2) +  n * lambda0 * cw[j] * Rw[j,j]
+      L = 2 * mean((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
+      R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
       L/R
     })
-# print(cw.new)
-  if(max(abs(cw-cw.new)) < 1e-5) break
-  cw = c(scale(cw.new))
+
+    loss = abs(cw-cw.new)
+    conv = max(loss) < 1e-5
+
+    if(conv) break
+    cw = cw.new  # if not convergence
   }
-  cw.new = c(scale(cw.new))
+  # cw.new = cw.new
   c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
 
@@ -244,14 +237,17 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
     dvec = t(Rw) %*% (zw - b*sw)
     cw.new = MASS::ginv(D) %*% dvec
 
-    if(max(abs(cw-cw.new)) < 1e-5) break
-    cw =  c(scale(cw.new))
+    loss = abs(cw-cw.new)
+    conv = max(loss) < 1e-5
+
+    if(conv) break
+    cw =  cw.new  # if not convergence
   }
 
-  cw.new = c(scale(cw.new))
+  # cw.new = c(scale(cw.new))
   c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-
+  # cat("convergence", conv, "iteration", i, "\n")
   return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = cw.new))
 }
 
@@ -301,20 +297,14 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
         uw = model$zw.new[trainID] - model$b.new * model$sw.new[trainID] - (tr_n/2) * lambda0 * model$cw.new[trainID]
 
         theta.new = .Call("Cnng", Gw, uw, init.theta, lambda_theta[k], gamma)
-
-        theta.new = rescale_theta(theta.new)
       }
 
       if(algo == "QP") {
         theta.new = nng.QP(model$zw.new[trainID], model$b.new, model$sw.new[trainID], model$cw.new[trainID], model$w.new[trainID], tr_G,
                          theta = init.theta, lambda0, M[k], gamma)
-        # print(nng.fit)
-        theta.new = rescale_theta(theta.new)
       }
-      # sel[f, k] = sum(theta.new > 0)
-      # print(nng.fit$theta.new)
-      testfhat = c(scale(te_G %*% theta.new))
 
+      testfhat = c(te_G %*% as.matrix(theta.new))
       testmu = obj$linkinv(testfhat)
       testw = obj$variance(testmu)
       testz = testfhat + (y[testID] - testmu) / testw
@@ -331,12 +321,6 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, M, gam
       if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
     }
   }
-
-  # measure[is.nan(measure)] = 1e-30
-  # mid = colSums(measure) != 0
-  # measure = measure[,mid]
-  # if(algo == "CD") lambda_theta = lambda_theta[mid]
-  # if(algo == "QP") M = M[mid]
 
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
@@ -421,14 +405,15 @@ nng.cd = function (zw, b, sw, cw, w, G, theta, lambda0, lambda_theta, gamma)
   for(i in 1:20){
 
   theta.new = sapply(1:d, function(j) {
-    sum((uw - Gw[,-j] %*% theta[-j]) %*% Gw[,j])
+    mean((uw - Gw[,-j] %*% theta[-j]) %*% Gw[,j])
     })
 
   theta.new = ifelse(theta.new > 0 & r < abs(theta.new), theta.new - r, 0)
   theta.new = theta.new / (diag(t(Gw) %*% Gw) + lambda_theta * (1-gamma))
-  if(sum(theta.new == 0) < d) theta.new = theta.new / sd(theta.new)
 
-  if(max(abs(theta-theta.new)) < 1e-5) break
+  loss = abs(theta-theta.new)
+  conv = max(loss) < 1e-5
+  if(conv) break
 
   theta = theta.new
   }
@@ -459,7 +444,10 @@ nng.QP = function (zw, b, sw, cw, w, G, theta, lambda0, M, gamma, obj)
     theta.new[theta.new < 1e-10] <- 0
     if(sum(theta.new == 0) < d) theta.new = theta.new / sd(theta.new)
 
-    if(max(abs(theta-theta.new)) < 1e-5) break
+    loss = abs(theta-theta.new)
+    conv = max(loss) < 1e-5
+    if(conv) break
+
     theta = theta.new
   }
 
