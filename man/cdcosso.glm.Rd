@@ -10,7 +10,6 @@ cdcosso.glm(
   wt,
   lambda0,
   lambda_theta,
-  M,
   gamma,
   obj,
   nfolds,
@@ -30,8 +29,6 @@ cdcosso.glm(
 \item{lambda0}{Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".}
 
 \item{lambda_theta}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
-
-\item{M}{Weight vector for each explanatory variable. The default is to use the same weight of 1 for all variables.}
 
 \item{gamma}{Kernel parameter values to use for SVM models.}
 

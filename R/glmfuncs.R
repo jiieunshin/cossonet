@@ -147,10 +147,10 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     cw = c.init / sqrt(w)
     sw = sqrt(w)
 
-    fit = sspline.cd(Rtheta, y, f.init, optlambda, obj, c.init)
+    # fit = sspline.cd(Rtheta, y, f.init, optlambda, obj, c.init)
     # fit = sspline.cd(pesudoX, EigR, y, f.init, optlambda, obj, c.init)
 
-    # fit = .Call("Csspline", zw, Rw, cw, sw, optlambda, PACKAGE = "cdcosso")
+    fit = .Call("Csspline", zw, Rw, cw, sw, optlambda, PACKAGE = "cdcosso")
     # f.new <- fit$f.new
     f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
@@ -406,8 +406,8 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
   if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
 
   if(algo == "CD"){
-    theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
-    # theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
+    # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
+    theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
     f.new = c(G %*% as.matrix(theta.new))
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new, f.new = f.new)
   }

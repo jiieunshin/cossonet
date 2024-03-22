@@ -28,8 +28,8 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
   double *c_new = (double *)malloc(n * sizeof(double));
   double *pow_Rc = (double *)malloc(n * sizeof(double));
 
-  double max_diff;
-  int iter;
+  double max_diff = 1e-6;
+  int iter = 0;
   // calculate square term
   for(int j = 0; j < n; j++) { // iterate by column
     double add = 0.0;
@@ -153,7 +153,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   double *pow_theta = (double *)malloc(d * sizeof(double));
 
   double max_diff = 1e-6;
-  int iter;
+  int iter = 0;
 
   for(int j = 0; j < d; j++) { // iterate by column
     double V2 = 0.0;

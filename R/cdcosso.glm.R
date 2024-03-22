@@ -10,7 +10,6 @@
 #' @param wt Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
 #' @param lambda0 Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
 #' @param lambda_theta Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
-#' @param M Weight vector for each explanatory variable. The default is to use the same weight of 1 for all variables.
 #' @param gamma Kernel parameter values to use for SVM models.
 #' @param obj Penalty parameter vector for Lasso and Ridge regression.
 #' @param nfolds Vector of penalty parameters to be applied to different parts of the model.
@@ -33,7 +32,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
   init.theta = rep(1, d)
 
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(x, y, init.theta/wt^2, rep(mean(y), n), nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(x, y, init.theta/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
   optlambda0 = sspline_cvfit$optlambda
 
   # solve (b, c) - 1st
@@ -44,7 +43,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
   c.upt = sspline_cvfit$c.new
   f.init <- c(sspline_cvfit$b.new + Rtheta %*% sspline_cvfit$c.new)
 
-  sspline_cvfit = cv.sspline(x, y, nng_fit$theta.new/wt^2, rep(mean(y), n), nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(x, y, nng_fit$theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 
   nng_fit = cv.nng(sspline_cvfit, x, y, wt, nng_fit$theta.new, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
 
