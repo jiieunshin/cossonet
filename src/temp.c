@@ -40,7 +40,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
   }
 
   // outer loop
-  for (iter = 0; iter < 40; ++iter) {
+  for (iter = 0; iter < 20; ++iter) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
@@ -164,7 +164,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   }
 
   // outer iteration
-  for(iter = 0; iter < 40; iter++) {
+  for(iter = 0; iter < 20; iter++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
       double V1 = 0.0;
