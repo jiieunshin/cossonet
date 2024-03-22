@@ -27,9 +27,7 @@ predict.cdcosso = function(object, testx)
 
   wt = rep(1, d)
 
-  t.new = rescale_theta(object$theta_step$theta.new)
-  # t.new = object$theta_step$theta.new
-  Rtheta <- wsGram(R, t.new/wt^2)
+  Rtheta <- wsGram(R, object$theta_step$theta.new/wt^2)
 
   # if(object$algorithm == "QP"){
   #   sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(tr_n - 1))
@@ -37,8 +35,6 @@ predict.cdcosso = function(object, testx)
   # } else if(object$algorithm == "CD"){
   # }
 
-  sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(te_n - 1))
-  # c.new = object$c_step$c.new / sdx
   c.new = object$c_step$c.new
   f.new = Rtheta %*% c.new + object$c_step$b.new
   mu.new = object$object$linkinv(f.new)

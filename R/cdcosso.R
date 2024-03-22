@@ -68,17 +68,14 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
     type = match.arg(kernel)
 
   if(missing(algo))
-    algo = "QP"
+    algo = "CD"
 
   if(missing(lambda0)){
-    lambda0 = exp(seq(log(2^{-30}), log(2^{10}), length.out = 40))
+    lambda0 = exp(seq(log(2^{-30}), log(2^{4}), length.out = 40))
   }
 
   if(missing(lambda_theta))
-    lambda_theta = exp(seq(log(2^{-30}), log(2^{10}), length.out = 40))
-
-  if(missing(M))
-    M = exp(seq(log(2^{-16}), log(2^{4}), length.out = 40))
+    lambda_theta = exp(seq(log(2^{-30}), log(2^{4}), length.out = 40))
 
   if (scale){   # min-max scale
     x = apply(x, 2, rescale)
@@ -92,7 +89,7 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, one.std, type, kparam, algo)
+               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo)
                # Cox = cdcosso.cox(x, y[, "time"], y[, "status"], lambda0, lambda_theta, gamma)
                # Negbin, svm 추가
   )

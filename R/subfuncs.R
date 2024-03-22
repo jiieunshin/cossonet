@@ -271,12 +271,13 @@ cvsplitID = function (n, folds)
   return(IDmat)
 }
 
-rescale_theta = function(theta){
+rescale_theta = function(theta, scale = FALSE){
   d = length(theta)
   if(sum(theta == 0) == d){
     theta = rep(1e-10, d)
   } else{
-    theta = theta
+    if(scale) theta = theta / sd(theta)
+    if(!scale) theta = theta
   }
   return(theta)
 }

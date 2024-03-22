@@ -28,6 +28,9 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
   double *c_new = (double *)malloc(n * sizeof(double));
   double *pow_Rc = (double *)malloc(n * sizeof(double));
 
+  double max_diff;
+  int iter;
+  // calculate square term
   for(int j = 0; j < n; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < n; k++) { // iterate by row
@@ -36,8 +39,8 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
     pow_Rc[j] += 2 * add;
   }
 
-  // Main loop
-  for (int iter = 0; iter < 20; ++iter) {
+  // outer loop
+  for (iter = 0; iter < 80; ++iter) {
 
     // update cw
     for (int j = 0; j < n; ++j) { // iterate by column
@@ -52,7 +55,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
         }
         V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * n + k];
       }
-      V1 = 2 * V1 / n;
+      V1 = 2 * V1;
 
       double V2 = 0.0;
       for (int l = 0; l < n; ++l) {
@@ -65,30 +68,32 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP lambda0) {
       double V4 = n * lambda0_c * Rw_c[j * n + j];
 
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
-    }
 
-    // If convergence criteria are met, break the loop
-    double max_diff = 1e-5;
-    for (int j = 0; j < n; ++j) {
-      max_diff = fmax(max_diff, fabs(cw_c[j] - cw_new[j]));
-    }
-    if (max_diff <= 1e-3) {
-      break;
-    }
 
-    // Update cw_c with cw_new values
-    for (int j = 0; j < n; ++j) {
+      // If convergence criteria are met, break the loop
+      for (int j = 0; j < n; ++j) {
+        max_diff = fmax(max_diff, fabs(cw_c[j] - cw_new[j]));
+      }
+      if (max_diff <= 1e-6) {
+        break;
+      }
+
+      // If not convergence, update cw
       cw_c[j] = cw_new[j];
     }
 
-  } // Update iteration
+  } // end outer iteration
+
+  if (max_diff > 1e-6 && iter == 1){
+    memcpy(cw_new, cw_c, n * sizeof(double));
+  }
 
   // Calculate c_new
   for (int i = 0; i < n; ++i) {
     c_new[i] = cw_new[i] * sqrt(sw_c[i]);
   }
 
-  // Calculate b_new
+  // result
   double sum3 = 0.0, sum4 = 0.0;
   for (int k = 0; k < n; ++k) { // iterate by row
     double Rc = 0.0;
@@ -140,12 +145,15 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   double *theta_c = REAL(theta);
   double lambda_theta_c = REAL(lambda_theta)[0];
   double gamma_c = REAL(gamma)[0];
-  double r = lambda_theta_c * gamma_c / 2;
+  double r = lambda_theta_c * gamma_c * n;
   // SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
   double *theta_new = (double *)malloc(d * sizeof(double));
   double *pow_theta = (double *)malloc(d * sizeof(double));
+
+  double max_diff = 1e-6;
+  int iter;
 
   for(int j = 0; j < d; j++) { // iterate by column
     double V2 = 0.0;
@@ -155,7 +163,8 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
     pow_theta[j] += V2;
   }
 
-  for(int iter = 0; iter < 20; iter++) {
+  // outer iteration
+  for(iter = 0; iter < 80; iter++) {
 
     for(int j = 0; j < d; j++) { // iterate by column
       double V1 = 0.0;
@@ -168,42 +177,38 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP theta, SEXP lambda_theta, SEXP gamma) {
         }
         V1 += (uw_c[k] - GT) * Gw_c[j * n + k];
       }
-      theta_new[j] += V1 / n;
-    }
+      theta_new[j] += 2 * V1;
 
-    for(int j = 0; j < d; j++) {
-      if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-        theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + lambda_theta_c * (1 - gamma_c));
-      } else {
-        theta_new[j] = 0;
+      for(int j = 0; j < d; j++) {
+        if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
+          theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + n * lambda_theta_c * (1 - gamma_c));
+        } else {
+          theta_new[j] = 0;
+        }
       }
-    }
 
-    for (int j = 0; j < d; ++j) {
-      if (isnan(theta_new[j])) {
-        theta_new[j] = 0.0;
+      // If convergence criteria are met, break the loop
+     for (int j = 0; j < d; ++j) {
+        max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
       }
+
+      if (max_diff <= 1e-6) {
+        break;
+      }
+
+      // Update theta_c with cw_new values
+      for (int j = 0; j < d; ++j) {
+        theta_c[j] = theta_new[j];
+      }
+
     }
+  } // end outer iteration
 
-    // If convergence criteria are met, break the loop
-    double max_diff = 1e-3;
-    for (int j = 0; j < d; ++j) {
-      max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
-    }
+  if (max_diff > 1e-6 && iter == 1){
+    theta_new = (double *)malloc(d * sizeof(double));
+  }
 
-    if (max_diff <= 1e-3) {
-      break;
-    }
-
-    // Update theta_c with cw_new values
-    for (int j = 0; j < d; ++j) {
-      theta_c[j] = theta_new[j];
-    }
-
-  } // end iteration
-
-
-  // Convert theta_new to an R numeric vector
+  // result
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, d));
   for(int j = 0; j < d; ++j) {
     REAL(theta_new_r)[j] = theta_new[j];

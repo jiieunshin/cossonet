@@ -22,32 +22,31 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, one.std, type, kparam, algo)
+cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo)
 {
   n = length(y)
   d = length(wt)
   par(mfrow = c(1,2))
 
   # initiation
-  init.theta = as.vector(glmnet(x, y, family = "binomial", lambda = lambda_theta[2], gamma = 0)$beta)
-  init.theta = rescale_theta(init.theta)
+  # init.theta = as.vector(glmnet(x, y, family = "binomial", lambda = lambda_theta[2], gamma = 0)$beta)
+  init.theta = rep(1, d)
 
   # solve (theta) - 1st
   sspline_cvfit = cv.sspline(x, y, init.theta/wt^2, rep(mean(y), n), nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
   optlambda0 = sspline_cvfit$optlambda
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, optlambda0, lambda_theta, M, gamma, nfolds, obj, one.std, algo)
+  nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, optlambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
 
   # solve (theta) - 2nd
-  theta.new = rescale_theta(nng_fit$theta.new)
-  # Rtheta <- wsGram(sspline_cvfit$R, theta.new/wt^2)
-  #
-  # sdx <- sqrt(drop(rep(1, n) %*% (Rtheta^2))/(n - 1))
-  # c.upt = sspline_cvfit$c.new / sdx
-  # f.init <- c(sspline_cvfit$b.new + Rtheta %*% sspline_cvfit$c.new)
-  #
-  sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, nng_fit$f.new, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  Rtheta <- wsGram(sspline_cvfit$R, nng_fit$theta.new/wt^2)
+  c.upt = sspline_cvfit$c.new
+  f.init <- c(sspline_cvfit$b.new + Rtheta %*% sspline_cvfit$c.new)
+
+  sspline_cvfit = cv.sspline(x, y, nng_fit$theta.new/wt^2, rep(mean(y), n), nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+
+  nng_fit = cv.nng(sspline_cvfit, x, y, wt, nng_fit$theta.new, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
 
   par(mfrow = c(1,1))
 
@@ -61,7 +60,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, M, gamma, obj, nfolds, 
 
   if(algo == "QP")
     out = list(data = list(x = x, y = y, R = sspline_cvfit$R, kernel = type, kparam = kparam),
-               tune = list(lambda0 = lambda0, M = M, gamma = gamma),
+               tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
                c_step = sspline_cvfit,
                theta_step = nng_fit,
                object = obj,
