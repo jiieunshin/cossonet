@@ -36,7 +36,7 @@ predict.cdcosso = function(object, testx)
   # }
 
   c.new = object$c_step$c.new
-  f.new = Rtheta %*% c.new + object$c_step$b.new
+  f.new = c(Rtheta %*% c.new + object$c_step$b.new)
   mu.new = object$object$linkinv(f.new)
 
   return(list(f.new = f.new, mu.new = mu.new))

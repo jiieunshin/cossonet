@@ -19,7 +19,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
   c.init = as.vector(glmnet(Rtheta, y, family = obj$family, lambda = cand.lambda[1], alpha = 0)$beta)
   c.init = c(scale(c.init))
-  f.init = Rtheta %*% c.init
+  f.init = c(Rtheta %*% c.init)
 
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   for (f in 1:nfolds) {
@@ -64,7 +64,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
         cw.new = sspline_fit$cw.new
-
         # print(b.new)
       }
 
@@ -135,7 +134,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   # c.init = runif(n, -1e-5, 1e-5)
 
   if(algo == "CD"){
-    ff = f.init
+    ff = c(f.init)
     mu = obj$linkinv(ff)
     w = obj$variance(mu)
     z = ff + (y - mu) / w
@@ -148,7 +147,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     sw = sqrt(w)
 
     # fit = sspline.cd(Rtheta, y, f.init, optlambda, obj, c.init)
-    # fit = sspline.cd(pesudoX, EigR, y, f.init, optlambda, obj, c.init)
 
     fit = .Call("Csspline", zw, Rw, cw, sw, optlambda, PACKAGE = "cdcosso")
     # f.new <- fit$f.new
@@ -198,7 +196,7 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
   cw.new = rep(0, n)
-  for(i in 1:80){ # outer iteration
+  for(i in 1:40){ # outer iteration
 
     for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
@@ -214,6 +212,7 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
     }
   }
   if(i == 1 & !conv) cw.new = cw
+  cw.new = cw.new / sd(cw.new)
   c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
 
@@ -345,7 +344,6 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
       }
 
       testfhat = c(te_G %*% theta.new)
-      # plot(testfhat)
       testmu = obj$linkinv(testfhat)
       # testw = obj$variance(testmu)
       # testz = testfhat + (y[testID] - testmu) / testw
@@ -439,7 +437,7 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
-  for(i in 1:80){
+  for(i in 1:40){
 
     for(j in 1:d){
       theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
