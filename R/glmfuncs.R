@@ -316,8 +316,6 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
   Gw = G * sqrt(model$w.new)
   uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
 
-  sdx <- sqrt(drop(rep(1, n) %*% (Gw^2))/(n - 1))
-
   len = length(lambda_theta)
   measure <- matrix(0, ncol = len, nrow = nfolds)
   l = 0
@@ -334,11 +332,6 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
       l = l + 1
       if(algo == "CD") {
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
-        if(l == 1){
-          print(nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma))
-          print(theta.new)
-        }
-
       }
 
       if(algo == "QP") {
