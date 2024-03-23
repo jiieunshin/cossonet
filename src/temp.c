@@ -67,7 +67,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       double V2 = 0.0;
       for (int l = 0; l < nc; ++l) {
         if (l != j) {
-          V2 += Rw_c[l * nc + j] * cw_c[l];
+          V2 += Rw_c[j * nc + l] * cw_c[l];
         }
       }
       V2 = nc * lambda0_c * V2;
