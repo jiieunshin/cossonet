@@ -33,7 +33,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   for(int j = 0; j < nc; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < nc; k++) { // iterate by row
-      add += pow(Rw_c[j * nc + k], 2);
+      add += Rw_c[j * nc + k] * Rw_c[j * nc + k];
     }
     pow_Rc[j] += 2 * add;
   }
