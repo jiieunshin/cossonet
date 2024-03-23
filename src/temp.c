@@ -38,6 +38,14 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
     pow_Rc[j] += 2 * add;
   }
 
+  // Print the matrix A
+  Rprintf("pow_Rc:\n");
+  for (int j = 0; j < nc; j++) {
+    Rprintf("%f\t", pow_Rc[j]);
+    Rprintf("\n");
+  }
+
+
   double max_diff = 1e-6;
   // outer loop
   for (iter = 0; iter < 20; ++iter) {
