@@ -10,6 +10,19 @@ void R_init_markovchain(DllInfo *dll) {
   R_useDynamicSymbols(dll, TRUE);
 }
 
+// 표준편차를 계산하는 함수
+double sd(double *arr, int n) {
+  double mean = 0.0, sum_dev = 0.0;
+  for (int i = 0; i < n; ++i) {
+    mean += arr[i];
+  }
+  mean /= n;
+  for (int i = 0; i < n; ++i) {
+    sum_dev += (arr[i] - mean) * (arr[i] - mean);
+  }
+  return sqrt(sum_dev / n);
+}
+
 // Define the sspline_cd function
 SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   int nc = INTEGER(n)[0];
@@ -93,7 +106,10 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
 
   if (max_diff > 1e-6 && iter == 1){
     memcpy(cw_new, cw_c, nc * sizeof(double));
+  } else{
+    sd(cw_new, nc);
   }
+
 
   // Calculate c_new
   for (int i = 0; i < nc; ++i) {
