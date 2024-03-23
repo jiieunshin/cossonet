@@ -57,7 +57,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         Rw = tr_Rtheta * w
         cw = c.init[trainID] / sqrt(w)
         sw = sqrt(w)
-        print(sapply(1:tr_n, function(j) sum(Rw[,j]^2)))
         # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
         sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
 
