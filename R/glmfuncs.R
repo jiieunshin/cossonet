@@ -334,6 +334,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
 
       if(algo == "CD") {
         # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
+        print(sapply(1:d, function(j) sum(Gw[,j]^2)))
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
       }
 

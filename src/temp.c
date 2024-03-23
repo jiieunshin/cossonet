@@ -170,6 +170,13 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
     pow_theta[j] = V2;
   }
 
+  // Print the matrix A
+  Rprintf("pow_theta:\n");
+  for (int j = 0; j < dc; j++) {
+    Rprintf("%f\t", pow_theta[j]);
+    Rprintf("\n");
+  }
+
   // outer iteration
   for(iter = 0; iter < 20; iter++) {
 
