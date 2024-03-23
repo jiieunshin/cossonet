@@ -333,9 +333,9 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
     for (k in 1:len) {
 
       if(algo == "CD") {
-        # print(sapply(1:d, function(j) sum(Gw[,j]^2)))
-        # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
+        print(nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma))
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
+        print(theta.new)
       }
 
       if(algo == "QP") {
@@ -443,7 +443,7 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
       theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
 
       theta.new[j] = ifelse(theta.new[j] > 0 & r < abs(theta.new[j]), theta.new[j], 0)
-      theta.new[j] = theta.new[j] / sum(Gw[,j]^2)
+      theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma))
 
       loss = abs(theta[j] - theta.new[j])
       conv = max(loss) < 1e-6
