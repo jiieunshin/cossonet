@@ -28,14 +28,13 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
 
-  int iter = 0;
   // calculate square term
   for(int j = 0; j < nc; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < nc; k++) { // iterate by row
       add += Rw_c[j * nc + k] * Rw_c[j * nc + k];
     }
-    pow_Rc[j] += 2 * add;
+    pow_Rc[j] = 2 * add;
   }
 
   // Print the matrix A
@@ -46,6 +45,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   }
 
 
+  int iter = 0;
   double max_diff = 1e-6;
   // outer loop
   for (iter = 0; iter < 20; ++iter) {
@@ -62,7 +62,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
         }
         V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * nc + k];
       }
-      V1 *= V1;
+      V1 = 2 * V1;
 
       double V2 = 0.0;
       for (int l = 0; l < nc; ++l) {
@@ -70,7 +70,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
           V2 += Rw_c[l * nc + j] * cw_c[l];
         }
       }
-      V2 *= nc * lambda0_c;
+      V2 = nc * lambda0_c * V2;
 
       double V4 = nc * lambda0_c * Rw_c[j * nc + j];
 
