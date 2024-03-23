@@ -57,9 +57,10 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         Rw = tr_Rtheta * w
         cw = c.init[trainID] / sqrt(w)
         sw = sqrt(w)
-        # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
+        sspline_fit2 = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
+        print(sspline_fit2)
         sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
-
+        print(sspline_fit)
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
         cw.new = sspline_fit$cw.new
@@ -333,8 +334,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
     for (k in 1:len) {
 
       if(algo == "CD") {
-        # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
-        print(sapply(1:d, function(j) sum(Gw[,j]^2)))
+        print(nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma))
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
       }
 
