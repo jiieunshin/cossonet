@@ -162,6 +162,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   return result;
 }
 
+
 SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   // Convert R vectors to C arrays
   int nc = INTEGER(n)[0]; // Extract the value of n
@@ -182,11 +183,11 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   int iter = 0;
 
   for(int j = 0; j < dc; j++) { // iterate by column
-    double V2 = 0.0;
+    double add = 0.0;
     for(int k = 0; k < nc; k++) { // iterate by row
-      V2 += Gw_c[j * nc + k] * Gw_c[j * nc + k];
+      add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
     }
-    pow_theta[j] = 2 * V2;
+    pow_theta[j] = 2 * add;
   }
 
 
@@ -215,7 +216,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
 
       for(int j = 0; j < dc; j++) {
         if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-          theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + nc * lambda_theta_c * (1 - gamma_c));
+          theta_new[j] = (theta_new[j] - r) / pow_theta[j];
         } else {
           theta_new[j] = 0;
         }
