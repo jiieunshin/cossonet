@@ -187,7 +187,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
     for(int k = 0; k < nc; k++) { // iterate by row
       add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
     }
-    pow_theta[j] = 2 * add;
+    pow_theta[j] = add;
   }
 
   // outer iteration
@@ -208,7 +208,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
 
       for(int j = 0; j < dc; j++) {
         if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-          theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
+          theta_new[j] = theta_new[j] / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
         } else {
           theta_new[j] = 0;
         }
