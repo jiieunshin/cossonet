@@ -208,7 +208,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
 
       for(int j = 0; j < dc; j++) {
         if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-          theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c));
+          theta_new[j] = (theta_new[j] - r) / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
         } else {
           theta_new[j] = 0;
         }
@@ -233,13 +233,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
 
   if (max_diff > 1e-6 && iter == 1){
     theta_new = (double *)malloc(dc * sizeof(double));
-  }
-
-  // Print the matrix A
-  Rprintf("pow_theta:\n");
-  for (int j = 0; j < dc; j++) {
-    Rprintf("%f\t", theta_new[j]);
-    Rprintf("\n");
   }
 
   // result

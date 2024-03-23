@@ -443,7 +443,7 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
       theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
 
       theta.new[j] = ifelse(theta.new[j] > 0 & r < abs(theta.new[j]), theta.new[j], 0)
-      theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma))
+      theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
 
       loss = abs(theta[j] - theta.new[j])
       conv = max(loss) < 1e-6
