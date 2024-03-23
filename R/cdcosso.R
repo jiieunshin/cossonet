@@ -71,11 +71,11 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
     algo = "CD"
 
   if(missing(lambda0)){
-    lambda0 = exp(seq(log(2^{-30}), log(2^{4}), length.out = 40))
+    lambda0 = exp(seq(log(2^{-40}), log(2^{4}), length.out = 40))
   }
 
   if(missing(lambda_theta))
-    lambda_theta = exp(seq(log(2^{-30}), log(2^{4}), length.out = 40))
+    lambda_theta = exp(seq(log(2^{-40}), log(2^{4}), length.out = 40))
 
   if (scale){   # min-max scale
     x = apply(x, 2, rescale)

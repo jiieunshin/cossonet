@@ -59,7 +59,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         sw = sqrt(w)
 
         # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
-        sspline_fit = .Call("Csspline", zw, Rw, cw, sw, cand.lambda[k], PACKAGE = "cdcosso")
+        sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
 
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
@@ -148,7 +148,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
     # fit = sspline.cd(Rtheta, y, f.init, optlambda, obj, c.init)
 
-    fit = .Call("Csspline", zw, Rw, cw, sw, optlambda, PACKAGE = "cdcosso")
+    fit = .Call("Csspline", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
     # f.new <- fit$f.new
     f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
@@ -196,7 +196,7 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
   cw.new = rep(0, n)
-  for(i in 1:40){ # outer iteration
+  for(i in 1:20){ # outer iteration
 
     for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
@@ -335,7 +335,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
 
       if(algo == "CD") {
         # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
-        theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], init.theta, lambda_theta[k], gamma)
+        theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
       }
 
       if(algo == "QP") {
@@ -405,7 +405,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
 
   if(algo == "CD"){
     # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
-    theta.new = .Call("Cnng", Gw, uw, init.theta, optlambda, gamma)
+    theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
     f.new = c(G %*% as.matrix(theta.new))
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new, f.new = f.new)
   }
@@ -437,7 +437,7 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
-  for(i in 1:40){
+  for(i in 1:20){
 
     for(j in 1:d){
       theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
