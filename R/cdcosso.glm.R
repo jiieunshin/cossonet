@@ -45,6 +45,7 @@ print(nng_fit$theta.new)
 
   nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new, FALSE)
+
   print(nng_fit$theta.new)
 
   par(mfrow = c(1,1))
