@@ -206,12 +206,10 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
       }
       theta_new[j] = 2 * V1;
 
-      for(int j = 0; j < dc; j++) {
-        if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
-          theta_new[j] = theta_new[j] / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
-        } else {
-          theta_new[j] = 0;
-        }
+      if(theta_new[j] > 0 && r < fabs(theta_new[j])) {
+        theta_new[j] = theta_new[j] / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
+      } else {
+        theta_new[j] = 0;
       }
 
       // If convergence criteria are met, break the loop

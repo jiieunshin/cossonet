@@ -331,11 +331,14 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
     tr_n = length(trainID)
     te_n = length(testID)
     for (k in 1:len) {
-
+      l = l + 1
       if(algo == "CD") {
-        print(nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma))
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
-        print(theta.new)
+        if(l == 1){
+          print(nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma))
+          print(theta.new)
+        }
+
       }
 
       if(algo == "QP") {
