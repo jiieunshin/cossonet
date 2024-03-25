@@ -26,7 +26,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'binomial'
+# family = 'Cox'
 # gamma = 0.8
 # kernel = "gaussian"
 # one.std = TRUE
@@ -89,8 +89,8 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo)
-               # Cox = cdcosso.cox(x, y[, "time"], y[, "status"], lambda0, lambda_theta, gamma)
+               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo),
+               Cox = cdcosso.cox(x, y[, "time"], y[, "status"], lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
                # Negbin, svm 추가
   )
   return(out)

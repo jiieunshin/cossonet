@@ -20,52 +20,31 @@
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
-
-cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo)
+cdcosso.cox = function (x, time, status, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
 {
+  # library(survival)
   n = length(y)
   d = length(wt)
+  
   par(mfrow = c(2,2))
-
-  # initiation
-  # init.theta = as.vector(glmnet(x, y, family = "binomial", lambda = lambda_theta[2], gamma = 0)$beta)
+  # initialize
   init.theta = rep(1, d)
-
-  # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(x, y, init.theta/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
-  optlambda0 = sspline_cvfit$optlambda
-
-  # solve (b, c) - 1st
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, optlambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
-  theta.new = rescale_theta(nng_fit$theta.new, FALSE)
-  # print(nng_fit$theta.new)
-
-  # solve (theta) - 2nd
-  sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
-
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
-  theta.new = rescale_theta(nng_fit$theta.new, FALSE)
-
-  # print(nng_fit$theta.new)
-
+  
+  # solve theta
+  getc_cvfit = cv.getc(x, time, status, status, 1/wt^2, nfolds, lambda0, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  optlambda0 = getc_cvfit$optlambda
+  theta_fit = cv.gettheta(getc_cvfit, Kmat, time, status, RS, wt, optlambda0, lambda_theta, gamma, nfolds, one.std)
+  
+  Rtheta <- wsGram(Kmat, theta_fit$thetahat)
+  getc_fit = getc(Rtheta, Rtheta, time, status, RS, optlambda0)
+  
   par(mfrow = c(1,1))
+  
+  out = list(data = K, 
+             tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
+             c_step = getc_fit, 
+             theta_step = theta_fit,
+             object = "Cox")
 
-  if(algo == "CD")
-    out = list(data = list(x = x, y = y, R = sspline_cvfit$R, kernel = type, kparam = kparam),
-               tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit,
-               theta_step = nng_fit,
-               object = obj,
-               algorithm = algo)
-
-  if(algo == "QP")
-    out = list(data = list(x = x, y = y, R = sspline_cvfit$R, kernel = type, kparam = kparam),
-               tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit,
-               theta_step = nng_fit,
-               object = obj,
-               algorithm = algo)
-
-  class(out) = "cosso"
   return(out)
 }
