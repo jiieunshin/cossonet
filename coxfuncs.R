@@ -68,7 +68,7 @@ cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kpar
       }
 
       if(algo == "QP"){
-        fit = getc.QP(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, cand.lambda[k])
+        # fit = getc.QP(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, cand.lambda[k])
 
       }
 
@@ -115,7 +115,7 @@ cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kpar
   }
 
   if(algo == "QP"){
-    c.new = getc.QP(Rtheta, Rtheta, time, status, RS, c.init, cand.lambda[k])
+    # c.new = getc.QP(Rtheta, Rtheta, time, status, RS, c.init, cand.lambda[k])
     f.new = c(Rtheta %*% c.new)
     out = list(IDmat = IDmat, measure = measure, R = R, RS = RS, f.new = f.new, c.new = c.new, optlambda = optlambda)
   }
@@ -210,7 +210,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       }
 
       if(algo == "QP") {
-        theta.fit = gettheta.QP(tr_G, G, model$chat, time[trainID], status[trainID], Risk[trainID,], model$optlambda, lambda_theta[k])
+        # theta.fit = gettheta.QP(tr_G, G, model$chat, time[trainID], status[trainID], Risk[trainID,], model$optlambda, lambda_theta[k])
       }
 
       expG = sapply(1:nrow(Risk[testID,]), function(j) {exp(G[testID,] %*% theta.fit$thetahat)})
@@ -263,7 +263,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   }
 
   if(algo == "QP"){
-    theta.new = gettheta.QP(G, G, model$chat, time, status, Risk, model$optlambda, optlambda)
+    # theta.new = gettheta.QP(G, G, model$chat, time, status, Risk, model$optlambda, optlambda)
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta_list = theta_list, thetahat = theta.fit$thetahat)
   }
   return(out)

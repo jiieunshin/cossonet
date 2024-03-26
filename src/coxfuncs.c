@@ -3,14 +3,6 @@
 #include <Rmath.h>
 #include <stdio.h>
 
-void R_init_markovchain(DllInfo *dll) {
-  // Register routines
-  R_registerRoutines(dll, NULL, NULL, NULL, NULL);
-  // Enable dynamic loading
-  R_useDynamicSymbols(dll, TRUE);
-}
-
-
 
 double* cal_expRc(double *R1, int m, int n, double *c_old, double *Risk) {
   double *expRc = (double*)malloc(m * sizeof(double));
