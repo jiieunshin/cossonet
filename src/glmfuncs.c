@@ -62,6 +62,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   double max_diff = 1e-6;
   // outer loop
   for (iter = 0; iter < 20; ++iter) {
+
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
 
@@ -188,6 +189,13 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
       add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
     }
     pow_theta[j] = add;
+  }
+
+
+  Rprintf("theta.pow_theta:\n");
+  for(int j = 0; j < dc; j++) {
+    Rprintf("%f\t", pow_theta[j]);
+    Rprintf("\n");
   }
 
   // outer iteration

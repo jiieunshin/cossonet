@@ -11,13 +11,13 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-# time = unlist(y["time"])
+# time = unlist(y[,"time"])
 # status = unlist(y["status"])
 # mscale = rep(1, d)/wt^2
 # nfolds = 5
-# cand.lambda = exp(seq(log(2^{-6}), log(2^{12}), length.out = 40))
-# lambda0 =  exp(seq(log(2^{-6}), log(2^{12}), length.out = 40))[1]
-cv.getc = function(x, time, status, status, mscale, nfolds, lambda0, one.std, type, kparam, algo)
+# cand.lambda = exp(seq(log(2^{-30}), log(2^{4}), length.out = 40))
+# lambda0 =  exp(seq(log(2^{-30}), log(2^{4}), length.out = 40))[1]
+cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kparam, algo)
 {
   n <- length(time)
   IDmat <- cvsplitID(n, nfolds)
@@ -31,6 +31,7 @@ cv.getc = function(x, time, status, status, mscale, nfolds, lambda0, one.std, ty
   }
 
   Rtheta <- wsGram(R, mscale)
+  RS = RiskSet(time, status)
 
   c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox', lambda = cand.lambda[1], alpha = 0)$beta)
   c.init = c(scale(c.init))
@@ -60,7 +61,8 @@ cv.getc = function(x, time, status, status, mscale, nfolds, lambda0, one.std, ty
     te_Rtheta <- wsGram(te_R, mscale)
 
     for (k in 1:length(cand.lambda)) {
-
+      # dyn.load("src/coxfuncs.dll")
+      .Call("Cget_c", tr_Rtheta, Rtheta, n, tr_n, tr_RS, c.init, cand.lambda[k])
       if(algo == "CD"){
         c.new = getc.cd(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, c.init, cand.lambda[k])
       }
@@ -107,15 +109,15 @@ cv.getc = function(x, time, status, status, mscale, nfolds, lambda0, one.std, ty
   # if(one.std) abline(v = log(cand.lambda)[std.id], col = 'darkgrey')
 
   if(algo == "CD"){
-    fit = getc.cd(Rtheta, Rtheta, time, status, RS, optlambda)
-    out = list(IDmat = IDmat, measure = measure, R = R, f.new = f.new, zw.new = z.new * w.new, b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda)
+    c.new = getc.cd(Rtheta, Rtheta, time, status, RS, c.init, cand.lambda[k])
+    f.new = c(Rtheta %*% c.new)
+    out = list(IDmat = IDmat, measure = measure, R = R, RS = RS, f.new = f.new, c.new = c.new, optlambda = optlambda)
   }
 
   if(algo == "QP"){
-    fit = sspline.QP(Rtheta, y, f.init, optlambda, obj, c.init)
-    out = list(IDmat = IDmat, measure = measure, R = R, f.new = f.new, zw.new = z.new * w.new, b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda)
+    c.new = getc.QP(Rtheta, Rtheta, time, status, RS, c.init, cand.lambda[k])
+    f.new = c(Rtheta %*% c.new)
+    out = list(IDmat = IDmat, measure = measure, R = R, RS = RS, f.new = f.new, c.new = c.new, optlambda = optlambda)
   }
   rm(K)
   rm(Rtheta)
@@ -138,22 +140,23 @@ getc.cd = function(R1, R2, time, status, Risk, c.init, lambda0){
 
   c.new = rep(0, length(c.old))
   for(iter in 1:80){
-    expRc = sapply(1:m, function(j) {
-      id = unique(Risk[,j])
-      sum(exp(R1[id,] %*% c.old))
-    })
-
-    RexpRc = sapply(1:m, function(j) {
-      id = unique(Risk[,j])
-      sum(R1[id,k] * exp(R1[id,] %*% c.old))
-    })
-
-    RRexpRc = sapply(1:m, function(j) {
-      id = unique(Risk[,j])
-      sum(R1[id,k]^2 * exp(R1[id,] %*% c.old))
-    })
 
     for(k in 1:n){
+      expRc = sapply(1:m, function(j) {
+        id = unique(Risk[,j])
+        sum(exp(R1[id,] %*% c.old))
+      })
+      print(expRc)
+      RexpRc = sapply(1:m, function(j) {
+        id = unique(Risk[,j])
+        sum(R1[id,k] * exp(R1[id,] %*% c.old))
+      })
+
+      RRexpRc = sapply(1:m, function(j) {
+        id = unique(Risk[,j])
+        sum(R1[id,k]^2 * exp(R1[id,] %*% c.old))
+      })
+
       grad = - sum(status * (R1[,k] - RexpRc / expRc)) + m * lambda0 * sum(c.old * R2[k,])
       hess = sum(status * (RRexpRc / expRc - (RexpRc * RexpRc) / (expRc * expRc) )) + m * lambda0 * R2[k,k]
 
