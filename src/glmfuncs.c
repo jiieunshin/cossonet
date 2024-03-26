@@ -189,13 +189,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
       add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
     }
     pow_theta[j] = add;
-  }
-
-
-  Rprintf("theta.pow_theta:\n");
-  for(int j = 0; j < dc; j++) {
     Rprintf("%f\t", pow_theta[j]);
-    Rprintf("\n");
   }
 
   // outer iteration
