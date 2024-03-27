@@ -26,8 +26,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
   f.init = c(Rtheta %*% c.init)
 
-  print(f.init)
-  print(mean(y == ifelse(obj$linkinv(f.init) < 0.5, 0, 1)))
+  # print(f.init)
+  # print(mean(y == ifelse(obj$linkinv(f.init) < 0.5, 0, 1)))
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   for (f in 1:nfolds) {
     testID <- IDmat[!is.na(IDmat[, f]), f]
@@ -167,7 +167,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
-
+print(f.new)
     out = list(IDmat = IDmat, measure = measure, R = R, w.new = w, zw.new = zw, b.new = fit$b.new,
                cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
   }
@@ -346,9 +346,9 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
     for (k in 1:len) {
       l = l + 1
       if(algo == "CD") {
-        # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
+        theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
 
-        theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
+        # theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
       }
 
       if(algo == "QP") {
@@ -419,8 +419,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
 
   if(algo == "CD"){
-    # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
-    theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
+    theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
+    # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
     f.new = c(G %*% as.matrix(theta.new))
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new, f.new = f.new)
   }
