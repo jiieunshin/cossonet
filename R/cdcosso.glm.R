@@ -106,7 +106,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
 
   par(mfrow = c(1,1))
   # if not convergence
-  if(class(sspline_cvfit3) == "try-error"){
+  if(class(sspline_cvfit4) == "try-error"){
     out = list(data = list(x = x, y = y, R = sspline_cvfit3$R, kernel = type, kparam = kparam),
                tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
                c_step = sspline_cvfit3,
@@ -117,7 +117,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
     class(out) = "cosso"
     cat("cdcosso is not convergence. \n")
     return(out)
-  } else if(!sspline_cvfit3$conv){
+  } else if(!sspline_cvfit4$conv){
     out = list(data = list(x = x, y = y, R = sspline_cvfit3$R, kernel = type, kparam = kparam),
                tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
                c_step = sspline_cvfit3,
