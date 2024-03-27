@@ -18,7 +18,12 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   Rtheta <- wsGram(R, mscale)
 
   c.init = as.vector(glmnet(Rtheta, y, family = obj$family, lambda = cand.lambda[1], alpha = 0)$beta)
-  if(sum(c.init == 0) == n) c.init = rep(1e-10, n)
+  if(sum(c.init == 0) == n){
+    c.init = rep(1e-10, n)
+  } else{
+    c.init = c.init / sd(c.init)
+  }
+
   f.init = c(Rtheta %*% c.init)
 
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
