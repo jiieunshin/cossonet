@@ -65,7 +65,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   int iter = 0;
   double max_diff = 1e-6;
   // outer loop
-  for (iter = 0; iter < 10; ++iter) {
+  for (iter = 0; iter < 20; ++iter) {
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column

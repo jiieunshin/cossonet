@@ -98,50 +98,19 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
     return(out)
   }
 
-  nng_fit = cv.nng(sspline_cvfit3, x, y, wt, sspline_cvfit3$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
-  theta.new = rescale_theta(nng_fit$theta.new, FALSE)
-
-  print(nng_fit$theta.new)
-  sspline_cvfit4 = cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
-
-  par(mfrow = c(1,1))
-  # if not convergence
-  if(class(sspline_cvfit4) == "try-error"){
-    out = list(data = list(x = x, y = y, R = sspline_cvfit3$R, kernel = type, kparam = kparam),
-               tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit3,
-               theta_step = nng_fit,
-               object = obj,
-               algorithm = algo)
-
-    class(out) = "cosso"
-    cat("cdcosso is not convergence. \n")
-    return(out)
-  } else if(!sspline_cvfit4$conv){
-    out = list(data = list(x = x, y = y, R = sspline_cvfit3$R, kernel = type, kparam = kparam),
-               tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit3,
-               theta_step = nng_fit,
-               object = obj,
-               algorithm = algo)
-
-    class(out) = "cosso"
-    cat("cdcosso is not convergence. \n")
-    return(out)
-  }
 
   if(algo == "CD")
-    out = list(data = list(x = x, y = y, R = sspline_cvfit4$R, kernel = type, kparam = kparam),
+    out = list(data = list(x = x, y = y, R = sspline_cvfit3$R, kernel = type, kparam = kparam),
                tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit4,
+               c_step = sspline_cvfit3,
                theta_step = nng_fit,
                object = obj,
                algorithm = algo)
 
   if(algo == "QP")
-    out = list(data = list(x = x, y = y, R = sspline_cvfit4$R, kernel = type, kparam = kparam),
+    out = list(data = list(x = x, y = y, R = sspline_cvfit3$R, kernel = type, kparam = kparam),
                tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit4,
+               c_step = sspline_cvfit3,
                theta_step = nng_fit,
                object = obj,
                algorithm = algo)
