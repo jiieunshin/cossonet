@@ -29,21 +29,20 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
 
   # initiation
   # init.theta = as.vector(glmnet(x, y, family = "binomial", lambda = lambda_theta[2], gamma = 0)$beta)
-  init.theta = rep(1, d)
 
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(x, y, init.theta/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(x, y, rep(1, d)/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
   optlambda0 = sspline_cvfit$optlambda
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, optlambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
+  nng_fit = cv.nng(sspline_cvfit, x, y, wt, rep(1, d), optlambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new, FALSE)
-  print(nng_fit$theta.new)
 
   # solve (theta) - 2nd
   sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  optlambda0 = sspline_cvfit$optlambda
 
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, init.theta, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
+  nng_fit = cv.nng(sspline_cvfit, x, y, wt, rep(1, d), sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new, FALSE)
 
   print(nng_fit$theta.new)

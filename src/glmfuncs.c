@@ -11,12 +11,16 @@ void R_init_markovchain(DllInfo *dll) {
 }
 
 // 표준편차를 계산하는 함수
-double sd(double *arr, int n) {
-  double mean = 0.0, sum_dev = 0.0;
+double mean(double *arr, int n) {
+  double mean = 0.0;
   for (int i = 0; i < n; ++i) {
     mean += arr[i];
   }
-  mean /= n;
+  return mean /= n;
+}
+
+double sd(double *arr, double mean, int n) {
+  double sum_dev = 0.0;
   for (int i = 0; i < n; ++i) {
     sum_dev += (arr[i] - mean) * (arr[i] - mean);
   }
@@ -108,9 +112,10 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   if (max_diff > 1e-6 && iter == 1){
     memcpy(cw_new, cw_c, nc * sizeof(double));
   } else{
-    double cw_new_sd = sd(cw_new, nc); // cw_new의 표준편차 계산
+    double cw_new_mean = mean(cw_new, nc); // cw_new의 표준편차 계산
+    double cw_new_sd = sd(cw_new, cw_new_mean, nc); // cw_new의 표준편차 계산
     for (int i = 0; i < nc; ++i) {
-      cw_new[i] /= cw_new_sd; // cw_new를 표준편차로 나누어 줌
+      cw_new[i] = (cw_new[i] - cw_new_mean) / cw_new_sd; // cw_new를 표준편차로 나누어 줌
     }
   }
 
@@ -232,11 +237,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
 
   if (max_diff > 1e-6 && iter == 1){
     theta_new = (double *)malloc(dc * sizeof(double));
-  } else{
-    double theta_new_sd = sd(theta_new, dc); // cw_new의 표준편차 계산
-    for (int i = 0; i < dc; ++i) {
-      theta_new[i] /= theta_new_sd; // cw_new를 표준편차로 나누어 줌
-    }
   }
 
   // result
