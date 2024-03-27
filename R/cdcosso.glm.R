@@ -72,7 +72,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
   print(nng_fit$theta.new)
   sspline_cvfit3 = cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 
-  par(mfrow = c(1,1))
+
   # if not convergence
   if(class(sspline_cvfit3) == "try-error"){
     out = list(data = list(x = x, y = y, R = sspline_cvfit2$R, kernel = type, kparam = kparam),

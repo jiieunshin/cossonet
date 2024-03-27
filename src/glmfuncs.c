@@ -197,7 +197,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   }
 
   // outer iteration
-  for(iter = 0; iter < 10; iter++) {
+  for(iter = 0; iter < 20; iter++) {
 
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
