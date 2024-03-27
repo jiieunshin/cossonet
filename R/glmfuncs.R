@@ -57,9 +57,9 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         Rw = tr_Rtheta * w
         cw = c.init[trainID] / sqrt(w)
         sw = sqrt(w)
-        sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
+        # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
 
-        # sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
+        sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
         cw.new = sspline_fit$cw.new
@@ -93,7 +93,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
       # print(measure)
     }
   }
-  # print(measure)
+
   rm(tr_Rtheta)
   rm(te_Rtheta)
   cvm <- apply(measure, 2, mean, na.rm = T)
@@ -333,7 +333,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
         # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
 
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
-        print(theta.new)
+        # print(theta.new)
       }
 
       if(algo == "QP") {
@@ -365,7 +365,6 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
       # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
     }
   }
-
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
   # selm = floor(apply(sel, 2, mean))
@@ -431,7 +430,6 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
 {
   n = nrow(Gw)
   d = ncol(Gw)
-
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
@@ -444,7 +442,7 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
       theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
 
       loss = abs(theta[j] - theta.new[j])
-      conv = max(loss) < 1e-6
+      conv = max(loss) < 1e-20
 
       if(i != 1 & conv) break
       theta = theta.new

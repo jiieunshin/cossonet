@@ -89,8 +89,8 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
+               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo)
+               # Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
                # Negbin, svm 추가
   )
   return(out)
