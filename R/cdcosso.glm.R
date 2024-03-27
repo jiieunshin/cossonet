@@ -54,7 +54,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
     cat("cdcosso is not convergence. \n")
     return(out)
   } else if(!sspline_cvfit2$conv){
-    out = list(data = list(x = x, y = y, R = sspline_cvfit$R, kernel = type, kparam = kparam),
+    out = list(data = list(x = x, y = y, R = sspline_cvfit1$R, kernel = type, kparam = kparam),
                tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
                c_step = sspline_cvfit1,
                theta_step = nng_fit,
