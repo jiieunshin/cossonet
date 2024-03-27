@@ -300,7 +300,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # init.theta = ifelse(init.theta < 0.5, 0, 1)
 # mean(y != ifelse(obj$linkinv(c(G %*% init.theta)) < 0.5, 0, 1))   # 이거는 잘됨. init.theta는 이거로 고정
 
-cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
+cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
 {
   n = length(y)
   d = length(mscale)
@@ -314,7 +314,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
 
   Gw = G * sqrt(model$w.new)
   uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
-
+  init.theta = as.vector(glmnet(Gw, uw, family = "gaussian", lambda = lambda0)$beta)
   len = length(lambda_theta)
   measure <- matrix(0, ncol = len, nrow = nfolds)
   l = 0

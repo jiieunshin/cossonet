@@ -35,14 +35,14 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
   optlambda0 = sspline_cvfit$optlambda
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, rep(1, d), optlambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
+  nng_fit = cv.nng(sspline_cvfit, x, y, wt, optlambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new, FALSE)
 
   # solve (theta) - 2nd
   sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
   optlambda0 = sspline_cvfit$optlambda
 
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, rep(1, d), sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
+  nng_fit = cv.nng(sspline_cvfit, x, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new, FALSE)
 
   print(nng_fit$theta.new)
