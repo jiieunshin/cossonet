@@ -232,6 +232,11 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
 
   if (max_diff > 1e-6 && iter == 1){
     theta_new = (double *)malloc(dc * sizeof(double));
+  } else{
+    double theta_new_sd = sd(theta_new, dc); // cw_new의 표준편차 계산
+    for (int i = 0; i < dc; ++i) {
+      theta_new[i] /= theta_new_sd; // cw_new를 표준편차로 나누어 줌
+    }
   }
 
   // result

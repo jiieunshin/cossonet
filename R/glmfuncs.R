@@ -122,7 +122,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     main = "Poisson Family"
   }
 
-  max_min <- c(min(cvm - cvsd), max(cvm + cvsd))
+  max_min <- c(min(cvm - cvsd, na.rm = T), max(cvm + cvsd, na.rm = T))
 
   plot(log(cand.lambda), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
   try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
@@ -365,17 +365,26 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
       # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
     }
   }
+  measure[is.nan(measure)] <- NA
+
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
-  # selm = floor(apply(sel, 2, mean))
 
+  cvm[is.nan(cvm)] <- NA
+  cvsd[is.na(cvsd)] <- 0
+  # selm = floor(apply(sel, 2, mean))
   id = which.min(cvm)[1]
 
   if(one.std){
     st1_err = cvm[id] + cvsd[id] # minimum cv err
     std.id = max(which(cvm[id:len] <= st1_err & cvm[id] <= cvm[id:len]))
-    std.id = ifelse(std.id > id, std.id, id)
-    optlambda = lambda_theta[std.id]
+    if(is.na(std.id)){
+      std.id = id
+      optlambda = lambda_theta[std.id]
+    } else{
+      std.id = ifelse(std.id > id, std.id, id)
+      optlambda = lambda_theta[std.id]
+    }
   } else{
     optlambda = lambda_theta[id]
   }
@@ -390,7 +399,7 @@ cv.nng = function(model, x, y, mscale, init.theta, lambda0, lambda_theta, gamma,
   if(obj$family == 'poisson'){
     main = "Poisson Family"
   }
-  max_min <- c(min(cvm - cvsd), max(cvm + cvsd))
+  max_min <- c(min(cvm - cvsd, na.rm = TRUE), max(cvm + cvsd, na.rm = TRUE))
 
   xrange = log(lambda_theta)
   plot(xrange, cvm, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
