@@ -1,5 +1,5 @@
 ############
-# mscale = init.theta/wt^2
+# mscale = theta.new/wt^2
 # cand.lambda = lambda0
 
 cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
@@ -18,7 +18,11 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   Rtheta <- wsGram(R, mscale)
 
   c.init = as.vector(glmnet(Rtheta, y, family = obj$family, lambda = cand.lambda[1], alpha = 0)$beta)
-  c.init = c(scale(c.init))
+  if(sum(c.init == 0) == n){
+    c.init = rep(1e-10, n)
+    } else{
+      c.init = c.init
+    }
   f.init = c(Rtheta %*% c.init)
 
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
@@ -72,28 +76,35 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         c.new = sspline_fit$c.new
         cw.new = sspline_fit$cw.new
       }
+      if(sum(is.nan(cw.new)) == tr_n){
+        next
+      } else{
+        # validation
+        # f.new <- fit$f.new
+        testfhat = c(b.new + te_Rtheta %*% c.new)
+        testmu = obj$linkinv(testfhat)
+        testw = obj$variance(testmu)
+        testz = testfhat + (y[testID] - testmu) / testw
 
-      # validation
-      # f.new <- fit$f.new
-      testfhat = c(b.new + te_Rtheta %*% c.new)
-      testmu = obj$linkinv(testfhat)
-      testw = obj$variance(testmu)
-      testz = testfhat + (y[testID] - testmu) / testw
+        testzw = testz * sqrt(testw)
+        testRw = te_Rtheta * testw
+        rss <- t(testzw - testRw %*% cw.new - b.new * sqrt(testw)) %*% (testzw - testRw %*% cw.new - b.new * sqrt(testw)) + .1
+        S = testRw %*% ginv(t(testRw) %*% testRw) %*% t(testRw)
+        df = sum(diag(S))
+        measure[f, k] <- rss / (1 - df/length(testID) + .1)^2 / length(testID)
 
-      testzw = testz * sqrt(testw)
-      testRw = te_Rtheta * testw
-      rss <- t(testzw - testRw %*% cw.new - b.new * sqrt(testw)) %*% (testzw - testRw %*% cw.new - b.new * sqrt(testw)) + .1
-      S = testRw %*% ginv(t(testRw) %*% testRw) %*% t(testRw)
-      df = sum(diag(S))
-      measure[f, k] <- rss / (1 - df/length(testID) + .1)^2 / length(testID)
-
-      # if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-      # if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
-      # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
-      # print(measure)
+        # if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+        # if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
+        # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
+        # print(measure)
+      }
     }
   }
 
+  if(sum(is.na(measure)) == length(cand.lambda) * nfolds){
+    conv = FALSE
+    return(conv)
+  }
   rm(tr_Rtheta)
   rm(te_Rtheta)
   cvm <- apply(measure, 2, mean, na.rm = T)
@@ -154,7 +165,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     z.new = f.new + (y - mu.new) / w.new
 
     out = list(IDmat = IDmat, measure = measure, R = R, f.new = f.new, zw.new = z.new * w.new, b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda)
+               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda, conv = TRUE)
   }
 
   if(algo == "QP"){
@@ -165,7 +176,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     z.new = f.new + (y - mu.new) / w.new
 
     out = list(IDmat = IDmat, measure = measure, R = R, f.new = f.new, zw.new = z.new * w.new, b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda)
+               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda, conv = TRUE)
   }
 
   rm(K)
@@ -333,7 +344,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
         # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
 
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
-        # print(theta.new)
       }
 
       if(algo == "QP") {
