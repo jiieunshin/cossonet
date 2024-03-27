@@ -103,7 +103,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
   if(sum(is.na(measure)) == length(cand.lambda) * nfolds){
     conv = FALSE
-    return(conv)
+    return(list(conv = conv))
   }
   rm(tr_Rtheta)
   rm(te_Rtheta)
