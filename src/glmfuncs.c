@@ -178,9 +178,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
 
-  double max_diff = 1e-6;
-  int iter = 0;
-
   for(int j = 0; j < dc; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < nc; k++) { // iterate by row
@@ -190,8 +187,11 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   }
 
   // outer iteration
-  for(iter = 0; iter < 20; iter++) {
+  double max_diff = 1e-6;
+  int iter = 0;
 
+  for(iter = 0; iter < 20; iter++) {
+    max_diff = 1e-6;
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
       for(int k = 0; k < nc; k++) { // iterate by row
