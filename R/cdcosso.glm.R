@@ -36,7 +36,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
   # solve (b, c) - 1st
   nng_fit = cv.nng(sspline_cvfit, x, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new, FALSE)
-print(theta.new)
+  print(theta.new)
   # solve (theta) - 2nd
   sspline_cvfit = try({cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo)}) ## 초기값 설정. 수정할 함수
 

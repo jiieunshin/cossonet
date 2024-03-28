@@ -205,7 +205,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
       }
       V1 *= 2;
 
-      if(theta_new[j] > 0 && r < fabs(V1)) {
+      if(V1 > 0 && r < fabs(V1)) {
         theta_new[j] = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
         theta_new[j] = 0;
