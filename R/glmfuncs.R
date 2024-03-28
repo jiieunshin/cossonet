@@ -453,7 +453,6 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
   theta.new = rep(0, d)
 
   for(i in 1:20){
-
     for(j in 1:d){
       theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
 
