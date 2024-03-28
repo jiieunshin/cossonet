@@ -98,8 +98,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         # measure[f, k] <- rss / (1 - df/length(testID) + .1)^2 / length(testID)
 
         if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-        # if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
-        # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
+        if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
+        if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
         # print(measure)
       }
     }
@@ -197,7 +197,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 sspline.cd = function (R, y, f, lambda0, obj, c.init)
 {
 
-  # print(as.vector(glmnet(R, y, family = obj$family, lambda = lambda0, alpha = 0)$beta))
   n = length(y)
 
   # initialize
@@ -234,51 +233,16 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
   return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = cw.new))
 }
 
-# sspline.cd = function (R, y, f, lambda0, obj, c.init)
-# {
-#   n = dim(R)[1]
-#
-#   # initialize
-#   mu = obj$linkinv(f)
-#   w = obj$variance(mu)
-#   z = f + (y - mu) / w
-#   b = 0
-#
-#   zw = z * sqrt(w)
-#   Rw = R * w
-#   cw = c.init / sqrt(w)
-#   sw = sqrt(w)
-#
-#   for(i in 1:20){
-#     cw.new = sapply(1:n, function(j){
-#       L = 2 * mean((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
-#       R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
-#       L/R
-#     })
-#
-#     loss = abs(cw-cw.new)
-#     conv = max(loss) < 1e-5
-#
-#     if(conv) break
-#     cw = cw.new  # if not convergence
-#   }
-#   # cw.new = cw.new
-#   cw.new = cw.new
-#   c.new = cw.new * sqrt(w)
-#   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-#
-#   return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = cw.new))
-# }
 
 sspline.QP = function (R, y, f, lambda0, obj, c.init)
 {
-  n = dim(R)[1]
+  n = length(y)
 
   # initialize
   mu = obj$linkinv(f)
   w = obj$variance(mu)
   z = f + (y - mu) / w
-  b = mean(z - R %*% c.init)
+  b = 0
 
   zw = z * sqrt(w)
   Rw = R * w
@@ -286,7 +250,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   sw = sqrt(w)
 
   # iteration
-  cw = c.init
+
   for(i in 1:20){
 
     D = (t(Rw) %*% Rw + n * lambda0 * Rw)
@@ -299,12 +263,10 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
     if(conv) break
     cw =  cw.new  # if not convergence
   }
-  # print(conv)
-  # cw.new = c(scale(cw.new))
-  c.new = c(cw.new * sqrt(w))
+  if(i == 1 & !conv) cw.new = cw
+  c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-  # cat("convergence", conv, "iteration", i, "\n")
-  return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = c(cw.new)))
+  return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = cw.new))
 }
 
 # LHS = t(R1) %*% R1 + 2 * n * lambda0 * R2
@@ -371,7 +333,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       # measure[f, k] <- rss / (1 - d * S/te_n + .1)^2 / te_n
 
       if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-      # if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
+      if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
       # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID]))
     }
   }

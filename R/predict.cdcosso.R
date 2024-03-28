@@ -12,11 +12,12 @@
 
 predict.cdcosso = function(object, testx)
 {
-  testx = apply(testx, 2, rescale)
-  K = make_anovaKernel(testx, object$data$x, object$data$kernel, object$data$kparam)
-
   tr_n = dim(object$data$x)[1]
   te_n <- dim(testx)[1]
+
+  if(class(testx)[1] == "data.frame") testx = matrix(unlist(testx), nrow = te_n)
+  testx = apply(testx, 2, rescale)
+  K = make_anovaKernel(testx, object$data$x, object$data$kernel, object$data$kparam)
 
   d = K$numK
   R = array(NA, c(te_n, tr_n, d))

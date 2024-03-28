@@ -26,7 +26,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'Cox'
+# family = 'gaussian'
 # gamma = 0.8
 # kernel = "gaussian"
 # one.std = TRUE
@@ -43,7 +43,7 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
   colnames(x) = NULL
   rownames(x) = NULL
   if(class(x)[1] == "data.frame")
-    x = as.matrix(x)
+    x = matrix(unlist(x), nrow = n)
 
   # family
   family = match.arg(family)
