@@ -1,5 +1,5 @@
 ############
-# mscale = theta.new/wt^2
+# mscale = rep(1, d)/wt^2
 # cand.lambda = lambda0
 
 cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
@@ -24,10 +24,10 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     c.init = scale(c.init)
   }
 
-  f.init = c(Rtheta %*% c.init)
-
+  # f.init = c(Rtheta %*% c.init)
+  f.init = rep(mean(y), n)
   # print(f.init)
-  # print(mean(y == ifelse(obj$linkinv(f.init) < 0.5, 0, 1)))
+  # print(mean(y == ifelse(obj$linkinv(aaa) < 0.5, 0, 1)))
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   for (f in 1:nfolds) {
     testID <- IDmat[!is.na(IDmat[, f]), f]
@@ -64,8 +64,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         Rw = tr_Rtheta * w
         cw = c.init[trainID] / sqrt(w)
         sw = sqrt(w)
-        # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
-
+        # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], ff, cand.lambda[k], obj, c.init[trainID])
+# print(c(tr_Rtheta %*% sspline_fit$c.new) + sspline_fit$b.new)
         sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
@@ -148,7 +148,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   # c.init = runif(n, -1e-5, 1e-5)
 
   if(algo == "CD"){
-    ff = c(f.init)
+    ff = f.init
     mu = obj$linkinv(ff)
     w = obj$variance(mu)
     z = ff + (y - mu) / w
@@ -164,17 +164,19 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
     fit = .Call("Csspline", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
     f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
+    # print(f.new)
     mu.new = obj$linkinv(f.new)
+    # print(mean(y != ifelse(mu.new < 0.5, 0, 1)))
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
-print(f.new)
-    out = list(IDmat = IDmat, measure = measure, R = R, w.new = w, zw.new = zw, b.new = fit$b.new,
+
+    out = list(IDmat = IDmat, measure = measure, R = R, w.new = w.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
                cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
   }
 
   if(algo == "QP"){
     fit = sspline.QP(Rtheta, y, f.init, optlambda, obj, c.init)
-    f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
+    f.new = c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
@@ -225,7 +227,7 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
     }
   }
   if(i == 1 & !conv) cw.new = cw
-  cw.new = cw.new / sd(cw.new)
+  cw.new = cw.new
   c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
 
@@ -309,9 +311,9 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # RHS = t(R1) %*% z.old
 # c.new = ginv(LHS) %*% RHS
 
-# model = sspline_cvfit
+# model = sspline_cvfit1
 # mscale = wt
-# lambda0 = optlambda0
+# lambda0 = sspline_cvfit1$optlambda
 # init.theta = ifelse(init.theta < 0.5, 0, 1)
 # mean(y != ifelse(obj$linkinv(c(G %*% init.theta)) < 0.5, 0, 1))   # 이거는 잘됨. init.theta는 이거로 고정
 
@@ -346,9 +348,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
     for (k in 1:len) {
       l = l + 1
       if(algo == "CD") {
-        theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
-
-        # theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
+        # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
+        theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
       }
 
       if(algo == "QP") {
@@ -419,8 +420,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
 
   if(algo == "CD"){
-    theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
-    # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
+    # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
+    theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
     f.new = c(G %*% as.matrix(theta.new))
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new, f.new = f.new)
   }

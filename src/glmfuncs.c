@@ -111,13 +111,14 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
 
   if (max_diff > 1e-6 && iter == 1){
     memcpy(cw_new, cw_c, nc * sizeof(double));
-  } else {
-    double cw_new_mean = mean(cw_new, nc); // cw_new의 표준편차 계산
-    double cw_new_sd = sd(cw_new, cw_new_mean, nc); // cw_new의 표준편차 계산
-    for (int i = 0; i < nc; ++i) {
-      cw_new[i] = cw_new[i] / cw_new_sd; // cw_new를 표준편차로 나누어 줌
-    }
   }
+  // else {
+  //   double cw_new_mean = mean(cw_new, nc); // cw_new의 표준편차 계산
+  //   double cw_new_sd = sd(cw_new, cw_new_mean, nc); // cw_new의 표준편차 계산
+  //   for (int i = 0; i < nc; ++i) {
+  //     cw_new[i] = cw_new[i] / cw_new_sd; // cw_new를 표준편차로 나누어 줌
+  //   }
+  // }
 
 
   // Calculate c_new
@@ -194,6 +195,13 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
       add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
     }
     pow_theta[j] = add;
+  }
+
+  // Print the matrix A
+  Rprintf("pow_theta:\n");
+  for (int j = 0; j < dc; j++) {
+    Rprintf("%f\t", pow_theta[j]);
+    Rprintf("\n");
   }
 
   // outer iteration
