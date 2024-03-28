@@ -192,7 +192,6 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
 
   for(iter = 0; iter < 20; iter++) {
     for(int j = 0; j < dc; j++) { // iterate by column
-      max_diff = 1e-6;
       double V1 = 0.0;
       for(int k = 0; k < nc; k++) { // iterate by row
         double GT = 0.0;
@@ -212,12 +211,12 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
       }
 
       // Calculate maximum difference for convergence
-      max_diff = fmax(max_diff, fabs(theta_c[j] - theta_new[j]));
+      max_diff = fabs(theta_c[j] - theta_new[j]);
 
       // Rprintf("%f\t", max_diff);
 
       // If convergence criteria are met, break the loop
-      if (max_diff <= 1e-20 && iter > 0) {
+      if (max_diff < 1e-20 && iter > 0) {
         break;
       }
 
@@ -226,7 +225,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
     }
   } // end outer iteration
 
-  if (max_diff > 1e-20 && iter == 0){
+  if (max_diff >= 1e-20 && iter == 0){
     theta_new = (double *)malloc(dc * sizeof(double));
   }
 
