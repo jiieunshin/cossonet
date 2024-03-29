@@ -258,7 +258,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
     cw.new = MASS::ginv(D) %*% dvec
 
     loss = abs(cw-cw.new)
-    conv = max(loss) < 1e-5
+    conv = max(loss) < 1e-6
 
     if(conv) break
     cw =  cw.new  # if not convergence

@@ -94,11 +94,9 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
 
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
-
       // If convergence criteria are met, break the loop
-      for (int j = 0; j < nc; ++j) {
-        max_diff = fmax(max_diff, fabs(cw_c[j] - cw_new[j]));
-      }
+      max_diff = fabs(cw_c[j] - cw_new[j]);
+
       if (max_diff <= 1e-6) {
         break;
       }
