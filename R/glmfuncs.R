@@ -65,7 +65,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         cw = c.init[trainID] / sqrt(w)
         sw = sqrt(w)
         # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], ff, cand.lambda[k], obj, c.init[trainID])
-# print(c(tr_Rtheta %*% sspline_fit$c.new) + sspline_fit$b.new)
+        # print(c(tr_Rtheta %*% sspline_fit$c.new) + sspline_fit$b.new)
         sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
@@ -221,9 +221,10 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
       conv = max(loss) < 1e-6
 
       if(conv) break
-      cw = cw.new  # if not convergence
+      cw[j] = cw.new[j]  # if not convergence
 
     }
+    if(conv) break
   }
   if(i == 1 & !conv) cw.new = cw
   cw.new = cw.new
@@ -427,17 +428,12 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
       if(i != 1 & conv) break
       theta = theta.new
     }
+    if(i != 1 & conv) break
   }
 
   if(i == 1 & !conv){
     theta = rep(0, d)
   }
-  # else if(sum(theta.new = 0) == d){
-  #   theta = theta.new / sd(theta.new)
-  # }
-  # print(theta)
-  # if(sum(theta == 0) != d) theta = theta / sd(theta)
-
   return(theta)
 }
 
