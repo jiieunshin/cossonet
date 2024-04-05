@@ -1,4 +1,5 @@
-RiskSet = function (time, status) {
+RiskSet = function (time, status)
+{
   uniqTime = sort(unique(time[status == 1]))
   RiskSet = matrix(0, ncol = length(uniqTime), nrow = length(time))
   for (k in 1:length(uniqTime)) {
@@ -13,7 +14,8 @@ RiskSet = function (time, status) {
 # mscale = rep(1, d)/wt^2
 # nfolds = 5
 # cand.lambda = lambda0
-cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kparam, algo) {
+cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kparam, algo)
+{
   n <- length(time)
   IDmat <- cvsplitID(n, nfolds)
 
@@ -56,13 +58,13 @@ cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kpar
       # dyn.load("src/coxfuncs.dll")
       # .Call("Cget_c", tr_Rtheta, Rtheta, n, tr_n, tr_RS, c.init, cand.lambda[k])
       if(algo == "CD"){
-        # library(glmnet)
         c.init = as.vector(glmnet(tr_Rtheta, cbind(time = time[trainID], status = status[trainID]), family = 'cox', lambda = cand.lambda[k], alpha = 0)$beta)
         fit = getc.cd(tr_Rtheta, c.init, time[trainID], status[trainID], cand.lambda[k], tr_RS)
       }
 
       if(algo == "QP"){
         # fit = getc.QP(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, cand.lambda[k])
+
       }
 
       Lik = PartialLik(time[testID], status[testID], te_RS, te_Rtheta %*% fit$c.new)
