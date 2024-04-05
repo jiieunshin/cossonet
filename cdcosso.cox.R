@@ -20,20 +20,22 @@
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
-cdcosso.cox = function (x, time, status, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
+
+# time = unlist(y[, 'time'])
+# stauts = unlist(y[, 'status'])
+cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
 {
   # library(survival)
-  n = length(y)
+  n = nrow(x)
   d = length(wt)
   
   par(mfrow = c(2,2))
   # initialize
-  init.theta = rep(1, d)
   
   # solve theta
-  getc_cvfit = cv.getc(x, time, status, status, 1/wt^2, nfolds, lambda0, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  getc_cvfit = cv.getc(x, time, status, rep(1, d)/wt^2, nfolds, lambda0, one.std, type, kparam, algo) ## 초기??? ??????. ????????? ??????
   optlambda0 = getc_cvfit$optlambda
-  theta_fit = cv.gettheta(getc_cvfit, Kmat, time, status, RS, wt, optlambda0, lambda_theta, gamma, nfolds, one.std)
+  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, optlambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
   
   Rtheta <- wsGram(Kmat, theta_fit$thetahat)
   getc_fit = getc(Rtheta, Rtheta, time, status, RS, optlambda0)

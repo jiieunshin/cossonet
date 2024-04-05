@@ -17,12 +17,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
   Rtheta <- wsGram(R, mscale)
 
-  c.init = as.vector(glmnet(Rtheta, y, family = obj$family, lambda = cand.lambda[1], alpha = 0)$beta)
-  if(sum(c.init == 0) == n){
-    c.init = rep(1e-10, n)
-  } else{
-    c.init = scale(c.init)
-  }
 
   # f.init = c(Rtheta %*% c.init)
   f.init = rep(mean(y), n)
@@ -60,9 +54,11 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         b = 0
         # print(b)
 
+        c.init = as.vector(glmnet(tr_Rtheta, y[trainID], family = obj$family, lambda = cand.lambda[k])$beta)
+
         zw = z * sqrt(w)
         Rw = tr_Rtheta * w
-        cw = c.init[trainID] / sqrt(w)
+        cw = c.init / sqrt(w)
         sw = sqrt(w)
         # sspline_fit = sspline.cd(tr_Rtheta, y[trainID], ff, cand.lambda[k], obj, c.init[trainID])
         # print(c(tr_Rtheta %*% sspline_fit$c.new) + sspline_fit$b.new)
