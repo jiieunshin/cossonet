@@ -281,3 +281,11 @@ rescale_theta = function(theta, scale = FALSE){
   }
   return(theta)
 }
+
+KLD = function(y, fhat, obj){
+  if(obj$family == "gaussian") B = function(x) x
+  if(obj$family == "binomial") B = function(x) log(exp(x) + 1)
+  if(obj$family == "poisson") B = function(x) exp(x)
+
+  return(- y * fhat + B(fhat))
+}
