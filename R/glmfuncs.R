@@ -20,12 +20,12 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   # f.init = c(Rtheta %*% c.init)
   if(obj$family == "binomial") f.init = rep(mean(y), n)
   if(obj$family == "poisson") f.init = rep(0.5, n)  # 추정에 이 초기값 영향도 있음
-  # print(f.init)
+
   # print(mean(y == ifelse(obj$linkinv(aaa) < 0.5, 0, 1)))
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
-  bmat <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
+  miss <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   for (f in 1:nfolds) {
-    print(f)
+    # print(f)
     testID <- IDmat[!is.na(IDmat[, f]), f]
     trainID <- (1:n)[-testID]
 
@@ -45,7 +45,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     te_Rtheta <- wsGram(te_R, mscale)
 
     for (k in 1:length(cand.lambda)) {
-print(k)
+# print(k)
       if(algo == "CD"){
 
         # initialize
@@ -53,7 +53,7 @@ print(k)
         mu = obj$linkinv(ff)
         w = obj$variance(mu)
         z = ff + (y[trainID] - mu) / w
-        # print(b)
+
         c.init = as.vector(glmnet(tr_Rtheta, y[trainID], family = 'gaussian', lambda = cand.lambda[k])$beta)
         # c.init = rep(1, tr_n)
         zw = z * sqrt(w)
@@ -66,7 +66,6 @@ print(k)
         b.new = sspline_fit$b.new
         c.new = sspline_fit$c.new
         cw.new = sspline_fit$cw.new
-        print(b.new)
       }
 
       if(algo == "QP"){
@@ -79,17 +78,16 @@ print(k)
         next
       } else{
         # validation
-        # testfhat = c(b.new + te_Rtheta %*% c.new)
-        # testmu = obj$linkinv(testfhat)
+        testfhat = c(b.new + te_Rtheta %*% c.new)
+        testmu = obj$linkinv(testfhat)
         # testw = obj$variance(testmu)
         w.new = sspline_fit$sw.new^2
         XX = sspline_fit$zw.new - (tr_Rtheta * w.new) %*% cw.new - sspline_fit$sw.new
         den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(w.new)/cand.lambda[k]))) / tr_n)^2
-        bmat[f,k] <- b.new
+        miss[f,k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
         measure[f, k] <- as.vector((t(XX) %*% XX) / den / tr_n)
-        print(measure[f, k] )
+
         # testz = testfhat + (y[testID] - testmu) / testw
-        #
         # testzw = testz * sqrt(testw)
         # testRw = te_Rtheta * testw
         # rss <- t(testzw - testRw %*% cw.new - b.new * sqrt(testw)) %*% (testzw - testRw %*% cw.new - b.new * sqrt(testw)) + .1
@@ -111,9 +109,32 @@ print(k)
   }
   rm(tr_Rtheta)
   rm(te_Rtheta)
+
+  # plotting error bar
+  if(obj$family == 'gaussian'){
+    main = "Gaussian Family"
+  }
+  if(obj$family == 'binomial'){
+    main = "Binomial Family"
+  }
+  if(obj$family == 'poisson'){
+    main = "Poisson Family"
+  }
+
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
   cvsd[cvsd == Inf] <- NA
+  max_min <- c(min(cvm - cvsd, na.rm = T), max(cvm + cvsd, na.rm = T))
+
+  plot(log(cand.lambda), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
+  try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  points(log(cand.lambda), cvm, pch = 15, col = 'red')
+
+  ###
+
+  miss_cvm <- apply(miss, 2, mean, na.rm = T)
+  misS_cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+  max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
 
   # optimal lambda1
   id = which.min(cvm)[1]
@@ -127,26 +148,12 @@ print(k)
   #   optlambda = cand.lambda[id]
   # }
   #
-  # plotting error bar
-  if(obj$family == 'gaussian'){
-    main = "Gaussian Family"
-  }
-  if(obj$family == 'binomial'){
-    main = "Binomial Family"
-  }
-  if(obj$family == 'poisson'){
-    main = "Poisson Family"
-  }
 
-  max_min <- c(min(cvm - cvsd, na.rm = T), max(cvm + cvsd, na.rm = T))
 
-  plot(log(cand.lambda), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
-  try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
-  points(log(cand.lambda), cvm, pch = 15, col = 'red')
+  plot(log(cand.lambda), miss_cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
+  try(arrows(log(cand.lambda), miss_cvm - misS_cvsd, log(cand.lambda), miss_cvm + misS_cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  points(log(cand.lambda), miss_cvm, pch = 15, col = 'red')
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
-  # abline(v = log(cand.lambda)[std.id], col = 'darkgrey', lty = 2)
-
-  # c.init = runif(n, -1e-5, 1e-5)
 
   if(algo == "CD"){
     ff = f.init
@@ -165,14 +172,14 @@ print(k)
     fit = sspline.cd(Rtheta, y, ff, optlambda, obj, c.init)
 
     # fit = .Call("Csspline", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
-    # f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
+    f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
+    mu.new = obj$linkinv(f.new)
     # print(f.new)
-    # mu.new = obj$linkinv(f.new)
     # print(mean(y != ifelse(mu.new < 0.5, 0, 1)))
-    # w.new = obj$variance(mu.new)
-    # z.new = f.new + (y - mu.new) / w.new
+    w.new = obj$variance(mu.new)
+    z.new = f.new + (y - mu.new) / w.new
 
-    out = list(IDmat = IDmat, measure = measure, R = R, w.new = fit$w.new, zw.new = fit$zw.new, b.new = fit$b.new,
+    out = list(IDmat = IDmat, measure = measure, R = R, w.new = w.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
                cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
   }
 
@@ -299,6 +306,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   init.theta = rep(1, d)
   len = length(lambda_theta)
   measure <- matrix(0, ncol = len, nrow = nfolds)
+  miss <- matrix(0, ncol = len, nrow = nfolds)
 
   for (f in 1:nfolds) {
     testID <- IDmat[!is.na(IDmat[, f]), f]
@@ -322,14 +330,15 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
                          theta = init.theta, lambda0, lambda_theta[k], gamma)
       }
 
-      # testfhat = c(te_G %*% theta.new)
-      # testmu = obj$linkinv(testfhat)
+      testfhat = c(te_G %*% theta.new)
+      testmu = obj$linkinv(testfhat)
 
       XX = uw[trainID] - Gw[trainID,] %*% theta.new
       num = (t(XX) %*% XX)/tr_n
       den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
       measure[f, k] <- as.vector(num / den)
-      print(measure[f, k] )
+      miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+      # print(measure[f, k] )
 
 
       # testw = obj$variance(testmu)
@@ -350,13 +359,27 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   }
   measure[is.nan(measure)] <- NA
 
+  # plotting error bar
+  if(obj$family == 'gaussian'){
+    main = "Gaussian Family"
+  }
+  if(obj$family == 'binomial'){
+    main = "Binomial Family"
+  }
+  if(obj$family == 'poisson'){
+    main = "Poisson Family"
+  }
+
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
 
   cvm[is.nan(cvm)] <- NA
   cvsd[is.na(cvsd)] <- 0
-  # selm = floor(apply(sel, 2, mean))
   id = which.min(cvm)[1]
+
+  miss_cvm <- apply(miss, 2, mean, na.rm = T)
+  misS_cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+  max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
 
   if(one.std){
     st1_err = cvm[id] + cvsd[id] # minimum cv err
@@ -372,16 +395,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
     optlambda = lambda_theta[id]
   }
 
-  # plotting error bar
-  if(obj$family == 'gaussian'){
-    main = "Gaussian Family"
-  }
-  if(obj$family == 'binomial'){
-    main = "Binomial Family"
-  }
-  if(obj$family == 'poisson'){
-    main = "Poisson Family"
-  }
   max_min <- c(min(cvm - cvsd, na.rm = TRUE), max(cvm + cvsd, na.rm = TRUE))
 
   xrange = log(lambda_theta)
@@ -391,6 +404,16 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   abline(v = xrange[id], col = 'darkgrey')
   # text(log(lambda_theta), par("usr")[4], labels = selm, pos = 1)
   if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
+
+  cvm <- apply(miss, 2, mean, na.rm = T)
+cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
+
+
+  plot(log(lambda_theta), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
+  try(arrows(log(lambda_theta), cvm - cvsd, log(lambda_theta), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  points(log(lambda_theta), cvm, pch = 15, col = 'red')
+  abline(v = log(lambda_theta)[id], col = 'darkgrey', lty = 2)
 
   if(algo == "CD"){
     theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
