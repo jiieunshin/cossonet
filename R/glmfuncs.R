@@ -318,7 +318,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
     tr_n = length(trainID)
     te_n = length(testID)
     for (k in 1:len) {
-      l = l + 1
       if(algo == "CD") {
         theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
         # theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
