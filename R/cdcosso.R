@@ -26,7 +26,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'poisson'
+# family = 'binomial'
 # gamma = 0.8
 # kernel = "gaussian"
 # one.std = TRUE
