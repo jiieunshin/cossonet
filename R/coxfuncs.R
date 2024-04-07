@@ -261,8 +261,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
   Gw = G * sqrt(model$w.new)
   uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
-  # init.theta = as.vector(glmnet(Gw, uw, family = "gaussian", lambda = lambda_theta[1])$beta)
-  # init.theta = rep(1, d)
+  init.theta = rep(1, d)
   len = length(lambda_theta)
   measure <- matrix(0, ncol = len, nrow = nfolds)
 
@@ -280,7 +279,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     tr_RS = RiskSet(time[trainID], status[trainID])
     te_RS = RiskSet(time[testID], status[testID])
     for (k in 1:len) {
-      init.theta = as.vector(glmnet(Gw[trainID,], uw[trainID], family = "gaussian", lambda = lambda_theta[k])$beta)
+      # init.theta = as.vector(glmnet(Gw[trainID,], uw[trainID], family = "gaussian", lambda = lambda_theta[k])$beta)
       theta.new = gettheta.cd(init.theta, Gw[trainID,], uw[trainID], lambda_theta[k], gamma)
       # GH = calculate_GH_for_theta(theta.new, tr_G, model$c.new[trainID], time[trainID], status[trainID], model$optlambda, tr_RS)
 
@@ -329,9 +328,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
 
   if(algo == "CD"){
-    # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
     # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
-    init.theta = as.vector(glmnet(Gw, uw, family = "gaussian", lambda = optlambda)$beta)
+    # init.theta = as.vector(glmnet(Gw, uw, family = "gaussian", lambda = optlambda)$beta)
     theta.new = gettheta.cd(init.theta, Gw[trainID,], uw[trainID], optlambda, gamma)
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   }

@@ -46,6 +46,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfold
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,
+             object = "Cox",
              algorithm = algo)
 
   return(out)

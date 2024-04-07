@@ -27,20 +27,21 @@ predict.cdcosso = function(object, testx)
   }
 
   wt = rep(1, d)
-
   Rtheta <- wsGram(R, object$theta_step$theta.new/wt^2)
-
-  # if(object$algorithm == "QP"){
-  #   sdx <- sqrt(drop(rep(1, te_n) %*% (Rtheta^2))/(tr_n - 1))
-  #   c.new = object$c_step$c.new / sdx
-  # } else if(object$algorithm == "CD"){
-  # }
 
   c.new = object$c_step$c.new
   f.new = c(Rtheta %*% c.new + object$c_step$b.new)
-  mu.new = object$object$linkinv(f.new)
 
-  return(list(f.new = f.new, mu.new = mu.new))
+  if(object$object != "Cox"){
+    mu.new = object$object$linkinv(f.new)
+    out = list(f.new = f.new, mu.new = mu.new)
+  }
+
+  if(object$object == "Cox"){
+    out = list(f.new = f.new)
+  }
+
+  return(out)
 }
 
 
