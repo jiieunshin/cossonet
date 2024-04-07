@@ -14,7 +14,7 @@ RiskSet = function (time, status)
 # mscale = rep(1, d)/wt^2
 # nfolds = 5
 # cand.lambda = lambda0
-cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kparam, algo)
+cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, kparam, algo)
 {
   n <- length(time)
   IDmat <- cvsplitID(n, nfolds)
@@ -102,19 +102,12 @@ cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kpar
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
   # if(one.std) abline(v = log(cand.lambda)[std.id], col = 'darkgrey')
 
-  if(algo == "CD"){
-    c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox', lambda = optlambda, alpha = 0)$beta)
-    fit = getc.cd(Rtheta, c.init, time, status, optlambda, RS)
-    # f.new = c(Rtheta %*% c.new)
-    out = list(IDmat = IDmat, RS = RS, measure = measure, R = R, w.new = fit$w.new, zw.new = fit$zw.new, b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
-  }
+  c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox', lambda = optlambda, alpha = 0)$beta)
+  fit = getc.cd(Rtheta, c.init, time, status, optlambda, RS)
+  # f.new = c(Rtheta %*% c.new)
+  out = list(IDmat = IDmat, RS = RS, measure = measure, R = R, w.new = fit$w.new, zw.new = fit$zw.new, b.new = fit$b.new,
+             cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
 
-  if(algo == "QP"){
-    # c.new = getc.QP(Rtheta, Rtheta, time, status, RS, c.init, cand.lambda[k])
-    f.new = c(Rtheta %*% c.new)
-    out = list(IDmat = IDmat, measure = measure, R = R, RS = RS, c.new = c.new, optlambda = optlambda)
-  }
   rm(K)
   rm(Rtheta)
 
@@ -174,9 +167,8 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
   cw.new = cw.new
   c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-  GH = calculate_GH_for_c(c.new, Rtheta, time, status, lambda0, Risk)
-  return(list(Gradient = GH$Gradient, Hessian = GH$Hessian, z.new = z, w.new = w,
-              b.new = b.new, c.new = c.new, zw.new = zw, sw.new = sqrt(w), cw.new = cw.new))
+  # GH = calculate_GH_for_c(c.new, Rtheta, time, status, lambda0, Risk)
+  return(list(z.new = z, w.new = w, b.new = b.new, c.new = c.new, zw.new = zw, sw.new = sqrt(w), cw.new = cw.new))
 }
 
 
@@ -185,52 +177,52 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
 # status = status[trainID]
 # lambda0 = lambda0[1]
 # Risk = tr_RS
-calculate_GH_for_c = function (c.init, R, time, status, lambda0, Risk)
-{
-  n = length(time)
-  tie.size = as.numeric(table(time[status == 1]))
-  # if (min(eigen(R)$value) < 0)
-  #   R = R + 1e-08 * diag(nrow(R))
-  eta = R %*% c.init
-  Hess.FullNumer.unScale = array(NA, dim = c(length(c.init), length(c.init), n))
-  for (i in 1:n) Hess.FullNumer.unScale[, , i] = R[i, ] %*% t(R[i, ])
-
-  Grad.Term1 = -t(R) %*% status/n
-  Grad.Term2 = matrix(NA, ncol = ncol(Risk), nrow = length(c.init))
-  Grad.Term3 = 2 * lambda0 * R %*% c.init
-  Grad.FullNumer = t(R) %*% diag(as.numeric(exp(eta)))
-  Grad.FullDenom = Hess.FullDenom = exp(eta)
-  Hess.FullNumer = Hess.FullNumer.unScale * array(rep(exp(eta), each = length(c.init)^2),
-                                                  dim = c(length(c.init), length(c.init), n)
-                                                  )
-  Hess.Term1 = Hess.Term2 = array(NA, dim = c(length(c.init), length(c.init), ncol(Risk)))
-  k = 1
-  tempSum.exp.eta = sum(exp(eta[Risk[, k]]), na.rm = TRUE)
-  temp.Gradient.numer = apply(Grad.FullNumer[, Risk[, k]], 1, sum, na.rm = TRUE)
-  temp.Hessian.numer = apply(Hess.FullNumer[, , Risk[, k]], c(1, 2), sum, na.rm = TRUE)
-  Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
-  Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
-  Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
-  for (k in 2:ncol(Risk)) {
-    excludeID = Risk[, k - 1][!Risk[, k - 1] %in% Risk[, k]]
-    tempSum.exp.eta = tempSum.exp.eta - sum(exp(eta[excludeID]))
-    if (length(excludeID) > 1) {
-      temp.Gradient.numer = temp.Gradient.numer - apply(Grad.FullNumer[, excludeID], 1, sum)
-      temp.Hessian.numer = temp.Hessian.numer - apply(Hess.FullNumer[, , excludeID], c(1, 2), sum)
-    }
-    else {
-      temp.Gradient.numer = temp.Gradient.numer - Grad.FullNumer[, excludeID]
-      temp.Hessian.numer = temp.Hessian.numer - Hess.FullNumer[, , excludeID]
-    }
-    Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
-    Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
-    Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
-  }
-  Grad.Term2 = apply(Grad.Term2, 1, sum)/n
-  Gradient = as.vector(Grad.Term1 + Grad.Term2 + Grad.Term3)
-  Hessian = apply(Hess.Term1, c(1, 2), sum)/n - apply(Hess.Term2, c(1, 2), sum)/n + 2 * lambda0 * R
-  return(list(Gradient = Gradient, Hessian = Hessian))
-}
+# calculate_GH_for_c = function (c.init, R, time, status, lambda0, Risk)
+# {
+#   n = length(time)
+#   tie.size = as.numeric(table(time[status == 1]))
+#   # if (min(eigen(R)$value) < 0)
+#   #   R = R + 1e-08 * diag(nrow(R))
+#   eta = R %*% c.init
+#   Hess.FullNumer.unScale = array(NA, dim = c(length(c.init), length(c.init), n))
+#   for (i in 1:n) Hess.FullNumer.unScale[, , i] = R[i, ] %*% t(R[i, ])
+#
+#   Grad.Term1 = -t(R) %*% status/n
+#   Grad.Term2 = matrix(NA, ncol = ncol(Risk), nrow = length(c.init))
+#   Grad.Term3 = 2 * lambda0 * R %*% c.init
+#   Grad.FullNumer = t(R) %*% diag(as.numeric(exp(eta)))
+#   Grad.FullDenom = Hess.FullDenom = exp(eta)
+#   Hess.FullNumer = Hess.FullNumer.unScale * array(rep(exp(eta), each = length(c.init)^2),
+#                                                   dim = c(length(c.init), length(c.init), n)
+#                                                   )
+#   Hess.Term1 = Hess.Term2 = array(NA, dim = c(length(c.init), length(c.init), ncol(Risk)))
+#   k = 1
+#   tempSum.exp.eta = sum(exp(eta[Risk[, k]]), na.rm = TRUE)
+#   temp.Gradient.numer = apply(Grad.FullNumer[, Risk[, k]], 1, sum, na.rm = TRUE)
+#   temp.Hessian.numer = apply(Hess.FullNumer[, , Risk[, k]], c(1, 2), sum, na.rm = TRUE)
+#   Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
+#   Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
+#   Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
+#   for (k in 2:ncol(Risk)) {
+#     excludeID = Risk[, k - 1][!Risk[, k - 1] %in% Risk[, k]]
+#     tempSum.exp.eta = tempSum.exp.eta - sum(exp(eta[excludeID]))
+#     if (length(excludeID) > 1) {
+#       temp.Gradient.numer = temp.Gradient.numer - apply(Grad.FullNumer[, excludeID], 1, sum)
+#       temp.Hessian.numer = temp.Hessian.numer - apply(Hess.FullNumer[, , excludeID], c(1, 2), sum)
+#     }
+#     else {
+#       temp.Gradient.numer = temp.Gradient.numer - Grad.FullNumer[, excludeID]
+#       temp.Hessian.numer = temp.Hessian.numer - Hess.FullNumer[, , excludeID]
+#     }
+#     Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
+#     Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
+#     Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
+#   }
+#   Grad.Term2 = apply(Grad.Term2, 1, sum)/n
+#   Gradient = as.vector(Grad.Term1 + Grad.Term2 + Grad.Term3)
+#   Hessian = apply(Hess.Term1, c(1, 2), sum)/n - apply(Hess.Term2, c(1, 2), sum)/n + 2 * lambda0 * R
+#   return(list(Gradient = Gradient, Hessian = Hessian))
+# }
 
 calculate_wz_for_c = function(c.init, R, lambda0, time, status, RS){
   n = length(time)
@@ -264,7 +256,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   # solve theta
   G <- matrix(0, nrow(model$R[, ,1]), d)
   for (j in 1:d) {
-    G[, j] = R[, , j] %*% model$c.new * (mscale[j]^(-2))
+    G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
   Gw = G * sqrt(model$w.new)
@@ -273,7 +265,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   # init.theta = rep(1, d)
   len = length(lambda_theta)
   measure <- matrix(0, ncol = len, nrow = nfolds)
-  l = 0
+
   for (f in 1:nfolds) {
     testID <- IDmat[!is.na(IDmat[, f]), f]
     trainID <- (1:n)[-testID]
@@ -288,16 +280,9 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     tr_RS = RiskSet(time[trainID], status[trainID])
     te_RS = RiskSet(time[testID], status[testID])
     for (k in 1:len) {
-      l = l + 1
-      if(algo == "CD") {
-        init.theta = as.vector(glmnet(Gw[trainID,], uw[trainID], family = "gaussian", lambda = lambda_theta[k])$beta)
-        theta.new = gettheta.cd(init.theta, Gw[trainID,], uw[trainID], lambda_theta[k], gamma)
-        GH = calculate_GH_for_theta(theta.new, tr_G, model$c.new[trainID], time[trainID], status[trainID], model$optlambda, tr_RS)
-      }
-
-      if(algo == "QP") {
-        fit = gettheta.cd(G, time, status, c.init, lambda0, Risk)
-      }
+      init.theta = as.vector(glmnet(Gw[trainID,], uw[trainID], family = "gaussian", lambda = lambda_theta[k])$beta)
+      theta.new = gettheta.cd(init.theta, Gw[trainID,], uw[trainID], lambda_theta[k], gamma)
+      # GH = calculate_GH_for_theta(theta.new, tr_G, model$c.new[trainID], time[trainID], status[trainID], model$optlambda, tr_RS)
 
       XX = uw[trainID] - Gw[trainID,] %*% theta.new
       num = (t(XX) %*% XX)
@@ -351,15 +336,9 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   }
 
-  if(algo == "QP"){
-    theta.new = nng.QP(model$zw.new, model$b.new, model$cw.new, model$w.new, G,
-                       init.theta, lambda0, optlambda, gamma, obj)
-    f.new = c(G %*% as.matrix(theta.new))
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new, f.new = f.new)
-  }
-
   return(out)
 }
+
 # theta = rep(1, d)
 # Gw = Gw[trainID,]
 # uw = uw[trainID]
@@ -392,73 +371,74 @@ gettheta.cd = function(theta.init, Gw, uw, lambda_theta, gamma){
   return(theta.new)
 }
 
-calculate_wz_for_theta = function(init.theta, G, time, status, RS){
-  n = length(time)
-  weight = z = rep(0, n)
+# calculate_wz_for_theta = function(init.theta, G, time, status, RS){
+#   n = length(time)
+#   weight = z = rep(0, n)
+#   eta = G %*% init.theta
+#   exp.eta = exp(eta)
+#   for (k in 1:n) {
+#     Sum.exp.eta.Grad = Sum.exp.eta.Hess = 0
+#     id = which(RS[k,] > 0)
+#
+#     for(r in id){
+#       Sum.exp.eta = sum(exp(G[RS[,r],] %*% init.theta))
+#       Sum.exp.eta.Grad = Sum.exp.eta.Grad + exp.eta[k] / Sum.exp.eta # {j in R_i} exp(R_j c)
+#       Sum.exp.eta.Hess = Sum.exp.eta.Hess + ( exp.eta * Sum.exp.eta - exp.eta[k]^2 ) / Sum.exp.eta^2
+#     }
+#
+#     Grad.Term = status[k] - Sum.exp.eta.Grad
+#     weight[k] = Sum.exp.eta.Hess
+#     z[k] = exp.eta + Grad.Term / weight[k]
+#   }
+#
+#   return(list(eta = eta, z = z, weight = weight))
+# }
 
-  for (k in 1:n) {
-    Sum.exp.eta.Grad = Sum.exp.eta.Hess = 0
-    id = which(RS[k,] > 0)
-    exp.eta = as.numeric(exp(G[k,] %*% init.theta))
-    for(r in id){
-      Sum.exp.eta = sum(exp(G[RS[,r],] %*% init.theta))
-      Sum.exp.eta.Grad = Sum.exp.eta.Grad + exp.eta / Sum.exp.eta # {j in R_i} exp(R_j c)
-      Sum.exp.eta.Hess = Sum.exp.eta.Hess + ( exp.eta * Sum.exp.eta - exp.eta^2 ) / Sum.exp.eta^2
-    }
 
-    Grad.Term = status[k] - Sum.exp.eta.Grad
-    weight[k] = Sum.exp.eta.Hess
-    z[k] = exp.eta + Grad.Term / weight[k]
-  }
-
-  return(list(eta = eta, z = z, weight = weight))
-}
-
-
-calculate_GH_for_theta = function(theta, G, chat, time, status, lambda0, Risk){
-  n = length(time)
-  d = length(theta)
-  tie.size = as.numeric(table(time[status == 1]))
-  # if (min(eigen(R)$value) < 0)
-  #   R = R + 1e-08 * diag(nrow(R))
-  eta = G %*% theta
-  Hess.FullNumer.unScale = array(NA, dim = c(d, d, n))
-  for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
-
-  Grad.Term1 = -t(G) %*% status/n
-  Grad.Term2 = matrix(NA, ncol = ncol(Risk), nrow = d)
-  Grad.Term3 = 2 * lambda0 * t(G) %*% chat
-  Grad.FullNumer = t(G) %*% diag(as.numeric(exp(eta)))
-  Grad.FullDenom = Hess.FullDenom = exp(eta)
-  Hess.FullNumer = Hess.FullNumer.unScale * array(rep(exp(eta), each = d^2),
-                                                  dim = c(d, d, n)
-  )
-  Hess.Term1 = Hess.Term2 = array(NA, dim = c(d, d, ncol(Risk)))
-  k = 1
-  tempSum.exp.eta = sum(exp(eta[Risk[, k]]), na.rm = TRUE)
-  temp.Gradient.numer = apply(Grad.FullNumer[, Risk[, k]], 1, sum, na.rm = TRUE)
-  temp.Hessian.numer = apply(Hess.FullNumer[, , Risk[, k]], c(1, 2), sum, na.rm = TRUE)
-  Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
-  Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
-  Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
-  for (k in 2:ncol(Risk)) {
-    excludeID = Risk[, k - 1][!Risk[, k - 1] %in% Risk[, k]]
-    tempSum.exp.eta = tempSum.exp.eta - sum(exp(eta[excludeID]))
-    if (length(excludeID) > 1) {
-      temp.Gradient.numer = temp.Gradient.numer - apply(Grad.FullNumer[, excludeID], 1, sum)
-      temp.Hessian.numer = temp.Hessian.numer - apply(Hess.FullNumer[, , excludeID], c(1, 2), sum)
-    }
-    else {
-      temp.Gradient.numer = temp.Gradient.numer - Grad.FullNumer[, excludeID]
-      temp.Hessian.numer = temp.Hessian.numer - Hess.FullNumer[, , excludeID]
-    }
-    Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
-    Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
-    Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
-  }
-  Grad.Term2 = apply(Grad.Term2, 1, sum)/n
-  Gradient = as.vector(Grad.Term1 + Grad.Term2 + Grad.Term3)
-  Hessian = apply(Hess.Term1, c(1, 2), sum)/n - apply(Hess.Term2, c(1, 2), sum)/n
-  return(list(Gradient = Gradient, Hessian = Hessian))
-}
+# calculate_GH_for_theta = function(theta, G, chat, time, status, lambda0, Risk){
+#   n = length(time)
+#   d = length(theta)
+#   tie.size = as.numeric(table(time[status == 1]))
+#   # if (min(eigen(R)$value) < 0)
+#   #   R = R + 1e-08 * diag(nrow(R))
+#   eta = G %*% theta
+#   Hess.FullNumer.unScale = array(NA, dim = c(d, d, n))
+#   for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
+#
+#   Grad.Term1 = -t(G) %*% status/n
+#   Grad.Term2 = matrix(NA, ncol = ncol(Risk), nrow = d)
+#   Grad.Term3 = 2 * lambda0 * t(G) %*% chat
+#   Grad.FullNumer = t(G) %*% diag(as.numeric(exp(eta)))
+#   Grad.FullDenom = Hess.FullDenom = exp(eta)
+#   Hess.FullNumer = Hess.FullNumer.unScale * array(rep(exp(eta), each = d^2),
+#                                                   dim = c(d, d, n)
+#   )
+#   Hess.Term1 = Hess.Term2 = array(NA, dim = c(d, d, ncol(Risk)))
+#   k = 1
+#   tempSum.exp.eta = sum(exp(eta[Risk[, k]]), na.rm = TRUE)
+#   temp.Gradient.numer = apply(Grad.FullNumer[, Risk[, k]], 1, sum, na.rm = TRUE)
+#   temp.Hessian.numer = apply(Hess.FullNumer[, , Risk[, k]], c(1, 2), sum, na.rm = TRUE)
+#   Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
+#   Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
+#   Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
+#   for (k in 2:ncol(Risk)) {
+#     excludeID = Risk[, k - 1][!Risk[, k - 1] %in% Risk[, k]]
+#     tempSum.exp.eta = tempSum.exp.eta - sum(exp(eta[excludeID]))
+#     if (length(excludeID) > 1) {
+#       temp.Gradient.numer = temp.Gradient.numer - apply(Grad.FullNumer[, excludeID], 1, sum)
+#       temp.Hessian.numer = temp.Hessian.numer - apply(Hess.FullNumer[, , excludeID], c(1, 2), sum)
+#     }
+#     else {
+#       temp.Gradient.numer = temp.Gradient.numer - Grad.FullNumer[, excludeID]
+#       temp.Hessian.numer = temp.Hessian.numer - Hess.FullNumer[, , excludeID]
+#     }
+#     Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
+#     Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
+#     Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
+#   }
+#   Grad.Term2 = apply(Grad.Term2, 1, sum)/n
+#   Gradient = as.vector(Grad.Term1 + Grad.Term2 + Grad.Term3)
+#   Hessian = apply(Hess.Term1, c(1, 2), sum)/n - apply(Hess.Term2, c(1, 2), sum)/n
+#   return(list(Gradient = Gradient, Hessian = Hessian))
+# }
 
