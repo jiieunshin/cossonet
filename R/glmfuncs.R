@@ -340,7 +340,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       miss[f, k] <- mean((testmu - y[testID])^2)
       # print(measure[f, k] )
 
-
       # testw = obj$variance(testmu)
       # testz = testfhat + (y[testID] - testmu) / testw
       # testzw = testz * sqrt(testw)

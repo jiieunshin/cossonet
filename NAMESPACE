@@ -13,4 +13,6 @@ export(metric)
 export(train_test_split)
 export(cdcosso)
 export(cdcosso.glm)
+export(cdcosso.cox)
 export(predict.cdcosso)
+

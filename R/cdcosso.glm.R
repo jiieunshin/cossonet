@@ -27,24 +27,16 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
   d = length(wt)
   par(mfrow = c(2,2))
 
-  # initiation
-  # init.theta = as.vector(glmnet(x, y, family = "binomial", lambda = lambda_theta[2], gamma = 0)$beta)
-
   # solve (theta) - 1st
   sspline_cvfit = cv.sspline(x, y, rep(1, d)/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 
   # solve (b, c) - 1st
   nng_fit = cv.nng(sspline_cvfit, x, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new, FALSE)
-  # print(theta.new)
+
   # solve (theta) - 2nd
   sspline_cvfit = try({cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo)}) ## 초기값 설정. 수정할 함수
 
-  # nng_fit = cv.nng(sspline_cvfit, x, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, nfolds, obj, one.std, algo)
-  # theta.new = rescale_theta(nng_fit$theta.new, FALSE)
-  # print(theta.new)
-  #
-  # sspline_cvfit = cv.sspline(x, y, theta.new/wt^2, nfolds, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
   par(mfrow = c(1,1))
   if(algo == "CD")
     out = list(data = list(x = x, y = y, R = sspline_cvfit$R, kernel = type, kparam = kparam),

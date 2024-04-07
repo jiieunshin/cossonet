@@ -54,7 +54,7 @@ cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kpar
     tr_Rtheta <- wsGram(tr_R, mscale)
     te_Rtheta <- wsGram(te_R, mscale)
 
-    for (k in 1:length(cand.lambda)) {
+    for (k in 1:length(cand.lambda)){
       # dyn.load("src/coxfuncs.dll")
       # .Call("Cget_c", tr_Rtheta, Rtheta, n, tr_n, tr_RS, c.init, cand.lambda[k])
       if(algo == "CD"){
@@ -64,12 +64,18 @@ cv.getc = function(x, time, status, mscale, nfolds, lambda0, one.std, type, kpar
 
       if(algo == "QP"){
         # fit = getc.QP(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, cand.lambda[k])
-
       }
 
-      Lik = PartialLik(time[testID], status[testID], te_RS, te_Rtheta %*% fit$c.new)
-      UHU = fit$Hessian %*% fit$c.new - fit$Gradient / diag(fit$Hessian)
-      measure[f, k] = Lik + sum(status[testID] == 1)/te_n^2 * (sum(diag(UHU))/(tr_n -  1) - sum(UHU)/(tr_n^2 - tr_n))
+      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_Rtheta %*% fit$c.new)
+
+      XX = fit$zw.new - tr_Rtheta %*% fit$c.new - fit$b.new
+      num = t(XX) %*% diag(fit$w.new) %*% XX
+      den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
+      measure[f, k] <- as.vector(num / den / tr_n)
+      print(fit$b.new)
+      print(measure[f, k])
+      # UHU = fit$Hessian %*% fit$c.new - fit$Gradient / diag(fit$Hessian)
+      # measure[f, k] = Lik + sum(status[testID] == 1)/te_n^2 * (sum(diag(UHU))/(tr_n -  1) - sum(UHU)/(tr_n^2 - tr_n))
     }
   }
   # print(measure)
@@ -144,38 +150,33 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
   zw = z * sqrt(w)
   Rw = Rtheta * w
   # cw = c.init / sqrt(w)
+  cw = c.init / sqrt(w)
   sw = sqrt(w)
   cw.new = rep(0, n)
-  cw = c.init
-  iter = 0
-  while(iter <= 10){
-    iter = iter + 1
-     for(j in 1:n){
-      # c.new[j] = sum((z - R[,-j] %*% c.old[-j]) * R[,j] * w) / (sum(w * R[,j]^2))
+
+  for(i in 1:20){ # outer iteration
+    for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
       R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
       cw.new[j] = L/R
 
-      loss = abs(cw - cw.new)
-      conv1 = max(loss) < 1e-6
-      conv2 = is.infinite(exp(cw.new[j] * sqrt(w[j])))
-      if((iter != 1 & conv1) | conv2) break
-      cw[j] = cw.new[j]
+      loss = abs(cw-cw.new)
+      conv = max(loss) < 1e-6
+
+      if(conv) break
+      cw[j] = cw.new[j]  # if not convergence
+
     }
-
-    if((iter != 1 & conv1) | conv2) break
+    if(conv) break
   }
-
-  if((iter == 1 & !conv1) | conv2){
-    cw.new = c.init / sqrt(w)
-   } else{
-    cw.new = cw
-   }
+  if(i == 1 & !conv) cw.new = cw
+  print(i)
+  cw.new = cw.new
   c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-
   GH = calculate_GH_for_c(c.new, Rtheta, time, status, lambda0, Risk)
-  return(list(Gradient = GH$Gradient, Hessian = GH$Hessian, w.new = w, b.new = b.new, c.new = c.new, zw.new = zw, sw.new = sqrt(w), cw.new = cw.new))
+  return(list(Gradient = GH$Gradient, Hessian = GH$Hessian, z.new = z, w.new = w,
+              b.new = b.new, c.new = c.new, zw.new = zw, sw.new = sqrt(w), cw.new = cw.new))
 }
 
 
@@ -253,7 +254,7 @@ calculate_wz_for_c = function(c.init, R, lambda0, time, status, RS){
   return(list(z = z, weight = weight))
 }
 
-# model = getc_cvfit
+# model = fit
 # mscale = wt
 cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo){
   n = length(time)
@@ -263,7 +264,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   # solve theta
   G <- matrix(0, nrow(model$R[, ,1]), d)
   for (j in 1:d) {
-    G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
+    G[, j] = R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
   Gw = G * sqrt(model$w.new)
@@ -298,20 +299,22 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
         fit = gettheta.cd(G, time, status, c.init, lambda0, Risk)
       }
 
-      Lik = PartialLik(time[testID], status[testID], te_RS, te_G %*% theta.new)
+      XX = uw[trainID] - Gw[trainID,] %*% theta.new
+      num = (t(XX) %*% XX)
+      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_G %*% theta.new)
+      den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
+      measure[f, k] <- as.vector(num / den / tr_n)
+
+      # Lik = PartialLik(time[testID], status[testID], te_RS, te_G %*% theta.new)
       # UHU = GH$Hessian %*% model$c.new[trainID] - GH$Gradient / diag(GH$Hessian)
-      measure[f, k] = Lik
+      # measure[f, k] = Lik
       # + sum(status[testID] == 1)/te_n^2 * (sum(diag(UHU))/(tr_n -  1) - sum(UHU)/(tr_n^2 - tr_n))
     }
   }
-  measure[is.nan(measure)] <- NA
-
+  measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
 
-  cvm[is.nan(cvm)] <- NA
-  cvsd[is.na(cvsd)] <- 0
-  # selm = floor(apply(sel, 2, mean))
   id = which.min(cvm)[1]
 
   if(one.std){

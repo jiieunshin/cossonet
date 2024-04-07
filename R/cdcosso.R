@@ -26,7 +26,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'binomial'
+# family = 'Cox'
 # gamma = 0.8
 # kernel = "gaussian"
 # one.std = TRUE
@@ -75,7 +75,7 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
   }
 
   if(missing(lambda_theta))
-    lambda_theta = exp(seq(log(2^{-40}), log(2^{10}), length.out = 40))
+    lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 40))
 
   if (scale){   # min-max scale
     x = apply(x, 2, rescale)
@@ -89,8 +89,8 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo)
-               # Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
+               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo),
+               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
                # Negbin, svm 추???
   )
   return(out)
