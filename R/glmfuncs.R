@@ -81,7 +81,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         testmu = obj$linkinv(testfhat)
         # testw = obj$variance(testmu)
         w.new = sspline_fit$sw.new^2
-        XX = sspline_fit$zw.new - (tr_Rtheta * w.new) %*% cw.new - sspline_fit$sw.new
+        XX = sspline_fit$zw.new - (tr_Rtheta * w.new) %*% cw.new - sspline_fit$b.new * sspline_fit$sw.new
         den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(w.new)/cand.lambda[k]))) / tr_n)^2
         # miss[f,k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
         miss[f,k] <- mean((testmu - y[testID])^2)
