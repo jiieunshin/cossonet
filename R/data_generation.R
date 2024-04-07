@@ -141,7 +141,7 @@ data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "addi
     x_nois = matrix(rnorm(n * (p-6)), n, p-6)
     x = cbind(x_sig, x_nois)
 
-    f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]) + g6(x[,6])) + rnorm(n, 0, 1)
+    f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]) + g6(x[,6])) + rnorm(n, 0, .1)
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))

@@ -18,8 +18,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   Rtheta <- wsGram(R, mscale)
 
   # f.init = c(Rtheta %*% c.init)
-  if(obj$family == "binomial") f.init = rep(mean(y), n)
-  if(obj$family == "poisson") f.init = rep(0.5, n)  # 추정에 이 초기값 영향도 있음
+  f.init = rep(0.5, n)
 
   # print(mean(y == ifelse(obj$linkinv(aaa) < 0.5, 0, 1)))
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
@@ -84,7 +83,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         w.new = sspline_fit$sw.new^2
         XX = sspline_fit$zw.new - (tr_Rtheta * w.new) %*% cw.new - sspline_fit$sw.new
         den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(w.new)/cand.lambda[k]))) / tr_n)^2
-        miss[f,k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+        # miss[f,k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+        miss[f,k] <- mean((testmu - y[testID])^2)
         measure[f, k] <- as.vector((t(XX) %*% XX) / den / tr_n)
 
         # testz = testfhat + (y[testID] - testmu) / testw
@@ -336,7 +336,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       num = (t(XX) %*% XX)/tr_n
       den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
       measure[f, k] <- as.vector(num / den)
-      miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+      # miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+      miss[f, k] <- mean((testmu - y[testID])^2)
       # print(measure[f, k] )
 
 
@@ -405,8 +406,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
 
   cvm <- apply(miss, 2, mean, na.rm = T)
-cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
-max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
+  cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+  max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
 
 
   plot(log(lambda_theta), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
