@@ -83,8 +83,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         w.new = sspline_fit$sw.new^2
         XX = sspline_fit$zw.new - (tr_Rtheta * w.new) %*% cw.new - sspline_fit$b.new * sspline_fit$sw.new
         den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(w.new)/cand.lambda[k]))) / tr_n)^2
-        # miss[f,k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-        miss[f,k] <- mean((testmu - y[testID])^2)
         measure[f, k] <- as.vector((t(XX) %*% XX) / den / tr_n)
 
         # testz = testfhat + (y[testID] - testmu) / testw
@@ -94,10 +92,9 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         # S = testRw %*% ginv(t(testRw) %*% testRw) %*% t(testRw)
         # df = sum(diag(S))
         # measure[f, k] <- rss / (1 - df/length(testID) + .1)^2 / length(testID)
-        # if(obj$family == "poisson") measure[f, k] <- mean(obj$dev.resids(y[testID], testmu, testw)) + t(c.new) %*% tr_Rtheta %*% c.new * tr_n * cand.lambda[k]
-        # if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-        # if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
-        # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID], obj))
+        if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+        if(obj$family == "gaussian") miss[f, k] <- mean((testmu - y[testID])^2)
+        if(obj$family == "poisson") miss[f, k] <- mean(obj$dev.resids(y[testID], testmu, rep(1, te_n)))
       }
     }
   }
@@ -336,8 +333,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       num = (t(XX) %*% XX)/tr_n
       den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
       measure[f, k] <- as.vector(num / den)
-      # miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-      miss[f, k] <- mean((testmu - y[testID])^2)
       # print(measure[f, k] )
 
       # testw = obj$variance(testmu)
@@ -351,9 +346,9 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       # S = l1 + l2
       # measure[f, k] <- rss / (1 - d * S/te_n + .1)^2 / te_n
       # measure[f, k] <- mean(KLD(y[testID], testfhat, obj))
-      # if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-      # if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
-      # if(obj$family == "poisson") measure[f, k] <- mean(KLD(testfhat, y[testID], obj))
+      if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
+      if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
+      if(obj$family == "poisson") measure[f, k] <- mean(obj$dev.resids(y[testID], testmu, rep(1, te_n)))
     }
   }
   measure[is.nan(measure)] <- NA
