@@ -22,7 +22,7 @@
 #' @export
 
 # time = unlist(y[, 'time'])
-# stauts = unlist(y[, 'status'])
+# status = unlist(y[, 'status'])
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
 {
   # library(survival)
@@ -30,10 +30,8 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfold
   d = length(wt)
 
   par(mfrow = c(3,2))
-  # initialize
-
   # solve theta
-  getc_cvfit = cv.getc(x, time, status, rep(1, d)/wt^2, nfolds, lambda0, one.std, type, kparam, algo) ## 초기??? ??????. ????????? ??????
+  getc_cvfit = cv.getc(x, time, status, rep(1, d)/wt^2, nfolds, lambda0, one.std, type, kparam, algo)
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
 
   # solve (theta) - 2nd

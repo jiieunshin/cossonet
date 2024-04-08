@@ -94,7 +94,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         # measure[f, k] <- rss / (1 - df/length(testID) + .1)^2 / length(testID)
         if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
         if(obj$family == "gaussian") miss[f, k] <- mean((testmu - y[testID])^2)
-        if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n))/2)
+        if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n)))
       }
     }
   }
