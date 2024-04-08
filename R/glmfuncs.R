@@ -44,7 +44,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     te_Rtheta <- wsGram(te_R, mscale)
 
     for (k in 1:length(cand.lambda)) {
-# print(k)
+    # print(k)
       if(algo == "CD"){
 
         # initialize
@@ -59,19 +59,19 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         Rw = tr_Rtheta * w
         cw = c.init / sqrt(w)
         sw = sqrt(w)
-        sspline_fit = sspline.cd(tr_Rtheta, y[trainID], ff, cand.lambda[k], obj, c.init)
+        fit = sspline.cd(tr_Rtheta, y[trainID], ff, cand.lambda[k], obj, c.init)
 
-        # sspline_fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
-        b.new = sspline_fit$b.new
-        c.new = sspline_fit$c.new
-        cw.new = sspline_fit$cw.new
+        # fit = .Call("Csspline", zw, Rw, cw, sw, tr_n, cand.lambda[k], PACKAGE = "cdcosso")
+        b.new = fit$b.new
+        c.new = fit$c.new
+        cw.new = fit$cw.new
       }
 
       if(algo == "QP"){
-        sspline_fit = sspline.QP(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
-        b.new = sspline_fit$b.new
-        c.new = sspline_fit$c.new
-        cw.new = sspline_fit$cw.new
+        fit = sspline.QP(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
+        b.new = fit$b.new
+        c.new = fit$c.new
+        cw.new = fit$cw.new
       }
       if(sum(is.nan(cw.new)) == tr_n){
         next
@@ -80,8 +80,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         testfhat = c(b.new + te_Rtheta %*% c.new)
         testmu = obj$linkinv(testfhat)
         # testw = obj$variance(testmu)
-        w.new = sspline_fit$sw.new^2
-        XX = sspline_fit$zw.new - (tr_Rtheta * w.new) %*% cw.new - sspline_fit$b.new * sspline_fit$sw.new
+        w.new = fit$sw.new^2
+        XX = fit$zw.new - (tr_Rtheta * w.new) %*% cw.new - fit$b.new * fit$sw.new
         den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(w.new)/cand.lambda[k]))) / tr_n)^2
         measure[f, k] <- as.vector((t(XX) %*% XX) / den / tr_n)
 
@@ -94,7 +94,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         # measure[f, k] <- rss / (1 - df/length(testID) + .1)^2 / length(testID)
         if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
         if(obj$family == "gaussian") miss[f, k] <- mean((testmu - y[testID])^2)
-        if(obj$family == "poisson") miss[f, k] <- mean(obj$dev.resids(y[testID], testmu, rep(1, te_n)))
+        if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n))/2)
       }
     }
   }
@@ -348,7 +348,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       # measure[f, k] <- mean(KLD(y[testID], testfhat, obj))
       if(obj$family == "binomial") measure[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
       if(obj$family == "gaussian") measure[f, k] <- mean((testmu - y[testID])^2)
-      if(obj$family == "poisson") measure[f, k] <- mean(obj$dev.resids(y[testID], testmu, rep(1, te_n)))
+      if(obj$family == "poisson") measure[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n)))
     }
   }
   measure[is.nan(measure)] <- NA
@@ -402,7 +402,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   cvm <- apply(miss, 2, mean, na.rm = T)
   cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
   max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
-
 
   plot(log(lambda_theta), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
   try(arrows(log(lambda_theta), cvm - cvsd, log(lambda_theta), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)

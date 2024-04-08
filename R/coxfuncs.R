@@ -32,6 +32,8 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
   RS = RiskSet(time, status)
 
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
+  miss <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
+
   for (f in 1:nfolds) {
     testID <- IDmat[!is.na(IDmat[, f]), f]
     trainID <- (1:n)[-testID]
@@ -72,10 +74,9 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
       num = t(XX) %*% diag(fit$w.new) %*% XX
       den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
       measure[f, k] <- as.vector(num / den / tr_n)
-      print(fit$b.new)
       print(measure[f, k])
       # UHU = fit$Hessian %*% fit$c.new - fit$Gradient / diag(fit$Hessian)
-      # measure[f, k] = Lik + sum(status[testID] == 1)/te_n^2 * (sum(diag(UHU))/(tr_n -  1) - sum(UHU)/(tr_n^2 - tr_n))
+      miss[f, k] = Lik
     }
   }
   # print(measure)
@@ -101,6 +102,17 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
   points(log(cand.lambda), cvm, pch = 15, col = 'red')
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
   # if(one.std) abline(v = log(cand.lambda)[std.id], col = 'darkgrey')
+
+  ###
+  miss_cvm <- apply(miss, 2, mean, na.rm = T)
+  misS_cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+  max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
+
+  plot(log(cand.lambda), miss_cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
+  try(arrows(log(cand.lambda), miss_cvm - misS_cvsd, log(cand.lambda), miss_cvm + misS_cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  points(log(cand.lambda), miss_cvm, pch = 15, col = 'red')
+  abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
+  ###
 
   c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox', lambda = optlambda, alpha = 0)$beta)
   fit = getc.cd(Rtheta, c.init, time, status, optlambda, RS)
@@ -289,9 +301,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
       measure[f, k] <- as.vector(num / den / tr_n)
 
-      # Lik = PartialLik(time[testID], status[testID], te_RS, te_G %*% theta.new)
       # UHU = GH$Hessian %*% model$c.new[trainID] - GH$Gradient / diag(GH$Hessian)
-      # measure[f, k] = Lik
+      miss[f, k] = Lik
       # + sum(status[testID] == 1)/te_n^2 * (sum(diag(UHU))/(tr_n -  1) - sum(UHU)/(tr_n^2 - tr_n))
     }
   }
@@ -326,6 +337,16 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   abline(v = xrange[id], col = 'darkgrey')
   # text(log(lambda_theta), par("usr")[4], labels = selm, pos = 1)
   if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
+
+  ##
+  cvm <- apply(miss, 2, mean, na.rm = T)
+  cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+  max_min <- c(min(cvm - cvsd, na.rm = TRUE), max(cvm + cvsd, na.rm = TRUE))
+
+  plot(log(lambda_theta), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
+  try(arrows(log(lambda_theta), cvm - cvsd, log(lambda_theta), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  points(log(lambda_theta), cvm, pch = 15, col = 'red')
+  abline(v = log(lambda_theta)[id], col = 'darkgrey', lty = 2)
 
   if(algo == "CD"){
     # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)

@@ -29,7 +29,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfold
   n = nrow(x)
   d = length(wt)
 
-  par(mfrow = c(2,2))
+  par(mfrow = c(3,2))
   # initialize
 
   # solve theta
@@ -41,12 +41,13 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfold
   sspline_cvfit = cv.getc(x, time, status, theta.new/wt^2, nfolds, lambda0, one.std, type, kparam, algo)
 
   par(mfrow = c(1,1))
-
+  object = list()
+  object$family = "Cox"
   out = list(data = list(x = x, time = time, status = status, R = getc_cvfit$R, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,
-             object = "Cox",
+             object,
              algorithm = algo)
 
   return(out)

@@ -32,12 +32,12 @@ predict.cdcosso = function(object, testx)
   c.new = object$c_step$c.new
   f.new = c(Rtheta %*% c.new + object$c_step$b.new)
 
-  if(object$object != "Cox"){
+  if(object$object$family != "Cox"){
     mu.new = object$object$linkinv(f.new)
     out = list(f.new = f.new, mu.new = mu.new)
   }
 
-  if(object$object == "Cox"){
+  if(object$object$family == "Cox"){
     out = list(f.new = f.new)
   }
 
