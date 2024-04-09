@@ -9,6 +9,18 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
+PartialLik = function (time, status, RS, K, a) {
+  pl = rep(NA, ncol(RS))
+  eventtime = unique(time[status == 1])
+  tie.size = as.numeric(table(time[status == 1]))
+  for (k in 1:ncol(RS)) {
+    failid = which(time == eventtime[k])
+    pl[k] = tie.size[k] * log(sum(exp(K[RS[,  k],] %*% a), na.rm = T))
+  }
+  pl = sum(pl) - t(status) %*% K %*% a
+  return(pl)
+}
+
 # time = unlist(y[, 'time'])
 # status = unlist(y[, 'status'])
 # mscale = rep(1, d)/wt^2
@@ -33,7 +45,6 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
 
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   miss <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
-
   for (f in 1:nfolds) {
     testID <- IDmat[!is.na(IDmat[, f]), f]
     trainID <- (1:n)[-testID]
@@ -68,13 +79,12 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
         # fit = getc.QP(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, cand.lambda[k])
       }
 
-      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_Rtheta %*% fit$c.new)
+      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_Rtheta, fit$c.new)
 
-      XX = fit$zw.new - tr_Rtheta %*% fit$c.new - fit$b.new
-      num = t(XX) %*% diag(fit$w.new) %*% XX
+      XX = fit$zw.new - (tr_Rtheta * fit$w.new) %*% fit$cw.new - fit$b.new * fit$sw.new
+      num = t(XX) %*% XX
       den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
       measure[f, k] <- as.vector(num / den / tr_n)
-      # print(measure[f, k])
       # UHU = fit$Hessian %*% fit$c.new - fit$Gradient / diag(fit$Hessian)
       miss[f, k] = Lik
     }
@@ -90,7 +100,8 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
   ylab = "Approximate cross-validation"
 
   # optimal lambda1
-  id = which.min(cvm)[1]
+  # id = which.min(cvm)[1]
+  id = 10
   optlambda = cand.lambda[id]
 
   # plotting error bar
@@ -126,16 +137,6 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
   return(out)
 }
 
-PartialLik = function (time, status, RS, fhat) {
-  pl = rep(NA, ncol(RS))
-  eventtime = unique(time[status == 1])
-  tie.size = as.numeric(table(time[status == 1]))
-  for (k in 1:ncol(RS)) {
-    failid = which(time == eventtime[k])
-    pl[k] = sum(fhat[failid]) - tie.size[k] * log(sum(exp(fhat[RS[,  k]]), na.rm = T))
-  }
-  return(-sum(pl)/length(time))
-}
 
 # Rtheta = tr_Rtheta
 # time = time[trainID]
@@ -159,23 +160,22 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
   sw = sqrt(w)
   cw.new = rep(0, n)
 
-  for(i in 1:40){ # outer iteration
+  for(i in 1:20){ # outer iteration
     for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
       R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
       cw.new[j] = L/R
 
-      loss = abs(cw-cw.new)
-      conv = max(loss) < 1e-6
-
-      if(conv) break
+      loss = abs(cw - cw.new)
+      conv1 = max(loss) < 1e-6
+      conv2 = sum(exp(R %*% (cw.new * sqrt(w))) == Inf) > 0
+      if(conv1 | conv2) break
       cw[j] = cw.new[j]  # if not convergence
 
     }
-    if(conv) break
+    if(conv1 | conv2) break
   }
-  if(i == 1 & !conv) cw.new = cw
-  # print(i)
+  if(i == 1 & !(conv1 | conv2)) cw.new = cw
   cw.new = cw.new
   c.new = cw.new * sqrt(w)
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
@@ -243,7 +243,8 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
   for (k in 1:n) {
     Sum.exp.eta.Grad = Sum.exp.eta.Hess = 0
     id = which(RS[k,] > 0)
-    exp.eta = as.numeric(exp(R[k,] %*% c.init))
+    eta = as.numeric(R[k,] %*% c.init)
+    exp.eta = exp(eta)
     for(r in id){
       Sum.exp.eta = sum(exp(R[RS[,r],] %*% c.init))
       Sum.exp.eta.Grad = Sum.exp.eta.Grad + exp.eta / Sum.exp.eta # {j in R_i} exp(R_j c)
@@ -252,7 +253,7 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
 
     Grad.Term = status[k] - Sum.exp.eta.Grad
     weight[k] = Sum.exp.eta.Hess
-    z[k] = exp.eta + Grad.Term / weight[k]
+    z[k] = eta + Grad.Term / weight[k]
   }
 
   return(list(z = z, weight = weight))
@@ -298,11 +299,11 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # GH = calculate_GH_for_theta(theta.new, tr_G, model$c.new[trainID], time[trainID], status[trainID], model$optlambda, tr_RS)
       Gw = tr_G * fit$w
       uw = fit$uw.new
-# print(fit$theta.new)
+print(fit$theta.new)
       XX = uw - Gw %*% fit$theta.new
       num = (t(XX) %*% XX)
 
-      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_G %*% fit$theta.new)
+      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_G, fit$theta.new)
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / tr_n)^2
       measure[f, k] <- as.vector(num / den / tr_n)
 
@@ -375,6 +376,7 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
   r = lambda_theta * gamma * n
 
   wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
+  # print(wz)
   w = wz$weight
   z = wz$z
 
@@ -413,7 +415,8 @@ calculate_wz_for_theta = function(init.theta, G, time, status, RS){
   for (k in 1:n) {
     Sum.exp.eta.Grad = Sum.exp.eta.Hess = 0
     id = which(RS[k,] > 0)
-    exp.eta = as.numeric(exp(G[k,] %*% init.theta))
+    eta = as.numeric(G[k,] %*% init.theta)
+    exp.eta = exp(eta)
     for(r in id){
       Sum.exp.eta = sum(exp(G[RS[,r],] %*% init.theta))
       Sum.exp.eta.Grad = Sum.exp.eta.Grad + exp.eta / Sum.exp.eta # {j in R_i} exp(R_j c)
@@ -422,7 +425,7 @@ calculate_wz_for_theta = function(init.theta, G, time, status, RS){
 
     Grad.Term = status[k] - Sum.exp.eta.Grad
     weight[k] = Sum.exp.eta.Hess
-    z[k] = exp.eta + Grad.Term / weight[k]
+    z[k] = eta + Grad.Term / weight[k]
   }
 
   return(list(z = z, weight = weight))
