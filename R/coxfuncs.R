@@ -87,7 +87,7 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
       num = t(XX) %*% XX
       den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
       measure[f, k] <- as.vector(num / den / tr_n)
-      # UHU = fit$Hessian %*% fit$c.new - fit$Gradient / diag(fit$Hessian)
+
       miss[f, k] = Lik
     }
   }
@@ -301,14 +301,12 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
       Gw = tr_G * sqrt(fit$w.new)
       XX = fit$z.new - tr_G %*% fit$theta.new - model$b.new
-      num = (t(XX) %*% diag(fit$w.new) %*% XX) / tr_n
+      num = t(XX) %*% diag(fit$w.new) %*% XX
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / tr_n)^2
-      measure[f, k] <- as.vector(num / den)
+      measure[f, k] <- as.vector(num / den / tr_n)
 
-      # UHU = GH$Hessian %*% model$c.new[trainID] - GH$Gradient / diag(GH$Hessian)
       Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_G, fit$theta.new, neg = FALSE)
       miss[f, k] = Lik
-      # + sum(status[testID] == 1)/te_n^2 * (sum(diag(UHU))/(tr_n -  1) - sum(UHU)/(tr_n^2 - tr_n))
     }
   }
 

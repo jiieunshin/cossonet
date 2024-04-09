@@ -317,7 +317,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       testfhat = c(te_G %*% theta.new)
       testmu = obj$linkinv(testfhat)
 
-      XX = model$z.new[trainID] - tr_G %*% theta.new - model$b.new * model$sw.new[trainID]
+      XX = model$z.new[trainID] - tr_G %*% theta.new - model$b.new
       num = t(XX) %*% diag(model$w.new[trainID]) %*% XX
       den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
       measure[f, k] <- as.vector(num / den /tr_n)
