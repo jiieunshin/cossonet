@@ -39,7 +39,9 @@ print(theta_cvfit$theta.new)
   sspline_cvfit = cv.getc(x, time, status, theta.new/wt^2, nfolds, lambda0, one.std, type, kparam, algo)
 
   par(mfrow = c(1,1))
+
   object = list()
+  object$object = "object"
   object$family = "Cox"
   out = list(data = list(x = x, time = time, status = status, R = getc_cvfit$R, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),

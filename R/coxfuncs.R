@@ -9,15 +9,17 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-PartialLik = function (time, status, RS, K, a) {
+PartialLik = function (time, status, RS, K, a, neg = FALSE) {
   pl = rep(NA, ncol(RS))
   eventtime = unique(time[status == 1])
   tie.size = as.numeric(table(time[status == 1]))
   for (k in 1:ncol(RS)) {
     failid = which(time == eventtime[k])
-    pl[k] = tie.size[k] * log(sum(exp(K[RS[,  k],] %*% a), na.rm = T))
+    pl[k] = tie.size[k] * log(sum(exp(K[RS[,  k],] %*% a), na.rm = T) + 1e-10)
   }
   pl = sum(pl) - t(status) %*% K %*% a
+
+  if(neg) pl = -pl
   return(pl)
 }
 
@@ -79,9 +81,9 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
         # fit = getc.QP(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, cand.lambda[k])
       }
 
-      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_Rtheta, fit$c.new)
+      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_Rtheta, fit$c.new, neg = FALSE)
 
-      XX = fit$zw.new - (tr_Rtheta * fit$w.new) %*% fit$cw.new - fit$b.new * fit$sw.new
+      XX = fit$zw.new - fit$Rw %*% fit$cw.new - fit$b.new * fit$sw.new
       num = t(XX) %*% XX
       den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
       measure[f, k] <- as.vector(num / den / tr_n)
@@ -97,16 +99,14 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
 
-  ylab = "Approximate cross-validation"
-
   # optimal lambda1
-  # id = which.min(cvm)[1]
-  id = 10
+  id = which.min(cvm)[1]
   optlambda = cand.lambda[id]
 
   # plotting error bar
   main = "Cox family"
   max_min <- c(min(cvm - cvsd), max(cvm + cvsd))
+  ylab = expression("GCV(" * lambda[0] * ")")
 
   plot(log(cand.lambda), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = max_min, type = 'n')
   try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
@@ -119,7 +119,7 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
   misS_cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
   max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
 
-  plot(log(cand.lambda), miss_cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
+  plot(log(cand.lambda), miss_cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = max_min, type = 'n')
   try(arrows(log(cand.lambda), miss_cvm - misS_cvsd, log(cand.lambda), miss_cvm + misS_cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
   points(log(cand.lambda), miss_cvm, pch = 15, col = 'red')
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
@@ -143,11 +143,10 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
 # status = status[trainID]
 # lambda0 = cand.lambda[k]
 # Risk = tr_RS
-
 getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
-  wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
+  wz = calculate_wz_for_c(scale(c.init), Rtheta, time, status, Risk)
   w = wz$weight
   z = wz$z
   b = 0
@@ -155,32 +154,34 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
 
   zw = z * sqrt(w)
   Rw = Rtheta * w
-  # cw = c.init / sqrt(w)
   cw = c.init / sqrt(w)
+  cw = c.init
   sw = sqrt(w)
-  cw.new = rep(0, n)
+  cw.new = rep(1, n)
 
   for(i in 1:20){ # outer iteration
     for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
       R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
-      cw.new[j] = L/R
+      upd = L/R
 
       loss = abs(cw - cw.new)
       conv1 = max(loss) < 1e-6
-      conv2 = sum(exp(R %*% (cw.new * sqrt(w))) == Inf) > 0
-      if(conv1 | conv2) break
-      cw[j] = cw.new[j]  # if not convergence
+      conv2 = sum(exp(R %*% (cw.new * sw)) == Inf) == 0
 
+      if(conv1 | conv2) break
+
+      cw[j] = cw.new[j] = upd
+      # cw[j] = cw.new[j]  # if not convergence
     }
     if(conv1 | conv2) break
   }
-  if(i == 1 & !(conv1 | conv2)) cw.new = cw
-  cw.new = cw.new
-  c.new = cw.new * sqrt(w)
+  if(i == 1 & (conv1 | conv2)) cw.new = cw
+
+  c.new = cw.new * sw
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
   # GH = calculate_GH_for_c(c.new, Rtheta, time, status, lambda0, Risk)
-  return(list(z.new = z, w.new = w, b.new = b.new, c.new = c.new, zw.new = zw, sw.new = sqrt(w), cw.new = cw.new))
+  return(list(Rw = Rw, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
 
@@ -245,6 +246,7 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
     id = which(RS[k,] > 0)
     eta = as.numeric(R[k,] %*% c.init)
     exp.eta = exp(eta)
+
     for(r in id){
       Sum.exp.eta = sum(exp(R[RS[,r],] %*% c.init))
       Sum.exp.eta.Grad = Sum.exp.eta.Grad + exp.eta / Sum.exp.eta # {j in R_i} exp(R_j c)
@@ -296,22 +298,20 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     for (k in 1:len) {
       # init.theta = as.vector(glmnet(Gw[trainID,], uw[trainID], family = "gaussian", lambda = lambda_theta[k])$beta)
       fit = gettheta.cd(init.theta, tr_G, time[trainID], status[trainID], model$b.new, (tr_n/2) * lambda0 * model$cw.new[trainID], lambda_theta[k], gamma, tr_RS)
-      # GH = calculate_GH_for_theta(theta.new, tr_G, model$c.new[trainID], time[trainID], status[trainID], model$optlambda, tr_RS)
-      Gw = tr_G * fit$w
-      uw = fit$uw.new
-print(fit$theta.new)
-      XX = uw - Gw %*% fit$theta.new
-      num = (t(XX) %*% XX)
 
-      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_G, fit$theta.new)
+      Gw = tr_G * sqrt(fit$w.new)
+      XX = fit$z.new - tr_G %*% fit$theta.new - model$b.new
+      num = (t(XX) %*% diag(fit$w.new) %*% XX) / tr_n
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / tr_n)^2
-      measure[f, k] <- as.vector(num / den / tr_n)
+      measure[f, k] <- as.vector(num / den)
 
       # UHU = GH$Hessian %*% model$c.new[trainID] - GH$Gradient / diag(GH$Hessian)
-      miss[f, k] = -Lik
+      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_G, fit$theta.new, neg = FALSE)
+      miss[f, k] = Lik
       # + sum(status[testID] == 1)/te_n^2 * (sum(diag(UHU))/(tr_n -  1) - sum(UHU)/(tr_n^2 - tr_n))
     }
   }
+
   measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
@@ -335,9 +335,10 @@ print(fit$theta.new)
   # plotting error bar
   main = "Cox Family"
   max_min <- c(min(cvm - cvsd, na.rm = TRUE), max(cvm + cvsd, na.rm = TRUE))
+  ylab = expression("GCV(" * lambda[theta] * ")")
 
   xrange = log(lambda_theta)
-  plot(xrange, cvm, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = "Approximate cross-validation", ylim = max_min, type = 'n')
+  plot(xrange, cvm, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = max_min, type = 'n')
   arrows(xrange, cvm - cvsd, xrange, cvm + cvsd, angle = 90, code = 3, length = 0.1, col = 'gray')
   points(xrange, cvm, pch = 15, col = 'red')
   abline(v = xrange[id], col = 'darkgrey')
@@ -349,10 +350,11 @@ print(fit$theta.new)
   cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
   max_min <- c(min(cvm - cvsd, na.rm = TRUE), max(cvm + cvsd, na.rm = TRUE))
 
-  plot(log(lambda_theta), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "generalized cross validation", ylim = max_min, type = 'n')
+  plot(log(lambda_theta), cvm, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood", ylim = max_min, type = 'n')
   try(arrows(log(lambda_theta), cvm - cvsd, log(lambda_theta), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
   points(log(lambda_theta), cvm, pch = 15, col = 'red')
   abline(v = log(lambda_theta)[id], col = 'darkgrey', lty = 2)
+  if(one.std) abline(v = log(lambda_theta)[std.id], col = 'darkgrey')
 
   if(algo == "CD"){
     # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
@@ -376,7 +378,6 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
   r = lambda_theta * gamma * n
 
   wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
-  # print(wz)
   w = wz$weight
   z = wz$z
 
@@ -388,24 +389,24 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
   theta = init.theta
   for(iter in 1:20){
     for(j in 1:d){
-      theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
+      upd = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
+      upd = ifelse(upd > 0 & r < abs(upd), upd, 0)
+      upd = upd / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
 
-      theta.new[j] = ifelse(theta.new[j] > 0 & r < abs(theta.new[j]), theta.new[j], 0)
-      theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
+      loss = abs(theta - upd)
+      conv1 = max(loss) < 1e-6
+      conv2 = sum(exp(G %*% theta.new) == Inf) > 0
 
-      loss = abs(theta[j] - theta.new[j])
-      conv = max(loss) < 1e-20
+      if(conv1 | conv2) break
 
-      if(iter != 1 & conv) break
-      theta[j] = theta.new[j]
+      theta[j] = theta.new[j] = upd
     }
-    if(iter != 1 & conv) break
+    if(conv1 | conv2) break
   }
 
-  if(iter == 1 & !conv){
-    theta.new = rep(0, d)
-  }
-  return(list(uw.new = uw, w.new = w, theta.new = theta.new))
+  # if(i == 1 & (conv1 | conv2)) theta.new = rep(0, d)
+
+  return(list(z.new = z, w.new = w, theta.new = theta.new))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){
