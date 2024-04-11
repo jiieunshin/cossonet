@@ -68,7 +68,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
       }
 
       if(algo == "QP"){
-        fit = sspline.QP(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init[trainID])
+        c.init = as.vector(glmnet(tr_Rtheta, y[trainID], family = 'gaussian', lambda = cand.lambda[k])$beta)
+        fit = sspline.QP(tr_Rtheta, y[trainID], ff, cand.lambda[k], obj, c.init)
         b.new = fit$b.new
         c.new = fit$c.new
         cw.new = fit$cw.new
@@ -146,10 +147,9 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
 
   if(algo == "CD"){
-    ff = f.init
-    mu = obj$linkinv(ff)
+    mu = obj$linkinv(f.init)
     w = obj$variance(mu)
-    z = ff + (y - mu) / w
+    z = f.init + (y - mu) / w
 
     c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
     zw = z * sqrt(w)
@@ -157,10 +157,10 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     cw = c.init / sqrt(w)
     sw = sqrt(w)
 
-    fit = sspline.cd(Rtheta, y, ff, optlambda, obj, c.init)
+    fit = sspline.cd(Rtheta, y, f.init, optlambda, obj, c.init)
 
     # fit = .Call("Csspline", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
-    f.new <- c(fit$b.new + Rtheta %*% fit$c.new)
+    f.new = c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
@@ -171,6 +171,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   }
 
   if(algo == "QP"){
+    c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
     fit = sspline.QP(Rtheta, y, f.init, optlambda, obj, c.init)
     f.new = c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
@@ -192,7 +193,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
 sspline.cd = function (R, y, f, lambda0, obj, c.init)
 {
-
   n = length(y)
   mu = obj$linkinv(f)
 
@@ -229,13 +229,12 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
   return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
-
 sspline.QP = function (R, y, f, lambda0, obj, c.init)
 {
   n = length(y)
+  mu = obj$linkinv(f)
 
   # initialize
-  mu = obj$linkinv(f)
   w = obj$variance(mu)
   z = f + (y - mu) / w
   b = 0
@@ -244,25 +243,28 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   Rw = R * w
   cw = c.init / sqrt(w)
   sw = sqrt(w)
+  cw.new = rep(0, n)
+  for(i in 1:20){ # outer iteration
 
-  # iteration
+    for(j in 1:n){
+      Dmat = t(R) %*% R + n * lambda0 * R
+      dvec = t(zw - b * sw) %*% R
+      cw.new = ginv(Dmat) %*% dvec
 
-  for(i in 1:20){
+      loss = abs(cw-cw.new)
+      conv = max(loss) < 1e-6
 
-    D = (t(Rw) %*% Rw + n * lambda0 * Rw)
-    dvec = t(Rw) %*% (zw - b*sw)
-    cw.new = MASS::ginv(D) %*% dvec
+      if(conv) break
+      cw[j] = cw.new[j]  # if not convergence
 
-    loss = abs(cw-cw.new)
-    conv = max(loss) < 1e-6
-
+    }
     if(conv) break
-    cw =  cw.new  # if not convergence
   }
   if(i == 1 & !conv) cw.new = cw
-  c.new = cw.new * sqrt(w)
+  cw.new = cw.new
+  c.new = cw.new * sw
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-  return(list(w.new = w, b.new = b.new, c.new = c.new, zw.new = z * w, sw.new = sqrt(w), cw.new = cw.new))
+  return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
 # LHS = t(R1) %*% R1 + 2 * n * lambda0 * R2
@@ -311,8 +313,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       }
 
       if(algo == "QP") {
-        theta.new = nng.QP(model$zw.new[trainID], model$b.new, model$cw.new[trainID], model$w.new[trainID], tr_G,
-                         theta = init.theta, lambda0, lambda_theta[k], gamma)
+        theta.new = nng.QP(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
       }
 
       testfhat = c(te_G %*% theta.new)
@@ -401,16 +402,12 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   if(algo == "CD"){
     theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
     # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   }
 
   if(algo == "QP"){
-    theta.new = nng.QP(model$zw.new, model$b.new, model$cw.new, model$w.new, G,
-                     init.theta, lambda0, optlambda, gamma, obj)
-    f.new = c(G %*% as.matrix(theta.new))
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
+    theta.new = nng.QP(Gw, uw, theta = init.theta, optlambda, gamma)
   }
-
+  out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   return(out)
 }
 
@@ -452,35 +449,33 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
 }
 
 
-nng.QP = function (zw, b, cw, w, G, theta, lambda0, lambda_theta, gamma, obj)
+nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
 {
-  n = nrow(G)
-  d = ncol(G)
+  n = nrow(Gw)
+  d = ncol(Gw)
+  r = lambda_theta * gamma * n
+  theta.new = rep(0, d)
 
-  Gw = G * sqrt(w)
-  uw = zw - b * sqrt(w) - (n/2) * lambda0 * cw
-
-  # print(algo)
-  Amat = diag(1, d)
-  bvec = rep(0, d)
   for(i in 1:20){
-    Dmat = 2 * (t(Gw) %*% Gw  + diag(lambda_theta * (1-gamma), d))
-    dvec = c(2 * t(uw) %*% Gw - gamma * lambda_theta)
+    for(j in 1:d){
+      Dmat = t(Gw) %*% Gw + n * lambda_theta * gamma
+      dvec = t(uw) %*% Gw + n * lambda_theta
+      Amat = diag(1, d)
+      bvec = rep(0, d)
+      theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)
 
-    # dvec = ifelse(dvec > 0 & abs(dvec) > lambda_theta * gamma, dvec, 0)
-    # theta.new = c(ginv(Dmat) %*% dvec)
-    theta.new <- solve.QP(Dmat, dvec, t(Amat), bvec)$solution
+      loss = abs(theta - theta.new)
+      conv = max(loss) < 1e-20
 
-    theta.new[theta.new < 1e-10] <- 0
-    if(sum(theta.new == 0) < d) theta.new = theta.new / sd(theta.new)
-
-    loss = abs(theta-theta.new)
-    conv = max(loss) < 1e-10
+      if(conv) break
+      theta[j] = theta.new[j]
+    }
     if(conv) break
-
-    theta = theta.new
   }
-  return(theta.new)
+
+  if(i == 1 & !conv) theta = rep(0, d)
+
+  return(theta)
 }
 
 
