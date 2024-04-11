@@ -32,6 +32,8 @@ cdcosso(
 
 \item{kernel}{Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".}
 
+\item{effect}{Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".}
+
 \item{algo}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
 
 \item{wt}{Weight vector for each explanatory variable. The default is to use the same weight of 1 for all variables.}

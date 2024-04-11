@@ -88,19 +88,18 @@ data_generation = function(n, p, rho, a,
 
     if(type == 'interaction'){
 
-      if(p <= 6) stop("dimension size should be larger than 6.")
+      if(p <= 5) stop("dimension size should be larger than 6.")
 
       x = matrix(runif(n*p), n, p)
 
-      Sigma = matrix(rho, 6, 6)
+      Sigma = matrix(rho, 5, 5)
       diag(Sigma) = 1
 
-      x_sig = rmvnorm(n, mean = rep(0, 6), sigma = Sigma)
-      x_nois = matrix(rnorm(n * (p-6)), n, p-6)
+      x_sig = rmvnorm(n, mean = rep(0, 5), sigma = Sigma)
+      x_nois = matrix(rnorm(n * (p-5)), n, p-5)
       x = cbind(x_sig, x_nois) + rnorm(n, 0, 0.01)
 
-      f = 3*g1(x[,1])*g2(x[,2]) + 5*g3(x[,3])*g4(x[,4]) + 4*g5(x[,5])*g6(x[,6]) +
-        3*g2(x[,2])*g5(x[,5]) + 5*g2(x[,2])*g6(x[,6]) + 4*g5(x[,5])*g6(x[,6])
+      f = 3*g1(x[,1])*g2(x[,2]) + 2*g3(x[,3])*g4(x[,4]) + 3*g4(x[,4])*g5(x[,5]) + 2*g1(x[,1])*g4(x[,4]) + 3*g2(x[,2])*g3(x[,3])
 
       prob = exp(f)/(exp(f) + 1)
       y = rbinom(n, 1, prob)
@@ -129,22 +128,22 @@ data_generation = function(n, p, rho, a,
 
   }else if(type == 'survival'){
 
-    if(p <= 6) stop("dimension size should be larger than 6.")
+    if(p <= 5) stop("dimension size should be larger than 6.")
     if(missing(a)) a = 0.3
 
     x = matrix(runif(n*p), n, p)
 
-    Sigma = matrix(rho, 6, 6)
+    Sigma = matrix(rho, 5, 5)
     diag(Sigma) = 1
 
-    x_sig = rmvnorm(n, mean = rep(0, 6), sigma = Sigma)
-    x_nois = matrix(rnorm(n * (p-6)), n, p-6)
+    x_sig = rmvnorm(n, mean = rep(0, 5), sigma = Sigma)
+    x_nois = matrix(rnorm(n * (p-5)), n, p-5)
     x = cbind(x_sig, x_nois)
 
-    f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]) + g6(x[,6])) + rnorm(n, 0, .1)
+    f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5])) + rnorm(n, 0, .1)
 
     surTime = rexp(n, exp(f))
-    cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
+    cenTime = rexp(n, exp(-f) * runif(1, 4, 5))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
 
     return(list(x = x, f = f, y = y))

@@ -236,11 +236,11 @@ wsGram = function (Gramat, mscale)
   return(KK)
 }
 
-rescale = function (x)
+rescale_theta = function (x)
 {
-  if (length(unique(x)) > 6)
-    return((x - min(x))/(max(x) - min(x)))
-  else return(x)
+  d = length(x)
+  if(sum(x == 0)) x = rep(1e-10, d)
+  return(x)
 }
 
 cvsplitID = function (n, folds)

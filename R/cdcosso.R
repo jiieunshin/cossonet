@@ -9,6 +9,7 @@
 #' @param y Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).
 #' @param family Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
 #' @param kernel Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
+#' @param effect Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
 #' @param algo Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
 #' @param wt Weight vector for each explanatory variable. The default is to use the same weight of 1 for all variables.
 #' @param kparam Kernel parameter values to use for SVM models.
@@ -26,9 +27,9 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'gaussian'
+# family = 'binomial'
 # gamma = 0.8
-# kernel = "gaussian"
+# kernel = "spline"
 # one.std = TRUE
 # scale = T
 # wt = rep(1, ncol(x))
@@ -77,11 +78,11 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
   if(missing(lambda0)){
-    lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
+    lambda0 = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20))
   }
 
   if(missing(lambda_theta))
-    lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
+    lambda_theta = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20))
 
   if (scale){   # min-max scale
     x = apply(x, 2, rescale)

@@ -35,7 +35,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfold
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
 print(theta_cvfit$theta.new)
   # solve (theta) - 2nd
-  theta.new = rescale_theta(theta_cvfit$theta.new, FALSE)
+  theta.new = rescale_theta(theta_cvfit$theta.new)
   sspline_cvfit = cv.getc(x, time, status, theta.new/wt^2, nfolds, lambda0, one.std, type, kparam, algo)
 
   par(mfrow = c(1,1))
