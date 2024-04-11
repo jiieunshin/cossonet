@@ -9,7 +9,7 @@ data_generation(
   p,
   rho,
   a,
-  type = c("indep", "group-effect", "additive", "interaction", "survival"),
+  type = c("indep", "linear", "additive", "interaction", "survival"),
   response = c("regression", "classification", "count")
 )
 }
