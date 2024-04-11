@@ -13,14 +13,14 @@
 #'
 #' @return a list containing the predicted value for the test data (f.new) and the transformed value of that predicted value (mu.new).
 #' @export
-data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "additive", "interaction", "survival"),
+data_generation = function(n, p, rho, a,
+                           type = c("indep", "linear", "additive", "interaction", "survival"),
                            response = c("regression", "classification", "count")){
   g1 = function(t) t/4
   g2 = function(t) (t/2)^2 - 1
   g3 = function(t) exp(3*t)/(1+exp(3*t))
   g4 = function(t) sin(t)^3
   g5 = function(t) sin(1.4*t)
-  g6 = function(t) exp(-t/2) * sin(t*2) / 3
 
   if(missing(type))
     type = "indep"
@@ -28,7 +28,7 @@ data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "addi
 
   if(missing(n)) n = 200
   if(missing(p)) p = 10
-  if(missing(rho)) rho = 0.4
+  if(missing(rho)) rho = 0.5
 
   if(type != 'survival'){
 
@@ -45,11 +45,11 @@ data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "addi
       x_nois = matrix(rnorm(n * (p-5)), n, p-5)
       x = cbind(x_sig, x_nois)
       pi = exp(x %*% beta) / (exp(x %*% beta) + 1)
-      y = rbinom(n, 1, pi)
+      f = rbinom(n, 1, pi)
 
     }
 
-    if(type == 'group-effect'){
+    if(type == 'linear'){
       Sigma = matrix(rho, 5, 5)
       diag(Sigma) = 1
 
@@ -57,34 +57,32 @@ data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "addi
       x_sig = rmvnorm(n, mean = rep(0, 5), sigma = Sigma)
       x_nois = matrix(rnorm(n * (p-5)), n, p-5)
       x = cbind(x_sig, x_nois)
-      pi = exp(x %*% beta) / (exp(x %*% beta) + 1)
-      y = rbinom(n, 1, pi)
+      f = x %*% beta
     }
 
     if(type == "additive"){
-      if(p <= 6) stop("dimension size should be larger than 6.")
+      if(p <= 5) stop("dimension size should be larger than 6.")
 
-      Sigma = matrix(rho, 6, 6)
+      Sigma = matrix(rho, 5, 5)
       diag(Sigma) = 1
 
-      x_sig = rmvnorm(n, mean = rep(0, 6), sigma = Sigma)
-      x_nois = matrix(rnorm(n * (p-6)), n, p-6)
+      x_sig = rmvnorm(n, mean = rep(0, 5), sigma = Sigma)
+      x_nois = matrix(rnorm(n * (p-5)), n, p-5)
       x = cbind(x_sig, x_nois)
       # Set the outer margins
-      # par(oma = c(0, 0, 0, 0))
+      par(oma = c(0, 0, 0, 0))
 
       # Set the inner margin
-      # par(mar = c(4, 4, 3, 1))
-      # par(mfrow = c(2,3))
-      # plot(x[,1], g1(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
-      # plot(x[,2], g2(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
-      # plot(x[,3], g3(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
-      # plot(x[,4], g4(x[,4]), cex = .6, pch = 16, xlab = 'x4', ylab = 'f4')
-      # plot(x[,5], g5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
-      # plot(x[,6], g6(x[,6]), cex = .6, pch = 16, xlab = 'x6', ylab = 'f6')
-      # par(mfrow = c(1,1))
+      par(mar = c(4, 4, 3, 1))
+      par(mfrow = c(2,3))
+      plot(x[,1], g1(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
+      plot(x[,2], g2(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
+      plot(x[,3], g3(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
+      plot(x[,4], g4(x[,4]), cex = .6, pch = 16, xlab = 'x4', ylab = 'f4')
+      plot(x[,5], g5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
+      par(mfrow = c(1,1))
 
-      f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]) + g6(x[,6])) + rnorm(n, 0, 1)
+      f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]))
 
     }
 
@@ -111,21 +109,23 @@ data_generation = function(n, p, rho, a, type = c("indep", "group-effect", "addi
     }
 
     if(response == "regression"){
-      y = f
+      out = list(x = x, y = f)
     }
 
     if(response == "classification"){
       prob = exp(f)/(exp(f) + 1)
       # plot(prob)
       y = rbinom(n, 1, prob)
+      out = list(x = x, f = f, y = y)
     }
 
     if(response == "count"){
       mu = exp(f)
       mu = ifelse(mu > 100, 100, mu)
       y = rpois(n, mu)
+      out = list(x = x, f = f, y = y)
     }
-    return(list(x = x, f = f, y = y))
+    return(out)
 
   }else if(type == 'survival'){
 

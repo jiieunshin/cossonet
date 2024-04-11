@@ -26,7 +26,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'binomial'
+# family = 'gaussian'
 # gamma = 0.8
 # kernel = "gaussian"
 # one.std = TRUE
@@ -35,7 +35,7 @@
 # kparam = 1
 # nfolds =5
 cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin", "svm", "Cox"),
-                    kernel = c("linear", "gaussian", "poly", "spline", "anova_gaussian", "gaussian2"),
+                    kernel = c("linear", "gaussian", "poly", "spline"), effect = c("main", "interaction"),
                     algo = c("CD", "QP"), wt = rep(1, ncol(x)),
                     kparam = 1, lambda0, lambda_theta, M, gamma = 0.3, nfolds = 5, one.std = TRUE, scale = TRUE, cpus)
 {
@@ -61,7 +61,6 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
     obj = list(disp = NA, link = link)
   }
 
-
   if(missing(kernel))
     type = 'gaussian'
   else
@@ -69,6 +68,13 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
 
   if(missing(algo))
     algo = "CD"
+
+  if(missing(effect))
+    effect = 'main'
+  else
+    effect = match.arg(kernel)
+
+  if(effect == "interaction") kernel = paste0(kernel, "2")
 
   if(missing(lambda0)){
     lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))

@@ -11,11 +11,14 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 #'
+
 metric = function(true, est){
   result_tab = table(true, est)
   if(dim(result_tab)[2] == 1){
     result_tab = cbind(0, result_tab)}
 
+  tp = result_tab[4]
+  fp = result_tab[3]
   # result.tab = table(te$Y, pred$Yhat)
   prec_class = diag(result_tab)/colSums(result_tab)
   prec_class[is.na(prec_class)] = 0
@@ -25,5 +28,5 @@ metric = function(true, est){
   recall = mean(recal_class)
   f1_score = 2 * (precision * recall) / (precision + recall)
 
-  return(list(precision = precision, recall = recall, f1_score = f1_score))
+  return(list(tp = tp, fp = fp, precision = precision, recall = recall, f1_score = f1_score))
 }

@@ -16,11 +16,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   }
 
   Rtheta <- wsGram(R, mscale)
-
-  # f.init = c(Rtheta %*% c.init)
   f.init = rep(0.5, n)
 
-  # print(mean(y == ifelse(obj$linkinv(aaa) < 0.5, 0, 1)))
   measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   miss <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
   for (f in 1:nfolds) {
@@ -34,6 +31,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
     tr_R = array(NA, c(tr_n, tr_n, d))
     te_R = array(NA, c(te_n, tr_n, d))
+    te2_R = array(NA, c(te_n, te_n, d))
 
     for(j in 1:d){
       tr_R[, , j] = K$K[[j]][trainID, trainID]
@@ -42,6 +40,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
     tr_Rtheta <- wsGram(tr_R, mscale)
     te_Rtheta <- wsGram(te_R, mscale)
+    te2_Rtheta <- wsGram(te2_R, mscale)
 
     for (k in 1:length(cand.lambda)) {
     # print(k)
@@ -54,7 +53,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         z = ff + (y[trainID] - mu) / w
 
         c.init = as.vector(glmnet(tr_Rtheta, y[trainID], family = 'gaussian', lambda = cand.lambda[k])$beta)
-        # c.init = rep(1, tr_n)
         zw = z * sqrt(w)
         Rw = tr_Rtheta * w
         cw = c.init / sqrt(w)
@@ -80,19 +78,16 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         # validation
         testfhat = c(b.new + te_Rtheta %*% c.new)
         testmu = obj$linkinv(testfhat)
+        testw = obj$variance(testmu)
+        testz = testfhat + (y[testID] - testmu) / testw
 
         XX = fit$zw.new - fit$Rw %*% fit$cw.new - fit$b.new * fit$sw.new
         num = t(XX) %*% XX
         den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
         measure[f, k] <- as.vector( num / den / tr_n)
 
-        # testz = testfhat + (y[testID] - testmu) / testw
-        # testzw = testz * sqrt(testw)
-        # testRw = te_Rtheta * testw
-        # rss <- t(testzw - testRw %*% cw.new - b.new * sqrt(testw)) %*% (testzw - testRw %*% cw.new - b.new * sqrt(testw)) + .1
-        # S = testRw %*% ginv(t(testRw) %*% testRw) %*% t(testRw)
-        # df = sum(diag(S))
-        # measure[f, k] <- rss / (1 - df/length(testID) + .1)^2 / length(testID)
+        # measure[f, k] <- mean(KLD(te_y, testfhat, obj))
+
         if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
         if(obj$family == "gaussian") miss[f, k] <- mean((testmu - y[testID])^2)
         if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n)))
@@ -206,7 +201,7 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
   cw.new = rep(0, n)
-  for(i in 1:20){ # outer iteration
+  for(i in 1:10){ # outer iteration
 
     for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
@@ -248,23 +243,18 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
   cw.new = rep(0, n)
-  for(i in 1:20){ # outer iteration
+  for(i in 1:10){ # outer iteration
+    Dmat = t(R) %*% R + n * lambda0 * R
+    dvec = as.vector(t(zw - b * sw) %*% R)
+    cw.new = ginv(Dmat) %*% dvec
 
-    for(j in 1:n){
-      Dmat = t(R) %*% R + n * lambda0 * R
-      dvec = as.vector(t(zw - b * sw) %*% R)
-      cw.new = ginv(Dmat) %*% dvec
+    loss = abs(cw-cw.new)
+    conv = max(loss) < 1e-6
 
-      loss = abs(cw-cw.new)
-      conv = max(loss) < 1e-6
-
-      if(conv) break
-      cw[j] = cw.new[j]  # if not convergence
-
-    }
     if(conv) break
+    cw = cw.new  # if not convergence
   }
-  if(i == 1 & !conv) cw.new = cw
+
   cw.new = cw.new
   c.new = cw.new * sw
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
@@ -327,19 +317,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       num = t(XX) %*% diag(model$w.new[trainID]) %*% XX
       den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
       measure[f, k] <- as.vector(num / den /tr_n)
-      # print(measure[f, k] )
+      # measure[f, k] <- mean(KLD(te_y, testfhat, obj))
 
-      # testw = obj$variance(testmu)
-      # testz = testfhat + (y[testID] - testmu) / testw
-      # testzw = testz * sqrt(testw)
-      # testGw = te_G * sqrt(testw)
-      # testuw = testzw - model$b.new * sqrt(testw) - (te_n/2) * lambda0 * model$cw.new[testID]
-      # rss <- t(testuw - testGw %*% theta.new) %*% (testuw - testGw %*% theta.new) + .1
-      # l1 = gamma * sum(abs(theta.new)) + (1-gamma) * norm(theta.new, "2")
-      # l2 = gamma * sum(abs(ginv(theta.new))) + (1-gamma) * norm(ginv(theta.new), "2")
-      # S = l1 + l2
-      # measure[f, k] <- rss / (1 - d * S/te_n + .1)^2 / te_n
-      # measure[f, k] <- mean(KLD(y[testID], testfhat, obj))
       if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
       if(obj$family == "gaussian") miss[f, k] <- mean((testmu - y[testID])^2)
       if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n)))
@@ -431,7 +410,7 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
-  for(i in 1:20){
+  for(i in 1:10){
     for(j in 1:d){
       theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
 
@@ -460,12 +439,21 @@ nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
-  Dmat = t(Gw) %*% Gw + n * lambda_theta * gamma
-  dvec = t(uw) %*% Gw + n * lambda_theta
-  Amat = diag(1, d)
-  bvec = rep(0, d)
-  theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)$solution
-  theta.new[theta.new < 1e-8] = 0
+  for(i in 1:10){ # outer iteration
+    Dmat = t(Gw) %*% Gw + diag(n * lambda_theta * gamma, d)
+    dvec = t(uw) %*% Gw + n * lambda_theta * (1-gamma)
+    Amat = diag(1, d)
+    bvec = rep(0, d)
+    theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)$solution
+    theta.new[theta.new < 1e-8] = 0
+
+    loss = abs(theta - theta.new)
+    conv = max(loss) < 1e-8
+
+    if(conv) break
+    theta = theta.new
+  }
+
   return(theta.new)
 }
 
