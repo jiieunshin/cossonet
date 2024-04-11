@@ -178,9 +178,9 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
 
-    out = list(IDmat = IDmat, measure = measure, R = R, f.new = f.new, zw.new = z.new * w.new, b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, w.new = w.new, optlambda = optlambda, conv = TRUE)
-  }
+    out = list(IDmat = IDmat, measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
+               z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
+               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)  }
 
   rm(K)
   rm(Rtheta)
@@ -460,26 +460,13 @@ nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
-  for(i in 1:20){
-    for(j in 1:d){
-      Dmat = t(Gw) %*% Gw + n * lambda_theta * gamma
-      dvec = t(uw) %*% Gw + n * lambda_theta
-      Amat = diag(1, d)
-      bvec = rep(0, d)
-      theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)$solution
-
-      loss = abs(theta - theta.new)
-      conv = max(loss) < 1e-20
-
-      if(conv) break
-      theta[j] = theta.new[j]
-    }
-    if(conv) break
-  }
-
-  if(i == 1 & !conv) theta = rep(0, d)
-
-  return(theta)
+  Dmat = t(Gw) %*% Gw + n * lambda_theta * gamma
+  dvec = t(uw) %*% Gw + n * lambda_theta
+  Amat = diag(1, d)
+  bvec = rep(0, d)
+  theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)$solution
+  theta.new[theta.new < 1e-8] = 0
+  return(theta.new)
 }
 
 
