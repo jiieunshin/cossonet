@@ -94,7 +94,6 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
   # print(measure)
   rm(tr_Rtheta)
   rm(te_Rtheta)
-
   measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
@@ -146,7 +145,7 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
 getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
-  wz = calculate_wz_for_c(scale(c.init), Rtheta, time, status, Risk)
+  wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
   w = wz$weight
   z = wz$z
   b = 0
@@ -154,36 +153,30 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
 
   zw = z * sqrt(w)
   Rw = Rtheta * w
-  cw = c.init / sqrt(w)
   cw = c.init
+  cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
-  cw.new = rep(1, n)
 
   for(i in 1:20){ # outer iteration
     for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
       R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
-      upd = L/R
+      temp[j] = L/R
 
-      loss = abs(cw - cw.new)
+      loss = abs(cw - temp)
       conv1 = max(loss) < 1e-6
-      conv2 = sum(exp(R %*% (cw.new * sw)) == Inf) == 0
 
-      if(conv1 | conv2) break
-
-      cw[j] = cw.new[j] = upd
-      # cw[j] = cw.new[j]  # if not convergence
+      if(conv1) break
+      cw[j] <- cw.new[j] <- temp[j]
     }
-    if(conv1 | conv2) break
+    if(conv1) break
   }
-  if(i == 1 & (conv1 | conv2)) cw.new = cw
 
   c.new = cw.new * sw
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-  # GH = calculate_GH_for_c(c.new, Rtheta, time, status, lambda0, Risk)
+
   return(list(Rw = Rw, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
-
 
 # R = tr_Rtheta
 # time = time[trainID]
@@ -309,7 +302,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       miss[f, k] = Lik
     }
   }
-
+  print(measure)
+  print(miss)
   measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
   cvm <- apply(measure, 2, mean, na.rm = T)
   cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
@@ -382,27 +376,58 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
   uw = (z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
   # uw = u * sqrt(w)
-
-  theta.new = rep(0, d)
-  theta = init.theta
+  theta = rep(1, d)
+  theta.new <- temp <- init.theta
   for(iter in 1:20){
     for(j in 1:d){
-      upd = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
-      upd = ifelse(upd > 0 & r < abs(upd), upd, 0)
-      upd = upd / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
+      temp[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
+      temp[j] = ifelse(temp[j] > 0 & r < abs(temp[j]), temp[j], 0)
+      temp[j] = temp[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
 
-      loss = abs(theta - upd)
+      loss = abs(theta - temp)
       conv1 = max(loss) < 1e-6
-      conv2 = sum(exp(G %*% theta.new) == Inf) > 0
+      # conv2 = sum(exp(G %*% theta.new) == Inf) > 0
 
-      if(conv1 | conv2) break
-
-      theta[j] = theta.new[j] = upd
+      if(conv1) break
+      theta[j] <- theta.new[j] <- temp[j]
     }
-    if(conv1 | conv2) break
+    if(conv1) break
   }
-
+print(theta.new)
   # if(i == 1 & (conv1 | conv2)) theta.new = rep(0, d)
+
+  return(list(z.new = z, w.new = w, theta.new = theta.new))
+}
+
+
+gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, gamma, Risk){
+  n = nrow(G)
+  d = ncol(G)
+  r = lambda_theta * gamma * n
+
+  wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
+  w = wz$weight
+  z = wz$z
+
+  uw = (z * sqrt(w)) - bhat * sqrt(w) - const
+  Gw = G * sqrt(w)
+  # uw = u * sqrt(w)
+  theta = init.theta
+  theta.new = rep(0, d)
+  for(i in 1:20){
+    for(j in 1:d){
+      theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
+      theta.new[j] = ifelse(theta.new[j] > 0 & r < abs(theta.new[j]), theta.new[j], 0)
+      theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
+
+      loss = abs(theta - theta.new)
+      conv = max(loss) < 1e-6
+
+      if(conv) break
+      theta[j] = theta.new[j]
+    }
+    if(conv) break
+  }
 
   return(list(z.new = z, w.new = w, theta.new = theta.new))
 }
