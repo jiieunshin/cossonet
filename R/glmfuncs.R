@@ -229,6 +229,10 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
   return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
+# R = tr_Rtheta
+# y = y[trainID]
+# f = f.init[trainID]
+# lambda0 = cand.lambda[k]
 sspline.QP = function (R, y, f, lambda0, obj, c.init)
 {
   n = length(y)
@@ -248,7 +252,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 
     for(j in 1:n){
       Dmat = t(R) %*% R + n * lambda0 * R
-      dvec = t(zw - b * sw) %*% R
+      dvec = as.vector(t(zw - b * sw) %*% R)
       cw.new = ginv(Dmat) %*% dvec
 
       loss = abs(cw-cw.new)
