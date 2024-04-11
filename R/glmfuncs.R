@@ -124,6 +124,10 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   max_min <- c(min(cvm - cvsd, na.rm = T), max(cvm + cvsd, na.rm = T))
   ylab = expression("GCV(" * lambda[0] * ")")
 
+  # optimal lambda1
+  id = which.min(cvm)[1]
+  optlambda = cand.lambda[id]
+
   plot(log(cand.lambda), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = max_min, type = 'n')
   try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
   points(log(cand.lambda), cvm, pch = 15, col = 'red')
@@ -135,9 +139,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   misS_cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
   max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
 
-  # optimal lambda1
-  id = which.min(cvm)[1]
-  optlambda = cand.lambda[id]
 
   plot(log(cand.lambda), miss_cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "miss", ylim = max_min, type = 'n')
   try(arrows(log(cand.lambda), miss_cvm - misS_cvsd, log(cand.lambda), miss_cvm + misS_cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
