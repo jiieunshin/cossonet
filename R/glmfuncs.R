@@ -69,7 +69,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
       if(algo == "QP"){
         c.init = as.vector(glmnet(tr_Rtheta, y[trainID], family = 'gaussian', lambda = cand.lambda[k])$beta)
-        fit = sspline.QP(tr_Rtheta, y[trainID], ff, cand.lambda[k], obj, c.init)
+        fit = sspline.QP(tr_Rtheta, y[trainID], f.init[trainID], cand.lambda[k], obj, c.init)
         b.new = fit$b.new
         c.new = fit$c.new
         cw.new = fit$cw.new
