@@ -466,7 +466,7 @@ nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
       dvec = t(uw) %*% Gw + n * lambda_theta
       Amat = diag(1, d)
       bvec = rep(0, d)
-      theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)
+      theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)$solution
 
       loss = abs(theta - theta.new)
       conv = max(loss) < 1e-20
