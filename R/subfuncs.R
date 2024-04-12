@@ -239,7 +239,7 @@ wsGram = function (Gramat, mscale)
 rescale_theta = function (x)
 {
   d = length(x)
-  if(sum(x == 0)) x = rep(1e-10, d)
+  if(sum(x == 0) == d) x = rep(1e-10, d)
   return(x)
 }
 

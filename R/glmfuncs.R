@@ -1,5 +1,5 @@
 ############
-# mscale = rep(1, d)/wt^2
+# mscale = theta.new/wt^2
 # cand.lambda = lambda0
 
 cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
@@ -31,7 +31,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
     tr_R = array(NA, c(tr_n, tr_n, d))
     te_R = array(NA, c(te_n, tr_n, d))
-    te2_R = array(NA, c(te_n, te_n, d))
 
     for(j in 1:d){
       tr_R[, , j] = K$K[[j]][trainID, trainID]
@@ -40,7 +39,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 
     tr_Rtheta <- wsGram(tr_R, mscale)
     te_Rtheta <- wsGram(te_R, mscale)
-    te2_Rtheta <- wsGram(te2_R, mscale)
 
     for (k in 1:length(cand.lambda)) {
     # print(k)
@@ -128,7 +126,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
   points(log(cand.lambda), cvm, pch = 15, col = 'red')
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
-
   ###
 
   miss_cvm <- apply(miss, 2, mean, na.rm = T)
@@ -209,18 +206,20 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
       cw.new[j] = L/R
 
       loss = abs(cw-cw.new)
-      conv = max(loss) < 1e-6
+      conv1 = max(loss) < 1e-6
+      conv2 = min(loss) > 10
 
-      if(conv) break
+      if(conv1 | conv2) break
       cw[j] = cw.new[j]  # if not convergence
 
     }
-    if(conv) break
+    if(conv1 | conv2) break
   }
-  if(i == 1 & !conv) cw.new = cw
+  if(i == 1 & !conv1) cw.new = cw
   cw.new = cw.new
   c.new = cw.new * sw
   b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
+
   return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
@@ -324,8 +323,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n)))
     }
   }
-  measure[is.nan(measure)] <- NA
 
+  measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
   # plotting error bar
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"

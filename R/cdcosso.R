@@ -27,7 +27,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'binomial'
+# family = 'gaussian'
 # gamma = 0.8
 # kernel = "spline"
 # one.std = TRUE
