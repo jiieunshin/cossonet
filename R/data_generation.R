@@ -82,7 +82,7 @@ data_generation = function(n, p, rho, a,
       plot(x[,5], g5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
       par(mfrow = c(1,1))
 
-      f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]))
+      f = (g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]))
 
     }
 
@@ -140,7 +140,7 @@ data_generation = function(n, p, rho, a,
     x_nois = matrix(rnorm(n * (p-5)), n, p-5)
     x = cbind(x_sig, x_nois)
 
-    f = 2*(g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5])) + rnorm(n, 0, .1)
+    f = (g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]))
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 5))

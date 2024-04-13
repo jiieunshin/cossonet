@@ -440,10 +440,10 @@ nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
 
   for(i in 1:10){ # outer iteration
     Dmat = t(Gw) %*% Gw + diag(n * lambda_theta * gamma, d)
-    dvec = t(uw) %*% Gw + n * lambda_theta * (1-gamma)
+    dvec = as.vector(2 * t(uw) %*% Gw - n * lambda_theta * (1-gamma))
     Amat = diag(1, d)
     bvec = rep(0, d)
-    theta.new = solve.QP(2 * Dmat, 2 * dvec, Amat, bvec)$solution
+    theta.new = solve.QP(2 * Dmat, dvec, Amat, bvec)$solution
     theta.new[theta.new < 1e-8] = 0
 
     loss = abs(theta - theta.new)
