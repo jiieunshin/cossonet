@@ -16,11 +16,11 @@
 data_generation = function(n, p, rho, a,
                            type = c("indep", "linear", "additive", "interaction", "survival"),
                            response = c("regression", "classification", "count")){
-  g1 = function(t) t/4
-  g2 = function(t) (t/2)^2 - 1
+  g1 = function(t) t
+  g2 = function(t) t^2 - 1
   g3 = function(t) exp(3*t)/(1+exp(3*t))
   g4 = function(t) sin(t)^3
-  g5 = function(t) sin(1.4*t)
+  g5 = function(t) sin(2*t)
 
   if(missing(type))
     type = "indep"
@@ -40,7 +40,7 @@ data_generation = function(n, p, rho, a,
       Sigma = matrix(rho, 5, 5)
       diag(Sigma) = 1
 
-      beta = c(rep(3, 5), rep(0, p-5))
+      beta = c(rep(2, 5), rep(0, p-5))
       x_sig = rmvnorm(n, mean = rep(0, 5), sigma = Sigma)
       x_nois = matrix(rnorm(n * (p-5)), n, p-5)
       x = cbind(x_sig, x_nois)
@@ -53,7 +53,7 @@ data_generation = function(n, p, rho, a,
       Sigma = matrix(rho, 5, 5)
       diag(Sigma) = 1
 
-      beta = c(rep(3, 5), rep(0, p-5))
+      beta = c(rep(2, 5), rep(0, p-5))
       x_sig = rmvnorm(n, mean = rep(0, 5), sigma = Sigma)
       x_nois = matrix(rnorm(n * (p-5)), n, p-5)
       x = cbind(x_sig, x_nois)
@@ -82,7 +82,7 @@ data_generation = function(n, p, rho, a,
       plot(x[,5], g5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
       par(mfrow = c(1,1))
 
-      f = (g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]))
+      f = 2*g1(x[,1]) + 4*g2(x[,2]) + 3*g3(x[,3]) + 2*g4(x[,4]) + 3*g5(x[,5])
 
     }
 
@@ -113,8 +113,9 @@ data_generation = function(n, p, rho, a,
 
     if(response == "classification"){
       prob = exp(f)/(exp(f) + 1)
-      # plot(prob)
       y = rbinom(n, 1, prob)
+      plot(prob)
+      print(table(y))
       out = list(x = x, f = f, y = y)
     }
 
@@ -151,5 +152,5 @@ data_generation = function(n, p, rho, a,
 
 }
 
-# tr = data_generation(n, p, type = "additive", response = "count")
-# print(table(tr$y))
+# tt = data_generation(n, p, type = "additive", response = "classification")
+
