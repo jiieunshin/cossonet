@@ -27,7 +27,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'gaussian'
+# family = 'binomial'
 # gamma = 0.8
 # kernel = "spline"
 # one.std = TRUE
@@ -63,7 +63,7 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
   }
 
   if(missing(kernel))
-    type = 'gaussian'
+    type = 'spline'
   else
     type = match.arg(kernel)
 

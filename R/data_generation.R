@@ -17,10 +17,10 @@ data_generation = function(n, p, rho, a,
                            type = c("indep", "linear", "additive", "interaction", "survival"),
                            response = c("regression", "classification", "count")){
   g1 = function(t) t
-  g2 = function(t) t^2 - 1
-  g3 = function(t) exp(3*t)/(1+exp(3*t))
-  g4 = function(t) sin(t)^3
-  g5 = function(t) sin(2*t)
+  g2 = function(t) t^2 - 2
+  g3 = function(t) (t < -1) * -1.5 + (t >= -1) * (t < 0) * -.5 + (t >= 0) * (t < 1) * .5 + (t >= 1) * 1.5  # step function
+  g4 = function(t) sin(2*t)
+  g5 = function(t) sin((t+2)^2) + exp(t/2)
 
   if(missing(type))
     type = "indep"
@@ -46,7 +46,6 @@ data_generation = function(n, p, rho, a,
       x = cbind(x_sig, x_nois)
       pi = exp(x %*% beta) / (exp(x %*% beta) + 1)
       f = rbinom(n, 1, pi)
-
     }
 
     if(type == 'linear'){
@@ -74,7 +73,7 @@ data_generation = function(n, p, rho, a,
 
       # Set the inner margin
       par(mar = c(4, 4, 3, 1))
-      par(mfrow = c(2,3))
+      par(mfrow = c(3,2))
       plot(x[,1], g1(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
       plot(x[,2], g2(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
       plot(x[,3], g3(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
@@ -82,7 +81,7 @@ data_generation = function(n, p, rho, a,
       plot(x[,5], g5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
       par(mfrow = c(1,1))
 
-      f = 2*g1(x[,1]) + 4*g2(x[,2]) + 3*g3(x[,3]) + 2*g4(x[,4]) + 3*g5(x[,5])
+      f = 2*g1(x[,1]) + 4*g2(x[,2]) + 3*g3(x[,3]) + 2*g4(x[,4]) + 4*g5(x[,5])
 
     }
 
@@ -152,5 +151,5 @@ data_generation = function(n, p, rho, a,
 
 }
 
-# tt = data_generation(n, p, type = "additive", response = "classification")
+# tt = data_generation(200, p, type = "additive", response = "classification")
 
