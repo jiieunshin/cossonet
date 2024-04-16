@@ -29,6 +29,16 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
 
+  memcpy(cw_new, cw_c, nc * sizeof(double));
+
+  // 복사 후 결과 확인
+  Rprintf("Original: cw_c\n");
+  for (int i = 0; i < nc; ++i) {
+    Rprintf("%f ", cw_new[i]);
+  }
+  Rprintf("\n");
+
+
   // calculate square term
   for(int j = 0; j < nc; j++) { // iterate by column
     double add = 0.0;

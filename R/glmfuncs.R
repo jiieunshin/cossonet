@@ -308,6 +308,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       if(algo == "CD") {
         # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
         theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
+        theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
       }
 
       if(algo == "QP") {
@@ -389,6 +390,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   if(algo == "CD"){
     # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
     theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
+    theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
   }
 
   if(algo == "QP"){
