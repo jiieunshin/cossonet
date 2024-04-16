@@ -73,15 +73,20 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
       if(sum(is.nan(cw.new)) == tr_n){
         next
       } else{
+        ff = f.init[trainID]
+        mu = obj$linkinv(ff)
+        w = obj$variance(mu)
+        Rw = tr_Rtheta * w
+
         # validation
         testfhat = c(b.new + te_Rtheta %*% c.new)
         testmu = obj$linkinv(testfhat)
         testw = obj$variance(testmu)
         testz = testfhat + (y[testID] - testmu) / testw
 
-        XX = fit$zw.new - fit$Rw %*% fit$cw.new - fit$b.new * fit$sw.new
+        XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
         num = t(XX) %*% XX
-        den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
+        den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(w)/cand.lambda[k]))) / tr_n)^2
         measure[f, k] <- as.vector( num / den / tr_n)
 
         # measure[f, k] <- mean(KLD(te_y, testfhat, obj))
@@ -452,7 +457,7 @@ nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
     if(conv) break
     theta = theta.new
   }
-  cat("conv =", conv, "i =", i, "\n")
+
   return(theta.new)
 }
 
