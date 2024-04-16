@@ -32,10 +32,16 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   // 복사 후 결과 확인
   Rprintf("Original: cw_c\n");
   for (int i = 0; i < nc; ++i) {
-    Rprintf("%f ", cw_new[i]);
+    Rprintf("%f ", cw_c[i]);
   }
   Rprintf("\n");
 
+  // 복사 후 결과 확인
+  Rprintf("Original: cw_new\n");
+  for (int i = 0; i < nc; ++i) {
+    Rprintf("%f ", cw_new[i]);
+  }
+  Rprintf("\n");
 
   // calculate square term
   for(int j = 0; j < nc; j++) { // iterate by column
@@ -77,6 +83,10 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       double V4 = nc * lambda0_c * Rw_c[j * nc + j];
 
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
+
+      if (cw_new[j] < 1e-6) {
+        cw_new[j] = 0;
+      }
 
       // If convergence criteria are met, break the loop
       double abs_diff = 0;
@@ -199,6 +209,10 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
       if(V1 > 0 && r < fabs(V1)) {
         theta_new[j] = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
+        theta_new[j] = 0;
+      }
+
+      if(theta_new[j] < 1e-6){
         theta_new[j] = 0;
       }
 
