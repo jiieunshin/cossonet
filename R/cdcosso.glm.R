@@ -58,4 +58,3 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
   return(out)
 }
 
-

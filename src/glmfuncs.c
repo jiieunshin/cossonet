@@ -10,22 +10,6 @@ void R_init_markovchain(DllInfo *dll) {
   R_useDynamicSymbols(dll, TRUE);
 }
 
-// 표준편차를 계산하는 함수
-double mean(double *arr, int n) {
-  double mean = 0.0;
-  for (int i = 0; i < n; ++i) {
-    mean += arr[i];
-  }
-  return mean /= n;
-}
-
-double sd(double *arr, double mean, int n) {
-  double sum_dev = 0.0;
-  for (int i = 0; i < n; ++i) {
-    sum_dev += (arr[i] - mean) * (arr[i] - mean);
-  }
-  return sqrt(sum_dev / n);
-}
 
 // Define the sspline_cd function
 SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
@@ -54,17 +38,10 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
     pow_Rc[j] = 2 * add;
   }
 
-  // Print the matrix A
-  // Rprintf("pow_Rc:\n");
-  // for (int j = 0; j < nc; j++) {
-  //   Rprintf("%f\t", pow_Rc[j]);
-  //   Rprintf("\n");
-  // }
-
   int iter = 0;
   double max_diff = 0;
   // outer loop
-  for (iter = 0; iter < 20; ++iter) {
+  for (iter = 0; iter < 10; ++iter) {
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
@@ -94,15 +71,19 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
+      double abs_diff = 0;
       max_diff = fabs(cw_c[0] - cw_new[0]);
       for (int k = 1; k < nc; ++k){
-        double abs_diff = fabs(cw_c[j] - cw_new[j]);
+        abs_diff = fabs(cw_c[k] - cw_new[k]);
+        if (abs_diff > 10) {
+          break;
+        }
         if (abs_diff < max_diff){
           max_diff = abs_diff;
         }
       }
 
-      if (max_diff <= 1e-6) {
+      if (max_diff <= 1e-6 || abs_diff > 10) {
         break;
       }
 
@@ -112,7 +93,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
 
   } // end outer iteration
 
-  if (max_diff > 1e-6 && iter == 1){
+  if (max_diff > 1e-6 && iter == 0){
     memcpy(cw_new, cw_c, nc * sizeof(double));
   }
 
@@ -193,7 +174,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   double max_diff = 1e-10;
   int iter = 0;
 
-  for(iter = 0; iter < 20; iter++) {
+  for(iter = 0; iter < 10; iter++) {
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
       for(int k = 0; k < nc; k++) { // iterate by row
@@ -213,13 +194,20 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
         theta_new[j] = 0;
       }
 
-      // Calculate maximum difference for convergence
-      max_diff = fabs(theta_c[j] - theta_new[j]);
-
-      // Rprintf("%f\t", max_diff);
-
       // If convergence criteria are met, break the loop
-      if (max_diff < 1e-10 && iter > 0) {
+      double abs_diff = 0;
+      max_diff = fabs(theta_c[0] - theta_new[0]);
+      for (int k = 1; k < dc; ++k){
+        abs_diff = fabs(theta_c[k] - theta_new[k]);
+        if (abs_diff > 10) {
+          break;
+        }
+        if (abs_diff < max_diff){
+          max_diff = abs_diff;
+        }
+      }
+
+      if (max_diff <= 1e-20 || abs_diff > 10) {
         break;
       }
 
@@ -228,7 +216,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
     }
   } // end outer iteration
 
-  if (max_diff >= 1e-10 && iter == 0){
+  if (max_diff >= 1e-20 && iter == 0){
     theta_new = (double *)malloc(dc * sizeof(double));
   }
 
