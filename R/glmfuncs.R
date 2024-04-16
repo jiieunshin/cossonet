@@ -1,5 +1,5 @@
 ############
-# mscale = theta.new/wt^2
+# mscale = wt^2
 # cand.lambda = lambda0
 
 cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
@@ -153,7 +153,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     Rw = Rtheta * w
     cw = c.init / sqrt(w)
     sw = sqrt(w)
-
+print(cw)
     # fit = sspline.cd(Rtheta, y, f.init, optlambda, obj, c.init)
 
     fit = .Call("Csspline", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
