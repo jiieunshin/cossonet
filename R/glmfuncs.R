@@ -51,7 +51,6 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         z = ff + (y[trainID] - mu) / w
 
         c.init = as.vector(glmnet(tr_Rtheta, y[trainID], family = 'gaussian', lambda = cand.lambda[k])$beta)
-        print(c.init)
         zw = z * sqrt(w)
         Rw = tr_Rtheta * w
         cw = c.init / sqrt(w)
@@ -307,8 +306,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
     te_n = length(testID)
     for (k in 1:len) {
       if(algo == "CD") {
-        # theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
-        theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
+        theta.new = nng.cd(Gw[trainID,], uw[trainID], theta = init.theta, lambda_theta[k], gamma)
+        # theta.new = .Call("Cnng", Gw[trainID,], uw[trainID], tr_n, d, init.theta, lambda_theta[k], gamma)
         theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
       }
 
@@ -389,8 +388,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
   abline(v = log(lambda_theta)[id], col = 'darkgrey', lty = 2)
 
   if(algo == "CD"){
-    # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
-    theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
+    theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
+    # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
     theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
   }
 

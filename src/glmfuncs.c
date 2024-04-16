@@ -95,6 +95,10 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       cw_c[j] = cw_new[j];
     }
 
+    if (max_diff <= 1e-6 || max_diff > 10) {
+      break;
+    }
+
   } // end outer iteration
 
   if (max_diff > 1e-6 && iter == 0){
@@ -166,7 +170,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
 
-  for (int k = 1; k < dc; ++k){
+  for (int k = 0; k < dc; ++k){
     theta_new[k] = 0;
     pow_theta[k] = 0;
   }
@@ -214,25 +218,29 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
         }
       }
 
-      if (max_diff <= 1e-20 || max_diff > 10) {
+      if (max_diff <= 1e-20) {
         break;
       }
 
       // If not convergence, Update theta_new.
       theta_c[j] = theta_new[j];
     }
+
+    if (max_diff <= 1e-20) {
+      break;
+    }
   } // end outer iteration
 
-  if (max_diff >= 1e-20 && iter == 0){
-    for (int k = 1; k < dc; ++k){
-      theta_new[k] = 0;
+  if (max_diff > 1e-20 && iter == 0){
+    for (int k = 0; k < dc; ++k){
+      theta_c[k] = 0;
     }
   }
 
   // result
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, dc));
   for(int j = 0; j < dc; ++j) {
-    REAL(theta_new_r)[j] = theta_new[j];
+    REAL(theta_new_r)[j] = theta_c[j];
   }
 
   free(theta_new);
