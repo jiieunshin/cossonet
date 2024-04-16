@@ -113,8 +113,8 @@ data_generation = function(n, p, rho, a,
     if(response == "classification"){
       prob = exp(f)/(exp(f) + 1)
       y = rbinom(n, 1, prob)
-      plot(prob)
-      print(table(y))
+      # plot(prob)
+      # print(table(y))
       out = list(x = x, f = f, y = y)
     }
 

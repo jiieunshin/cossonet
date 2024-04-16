@@ -78,7 +78,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
         if (abs_diff > 10) {
           break;
         }
-        if (abs_diff < max_diff){
+        if (abs_diff > max_diff){
           max_diff = abs_diff;
         }
       }
@@ -202,7 +202,7 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
         if (abs_diff > 10) {
           break;
         }
-        if (abs_diff < max_diff){
+        if (abs_diff > max_diff){
           max_diff = abs_diff;
         }
       }
