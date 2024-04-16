@@ -37,6 +37,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   Rprintf("\n");
 
   // 복사 후 결과 확인
+  memcpy(cw_new, cw_c, nc * sizeof(double));
   Rprintf("Original: cw_new\n");
   for (int i = 0; i < nc; ++i) {
     Rprintf("%f ", cw_new[i]);
@@ -239,7 +240,9 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   } // end outer iteration
 
   if (max_diff >= 1e-20 && iter == 0){
-    theta_new = (double *)malloc(dc * sizeof(double));
+    for (int k = 1; k < dc; ++k){
+      theta_new[k] = 0;
+    }
   }
 
   // result
