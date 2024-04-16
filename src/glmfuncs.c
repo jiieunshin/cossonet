@@ -29,20 +29,11 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
 
-  // 복사 후 결과 확인
-  Rprintf("Original: cw_c\n");
-  for (int i = 0; i < nc; ++i) {
-    Rprintf("%f ", cw_c[i]);
+  for(int k = 0; k < nc; k++) {
+    cw_new[k] = 0;
+    c_new[k] = 0;
+    pow_Rc[k] = 0;
   }
-  Rprintf("\n");
-
-  // 복사 후 결과 확인
-  memcpy(cw_new, cw_c, nc * sizeof(double));
-  Rprintf("Original: cw_new\n");
-  for (int i = 0; i < nc; ++i) {
-    Rprintf("%f ", cw_new[i]);
-  }
-  Rprintf("\n");
 
   // calculate square term
   for(int j = 0; j < nc; j++) { // iterate by column
@@ -85,24 +76,18 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
 
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
-      if (cw_new[j] < 1e-6) {
-        cw_new[j] = 0;
-      }
-
       // If convergence criteria are met, break the loop
       double abs_diff = 0;
       max_diff = fabs(cw_c[0] - cw_new[0]);
       for (int k = 1; k < nc; ++k){
         abs_diff = fabs(cw_c[k] - cw_new[k]);
-        if (abs_diff > 10) {
-          break;
-        }
+
         if (abs_diff > max_diff){
           max_diff = abs_diff;
         }
       }
 
-      if (max_diff <= 1e-6 || abs_diff > 10) {
+      if (max_diff <= 1e-6 || max_diff > 10) {
         break;
       }
 
@@ -181,6 +166,11 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
   double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
 
+  for (int k = 1; k < dc; ++k){
+    theta_new[k] = 0;
+    pow_theta[k] = 0;
+  }
+
   for(int j = 0; j < dc; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < nc; k++) { // iterate by row
@@ -213,24 +203,18 @@ SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP 
         theta_new[j] = 0;
       }
 
-      if(theta_new[j] < 1e-6){
-        theta_new[j] = 0;
-      }
-
       // If convergence criteria are met, break the loop
       double abs_diff = 0;
       max_diff = fabs(theta_c[0] - theta_new[0]);
       for (int k = 1; k < dc; ++k){
         abs_diff = fabs(theta_c[k] - theta_new[k]);
-        if (abs_diff > 10) {
-          break;
-        }
+
         if (abs_diff > max_diff){
           max_diff = abs_diff;
         }
       }
 
-      if (max_diff <= 1e-20 || abs_diff > 10) {
+      if (max_diff <= 1e-20 || max_diff > 10) {
         break;
       }
 

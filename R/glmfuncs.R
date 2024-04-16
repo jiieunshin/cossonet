@@ -51,6 +51,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         z = ff + (y[trainID] - mu) / w
 
         c.init = as.vector(glmnet(tr_Rtheta, y[trainID], family = 'gaussian', lambda = cand.lambda[k])$beta)
+        print(c.init)
         zw = z * sqrt(w)
         Rw = tr_Rtheta * w
         cw = c.init / sqrt(w)
@@ -153,7 +154,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     Rw = Rtheta * w
     cw = c.init / sqrt(w)
     sw = sqrt(w)
-print(cw)
+
     # fit = sspline.cd(Rtheta, y, f.init, optlambda, obj, c.init)
 
     fit = .Call("Csspline", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
