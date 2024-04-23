@@ -54,7 +54,6 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one
                object = obj,
                algorithm = algo)
 
-  class(out) = "cosso"
   return(out)
 }
 

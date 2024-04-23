@@ -15,12 +15,10 @@
 #' @param kparam Kernel parameter values to use for SVM models.
 #' @param lambda0 Penalty parameter vector for Lasso and Ridge regression.
 #' @param lambda_theta Vector of penalty parameters to be applied to different parts of the model.
-#' @param M Vector of Lagrange multiplier.
 #' @param gamma Gamma value used in Stochastic Search Optimization.
 #' @param nfolds Number of folds for cross-validation.
 #' @param one.std Logical value indicating whether to standardize explanatory variables.
 #' @param scale A logical value indicating whether to scale the explanatory variable by min-max.
-#' @param cpus Number of CPUs for parallel processing.
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
@@ -35,10 +33,16 @@
 # wt = rep(1, ncol(x))
 # kparam = 1
 # nfolds =5
-cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin", "svm", "Cox"),
-                    kernel = c("linear", "gaussian", "poly", "spline"), effect = c("main", "interaction"),
-                    algo = c("CD", "QP"), wt = rep(1, ncol(x)),
-                    kparam = 1, lambda0, lambda_theta, M, gamma = 0.3, nfolds = 5, one.std = TRUE, scale = TRUE, cpus)
+cdcosso = function (x,
+                    y,
+                    family = c("gaussian", "binomial", "poisson", "Cox"),
+                    kernel = c("linear", "gaussian", "poly", "spline"),
+                    effect = c("main", "interaction"),
+                    algo = c("CD", "QP"),
+                    wt = rep(1, ncol(x)), kparam = 1,
+                    lambda0 = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20)),
+                    lambda_theta = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20)),
+                    gamma = 0.3, nfolds = 5, one.std = TRUE, scale = TRUE)
 {
   n = nrow(x)
   colnames(x) = NULL
@@ -54,13 +58,6 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
     obj =  binomial()
   if(family == "poisson")
     obj = poisson()
-  if(family == "negbin"){
-    link = poisson()$linkfun
-    # if(missing(init.disp)){
-    #   init.distp = NA
-    # }
-    obj = list(disp = NA, link = link)
-  }
 
   if(missing(kernel))
     type = 'spline'
@@ -78,11 +75,11 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
   if(missing(lambda0)){
-    lambda0 = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20))
+    lambda0 = exp(seq(log(2^{-2}), log(2^{5}), length.out = 20))
   }
 
   if(missing(lambda_theta))
-    lambda_theta = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20))
+    lambda_theta = exp(seq(log(2^{-10}), log(2^{5}), length.out = 20))
 
   if (scale){   # min-max scale
     x = apply(x, 2, rescale)
@@ -100,5 +97,8 @@ cdcosso = function (x, y, family = c("gaussian", "binomial", "poisson", "negbin"
                Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
                # Negbin, svm 추???
   )
+
+  attr(out, "class") = "cdcosso"
+
   return(out)
 }

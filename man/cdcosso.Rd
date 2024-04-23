@@ -7,20 +7,26 @@
 cdcosso(
   x,
   y,
-  family = c("gaussian", "binomial", "poisson", "negbin", "svm", "Cox"),
+  family = c("gaussian", "binomial", "poisson", "Cox"),
   kernel = c("linear", "gaussian", "poly", "spline"),
   effect = c("main", "interaction"),
   algo = c("CD", "QP"),
   wt = rep(1, ncol(x)),
   kparam = 1,
-  lambda0,
-  lambda_theta,
-  M,
+  lambda0 = exp(seq(log(2^{
+     -5
+ }), log(2^{
+     5
+ }), length.out = 20)),
+  lambda_theta = exp(seq(log(2^{
+     -5
+ }), log(2^{
+     5
+ }), length.out = 20)),
   gamma = 0.3,
   nfolds = 5,
   one.std = TRUE,
-  scale = TRUE,
-  cpus
+  scale = TRUE
 )
 }
 \arguments{
@@ -44,8 +50,6 @@ cdcosso(
 
 \item{lambda_theta}{Vector of penalty parameters to be applied to different parts of the model.}
 
-\item{M}{Vector of Lagrange multiplier.}
-
 \item{gamma}{Gamma value used in Stochastic Search Optimization.}
 
 \item{nfolds}{Number of folds for cross-validation.}
@@ -53,8 +57,6 @@ cdcosso(
 \item{one.std}{Logical value indicating whether to standardize explanatory variables.}
 
 \item{scale}{A logical value indicating whether to scale the explanatory variable by min-max.}
-
-\item{cpus}{Number of CPUs for parallel processing.}
 }
 \value{
 A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.

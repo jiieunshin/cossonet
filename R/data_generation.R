@@ -16,11 +16,12 @@
 data_generation = function(n, p, rho, a,
                            type = c("indep", "linear", "additive", "interaction", "survival"),
                            response = c("regression", "classification", "count")){
-  g1 = function(t) t
-  g2 = function(t) t^2 - 2
-  g3 = function(t) (t < -1) * -1.5 + (t >= -1) * (t < 0) * -.5 + (t >= 0) * (t < 1) * .5 + (t >= 1) * 1.5  # step function
-  g4 = function(t) sin(2*t)
-  g5 = function(t) sin((t+2)^2) + exp(t/2)
+  f1 = function(t) - 25 * (0.5 - t)^2 + 1.8
+  f2 = function(t) 2 * exp(2 * t) - 6.5
+  f3 = function(t) cos(2 * t) + sin(6 * t) - 0.5
+  f4 = function(t) t^17 * (10*(1-t))^6 + 10 * (10 * t)^3 * (1-t)^15 - 1
+  f5 = function(t) 2 * (sin(6 * t)^{3} + cos(7 * t)^{5})
+
 
   if(missing(type))
     type = "indep"
@@ -65,23 +66,23 @@ data_generation = function(n, p, rho, a,
       Sigma = matrix(rho, 5, 5)
       diag(Sigma) = 1
 
-      x_sig = rmvnorm(n, mean = rep(0, 5), sigma = Sigma)
-      x_nois = matrix(rnorm(n * (p-5)), n, p-5)
+      x_sig = pnorm(rmvnorm(n, sigma = Sigma))
+      x_nois = pnorm(matrix(rnorm(n * (p-5)), n, p-5))
       x = cbind(x_sig, x_nois)
+
       # Set the outer margins
-      par(oma = c(0, 0, 0, 0))
-
+      # par(oma = c(0, 0, 0, 0))
       # Set the inner margin
-      par(mar = c(4, 4, 3, 1))
-      par(mfrow = c(3,2))
-      plot(x[,1], g1(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
-      plot(x[,2], g2(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
-      plot(x[,3], g3(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
-      plot(x[,4], g4(x[,4]), cex = .6, pch = 16, xlab = 'x4', ylab = 'f4')
-      plot(x[,5], g5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
-      par(mfrow = c(1,1))
+      # par(mar = c(4, 4, 3, 1))
+      # par(mfrow = c(1,5))
+      # plot(x[,1], f1(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
+      # plot(x[,2], f2(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
+      # plot(x[,3], f3(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
+      # plot(x[,4], f4(x[,4]), cex = .6, pch = 16, xlab = 'x4', ylab = 'f4')
+      # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
+      # par(mfrow = c(1,1))
 
-      f = 2*g1(x[,1]) + 4*g2(x[,2]) + 3*g3(x[,3]) + 2*g4(x[,4]) + 4*g5(x[,5])
+      f = 2 * f1(x[,1]) + 4 * f2(x[,2]) + 4 * f3(x[,3]) + f4(x[,4]) + 2 * f5(x[,5])
 
     }
 
@@ -98,7 +99,7 @@ data_generation = function(n, p, rho, a,
       x_nois = matrix(rnorm(n * (p-5)), n, p-5)
       x = cbind(x_sig, x_nois) + rnorm(n, 0, 0.01)
 
-      f = 3*g1(x[,1])*g2(x[,2]) + 2*g3(x[,3])*g4(x[,4]) + 3*g4(x[,4])*g5(x[,5]) + 2*g1(x[,1])*g4(x[,4]) + 3*g2(x[,2])*g3(x[,3])
+      f = 3*f1(x[,1])*f2(x[,2]) + 2*f3(x[,3])*f4(x[,4]) + 3*f4(x[,4])*f5(x[,5]) + 2*f1(x[,1])*f4(x[,4]) + 3*f2(x[,2])*f3(x[,3])
 
       prob = exp(f)/(exp(f) + 1)
       y = rbinom(n, 1, prob)
@@ -140,7 +141,7 @@ data_generation = function(n, p, rho, a,
     x_nois = matrix(rnorm(n * (p-5)), n, p-5)
     x = cbind(x_sig, x_nois)
 
-    f = (g1(x[,1]) + g2(x[,2]) + g3(x[,3]) + g4(x[,4]) + g5(x[,5]))
+    f = (f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5]))
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 5))
