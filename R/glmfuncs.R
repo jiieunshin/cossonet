@@ -6,7 +6,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
 {
   n <- length(y)
   IDmat <- cvsplitID(n, nfolds)
-
+  len = length(cand.lambda)
   K = make_anovaKernel(x, x, type = type, kparam)
   d = K$numK
   R = array(NA, c(n, n, d))
@@ -18,8 +18,8 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   Rtheta <- wsGram(R, mscale)
   f.init = rep(0.5, n)
 
-  measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
-  miss <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
+  measure <- matrix(NA, ncol = len, nrow = nfolds)
+  miss <- matrix(NA, ncol = len, nrow = nfolds)
   for (f in 1:nfolds) {
     # print(f)
     testID <- IDmat[!is.na(IDmat[, f]), f]
@@ -40,7 +40,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     tr_Rtheta <- wsGram(tr_R, mscale)
     te_Rtheta <- wsGram(te_R, mscale)
 
-    for (k in 1:length(cand.lambda)) {
+    for (k in 1:len) {
     # print(k)
       if(algo == "CD"){
 
@@ -92,7 +92,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         # measure[f, k] <- mean(KLD(te_y, testfhat, obj))
 
         if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-        if(obj$family == "gaussian") miss[f, k] <- mean((testmu - y[testID])^2)
+        if(obj$family == "gaussian") miss[f, k] <- mean((testfhat - y[testID])^2)
         if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n)))
       }
     }
@@ -126,11 +126,26 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
   # optimal lambda1
   id = which.min(cvm)[1]
   optlambda = cand.lambda[id]
+  # one.std = TRUE
+  # if(one.std){
+  #   st1_err = cvm[id] + cvsd[id] # minimum cv err
+  #   std.id = max(which(cvm[id:len] <= st1_err & cvm[id] <= cvm[id:len]))
+  #   if(is.na(std.id)){
+  #     std.id = id
+  #     optlambda = cand.lambda[std.id]
+  #   } else{
+  #     std.id = ifelse(std.id > id, std.id, id)
+  #     optlambda = cand.lambda[std.id]
+  #   }
+  # } else{
+  #   optlambda = cand.lambda[id]
+  # }
 
   plot(log(cand.lambda), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = max_min, type = 'n')
   try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
   points(log(cand.lambda), cvm, pch = 15, col = 'red')
   abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
+  # if(one.std) abline(v = log(cand.lambda)[std.id], col = 'darkgrey', lty = 2)
   ###
 
   miss_cvm <- apply(miss, 2, mean, na.rm = T)
@@ -325,7 +340,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       # measure[f, k] <- mean(KLD(te_y, testfhat, obj))
 
       if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
-      if(obj$family == "gaussian") miss[f, k] <- mean((testmu - y[testID])^2)
+      if(obj$family == "gaussian") miss[f, k] <- mean((testfhat - y[testID])^2)
       if(obj$family == "poisson") miss[f, k] <- mean(-obj$dev.resids(y[testID], testmu, rep(1, te_n)))
     }
   }
