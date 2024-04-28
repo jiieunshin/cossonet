@@ -16,20 +16,17 @@
 data_generation = function(n, p, rho, a,
                            type = c("indep", "linear", "additive", "interaction", "survival"),
                            response = c("regression", "classification", "count")){
-  # f1 = function(t) - 25 * (0.5 - t)^2 + 1.8
-  # f2 = function(t) 3 * sin(pi * t^3) + t^3 - 1.4
-  # # 2 * exp(2 * t) - 6.5
-  # # f2 = function(t) 0.5 * (t^3 + sin(pi*t^3)) - 0.3
-  # # f2 = function(t) sqrt(1-(x-1)^2) - 0.5
-  # f3 = function(t) cos(2 * t) + sin(6 * t) - 0.5
-  # f4 = function(t) 2 * (t^17 * (10*(1-t))^6 + 10 * (10 * t)^3 * (1-t)^15) - 2
-  # f5 = function(t) 2 * (sin(6 * t)^{3} + cos(7 * t)^{5}) - 0.2
-
   f1 = function(t) t - 0.5
   f2 = function(t) 2 * (cos(2 * pi * t) + sin(pi * t)) - 1.4
   f3 = function(t) (cos(2 * t) + sin(6 * t)) - 0.5
   f4 = function(t) t^17 * (10*(1-t))^6 + 10 * (10 * t)^3 * (1-t)^15 - 1
   f5 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{6}) - 0.1
+
+  # f1 = function(t) t - 0.5
+  # f2 = function(t) 2 * (cos(2 * pi * t) + sin(pi * t)) - 1.2
+  # f3 = function(t) sin(6 * t)
+  # f4 = function(t) t^17 * (8*(1-t))^6 + 10 * (8 * t)^3 * (1-t)^15 - 0.7
+  # f5 = function(t) -(sin(3 * t)^{2} + cos(3 * t)^{3}) + 0.7
 
   if(missing(type))
     type = "indep"
@@ -90,7 +87,7 @@ data_generation = function(n, p, rho, a,
       # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
       # par(mfrow = c(1,1))
 
-      f = 2 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 1 * f4(x[,4]) + 1 * f5(x[,5])
+      f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 1 * f4(x[,4]) + 1 * f5(x[,5])
 
     }
 
@@ -161,4 +158,4 @@ data_generation = function(n, p, rho, a,
 }
 
 # tt = data_generation(200, p, type = "additive", response = "classification")
-# range(tt$f)
+# range(exp(tt$f))
