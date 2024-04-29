@@ -19,8 +19,8 @@ data_generation = function(n, p, rho, a,
   f1 = function(t) t - 0.5
   f2 = function(t) 2 * (cos(2 * pi * t) + sin(pi * t)) - 1.4
   f3 = function(t) (cos(2 * t) + sin(6 * t)) - 0.5
-  f4 = function(t) t^17 * (10*(1-t))^6 + 10 * (10 * t)^3 * (1-t)^15 - 1
-  f5 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{6}) - 0.1
+  f4 = function(t) t^17 * (8*(1-t))^6 + 10 * (8 * t)^3 * (1-t)^15 - 0.7
+  f5 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{9})
 
   # f1 = function(t) t - 0.5
   # f2 = function(t) 2 * (cos(2 * pi * t) + sin(pi * t)) - 1.2
@@ -87,7 +87,7 @@ data_generation = function(n, p, rho, a,
       # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
       # par(mfrow = c(1,1))
 
-      f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 1 * f4(x[,4]) + 1 * f5(x[,5])
+      f = 2 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 1 * f4(x[,4]) + 1 * f5(x[,5])
 
     }
 
@@ -126,7 +126,7 @@ data_generation = function(n, p, rho, a,
 
     if(response == "count"){
       mu = exp(f)
-      mu = ifelse(mu > 100, 100, mu)
+      mu = ifelse(mu > 200, 200, mu)
       y = rpois(n, mu)
       out = list(x = x, f = f, y = y)
     }
