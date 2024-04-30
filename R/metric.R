@@ -19,14 +19,21 @@ metric = function(true, est){
 
   tp = result_tab[4]
   fp = result_tab[3]
+  result_tab = table(true, est)
+  tp = result_tab[4]
+  fp = result_tab[3]
+  fn = result_tab[2]
+  precision = tp/(tp+fp)
+  recall = tp/(tp+fn)
+  f1_score = 2 * (precision * recall)/(precision + recall)
   # result.tab = table(te$Y, pred$Yhat)
-  prec_class = diag(result_tab)/colSums(result_tab)
-  prec_class[is.na(prec_class)] = 0
-  precision =  mean(prec_class)
-
-  recal_class = diag(result_tab)/rowSums(result_tab)
-  recall = mean(recal_class)
-  f1_score = 2 * (precision * recall) / (precision + recall)
+  # prec_class = diag(result_tab)/colSums(result_tab)
+  # prec_class[is.na(prec_class)] = 0
+  # precision =  mean(prec_class)
+  #
+  # recal_class = diag(result_tab)/rowSums(result_tab)
+  # recall = mean(recal_class)
+  # f1_score = 2 * (precision * recall) / (precision + recall)
 
   return(list(tp = tp, fp = fp, precision = precision, recall = recall, f1_score = f1_score))
 }

@@ -87,7 +87,7 @@ data_generation = function(n, p, rho, a,
       # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
       # par(mfrow = c(1,1))
 
-      f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 1 * f4(x[,4]) + 1 * f5(x[,5])
+      f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 1 * f4(x[,4]) + 2 * f5(x[,5])
 
     }
 
