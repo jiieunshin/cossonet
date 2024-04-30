@@ -19,7 +19,7 @@ data_generation = function(n, p, rho, a,
   f1 = function(t) t - 0.5
   f2 = function(t) 2 * (cos(2 * pi * t) + sin(pi * t)) - 1.4
   f3 = function(t) (cos(2 * t) + sin(6 * t)) - 0.5
-  f4 = function(t) t^17 * (8*(1-t))^6 + 10 * (8 * t)^3 * (1-t)^15 - 0.7
+  f4 = function(t) t^17 * (10*(1-t))^6 + 10 * (10 * t)^3 * (1-t)^13 - 2.4
   f5 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{9})
 
   # f1 = function(t) t - 0.5
@@ -46,7 +46,7 @@ data_generation = function(n, p, rho, a,
       Sigma = matrix(rho, 5, 5)
       diag(Sigma) = 1
 
-      beta = c(rep(3, 5), rep(0, p-5))
+      beta = c(rep(2, 5), rep(0, p-5))
       x_sig = pnorm(rmvnorm(n, mean = rep(0, 5), sigma = Sigma))
       x_nois = pnorm(matrix(rnorm(n * (p-5)), n, p-5))
       x = cbind(x_sig, x_nois)
@@ -87,8 +87,6 @@ data_generation = function(n, p, rho, a,
       # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
       # par(mfrow = c(1,1))
 
-      f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 3 * f3(x[,3]) + 1 * f4(x[,4]) + 2 * f5(x[,5])
-
     }
 
     if(type == 'interaction'){
@@ -113,10 +111,12 @@ data_generation = function(n, p, rho, a,
     }
 
     if(response == "regression"){
+      f = f1(x[,1])/4 + f2(x[,2])/2 + f3(x[,3]) + f4(x[,4])/4 + f5(x[,5])
       out = list(x = x, y = f)
     }
 
     if(response == "classification"){
+      f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 1 * f4(x[,4]) + 1 * f5(x[,5])
       prob = exp(f)/(exp(f) + 1)
       y = rbinom(n, 1, prob)
       # plot(prob)
@@ -125,8 +125,8 @@ data_generation = function(n, p, rho, a,
     }
 
     if(response == "count"){
-      mu = exp(f-5)
-      mu = ifelse(mu > 200, 200, mu)
+      f = f1(x[,1])/4 + f2(x[,2])/2 + f3(x[,3]) + f4(x[,4])/4 + f5(x[,5])
+      mu = exp(f)
       y = rpois(n, mu)
       out = list(x = x, f = f, y = y)
     }
