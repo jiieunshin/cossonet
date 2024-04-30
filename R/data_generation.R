@@ -125,7 +125,7 @@ data_generation = function(n, p, rho, a,
     }
 
     if(response == "count"){
-      mu = exp(f)
+      mu = exp(f-5)
       mu = ifelse(mu > 200, 200, mu)
       y = rpois(n, mu)
       out = list(x = x, f = f, y = y)

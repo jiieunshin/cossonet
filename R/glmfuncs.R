@@ -87,9 +87,9 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
         XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
         num = t(XX) %*% XX
         den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(w)/cand.lambda[k]))) / tr_n)^2
-        # measure[f, k] <- as.vector( num / den / tr_n)
+        measure[f, k] <- as.vector( num / den / tr_n)
 
-        measure[f, k] <- mean(KLD(y[testID], testfhat, obj))
+        # measure[f, k] <- mean(KLD(y[testID], testfhat, obj))
 
         if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
         if(obj$family == "gaussian") miss[f, k] <- mean((testfhat - y[testID])^2)
@@ -336,8 +336,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj
       XX = model$z.new[trainID] - tr_G %*% theta.new - model$b.new
       num = t(XX) %*% diag(model$w.new[trainID]) %*% XX
       den = (1 - sum(diag( Gw[trainID,] %*% ginv( t(Gw[trainID,]) %*% Gw[trainID,]) %*% t(Gw[trainID,]) )) / tr_n)^2
-      # measure[f, k] <- as.vector(num / den /tr_n)
-      measure[f, k] <- mean(KLD(y[testID], testfhat, obj))
+      measure[f, k] <- as.vector(num / den /tr_n)
+      # measure[f, k] <- mean(KLD(y[testID], testfhat, obj))
 
       if(obj$family == "binomial") miss[f, k] <- mean(ifelse(testmu < 0.5, 0, 1) != y[testID])
       if(obj$family == "gaussian") miss[f, k] <- mean((testfhat - y[testID])^2)
