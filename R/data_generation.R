@@ -16,18 +16,17 @@
 data_generation = function(n, p, rho, a,
                            type = c("indep", "linear", "additive", "interaction", "survival"),
                            response = c("regression", "classification", "count")){
-  # f1 = function(t) t - 0.5
-  # f2 = function(t) 2 * (cos(2 * pi * t) + sin(pi * t)) - 1.4
-  # f3 = function(t) (cos(2 * t) + sin(6 * t)) - 0.5
-  # f4 = function(t) t^17 * (10*(1-t))^6 + 10 * (10 * t)^3 * (1-t)^13 - 2.4
+  f1 = function(t) t - 0.5
+  f2 = function(t) (2 * t - 1)^2 - 0.4
+  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) - 0.1
+  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
+  f5 = function(t) sin(pi * t^4) + t^4 - 0.5
+
+  # f1 = function(t) 3*t - 1.5
+  # f2 = function(t) pi * sin(pi * t) - 2
+  # f3 = function(t) (cos(2 * t) + sin(7 * t)) - 0.5
+  # f4 = function(t) 2 * t^5 - 0.2
   # f5 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{9})
-
-  f1 = function(t) 2*t - 1
-  f2 = function(t) 3 * (cos(2 * pi * t) + sin(pi * t))  - 2.2
-  f3 = function(t) (cos(1 * t) + sin(7 * t)) - 0.8
-  f4 = function(t) t^17 * (9*(1-t))^5 + 5 * (10 * t)^3 * (1-t)^13 - 0.5
-  f5 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{9}) + 0.1
-
 
   if(missing(type))
     type = "indep"
@@ -73,7 +72,7 @@ data_generation = function(n, p, rho, a,
       diag(Sigma) = 1
 
       x_sig = pnorm(rmvnorm(n, sigma = Sigma))
-      x_nois = matrix(rnorm(n * (p-5)), n, p-5)
+      x_nois = matrix(pnorm(rnorm(n * (p-5))), n, p-5)
       x = cbind(x_sig, x_nois)
 
       # Set the outer margins
@@ -117,7 +116,7 @@ data_generation = function(n, p, rho, a,
     }
 
     if(response == "classification"){
-      f = 3*f1(x[,1]) + 4*f2(x[,2]) + 45*f3(x[,3]) + 3*f4(x[,4]) + 4*f5(x[,5])
+      f = 2 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 3 * f4(x[,4]) + 1 * f5(x[,5])
       prob = exp(f)/(exp(f) + 1)
       y = rbinom(n, 1, prob)
       # plot(prob)
