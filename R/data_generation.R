@@ -116,7 +116,7 @@ data_generation = function(n, p, rho, a,
     }
 
     if(response == "classification"){
-      f = 2 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 3 * f4(x[,4]) + 1 * f5(x[,5])
+      f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 5 * f5(x[,5])
       prob = exp(f)/(exp(f) + 1)
       y = rbinom(n, 1, prob)
       # plot(prob)
