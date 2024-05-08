@@ -8,23 +8,17 @@ data_generation(
   n,
   p,
   rho,
-  a,
-  type = c("indep", "linear", "additive", "interaction", "survival"),
-  response = c("regression", "classification", "count")
+  response = c("regression", "classification", "count", "survival", "interaction")
 )
 }
 \arguments{
-\item{n}{Model object fitted from the cdcosso package.}
+\item{n}{The number of observation of a example dataset.}
 
-\item{p}{The test data you want to predict.}
+\item{p}{Dimension of a example dataset.}
 
-\item{rho}{The test data you want to predict.}
+\item{rho}{Correlation for first five significance variables.}
 
-\item{a}{The test data you want to predict.}
-
-\item{type}{The test data you want to predict.}
-
-\item{response}{The test data you want to predict.}
+\item{response}{Type of response variable.}
 }
 \value{
 a list containing the predicted value for the test data (f.new) and the transformed value of that predicted value (mu.new).

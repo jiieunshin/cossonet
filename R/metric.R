@@ -5,10 +5,10 @@
 #' Because it is a type of nonparametric inference, various types of kernels can be selected.
 #' To select hyperparameters, the function is designed to perform cross-validation.
 #'
-#' @param true Explanation variable matrix or data frame.
-#' @param est Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).
+#' @param true A vector of true value of binary class response.
+#' @param est A vector of estimated response by `cdcosso`.
 #'
-#' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+#' @return A list of contingency table for predicted results of binary class response.
 #' @export
 #'
 

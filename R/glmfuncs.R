@@ -2,10 +2,10 @@
 # mscale = wt^2
 # cand.lambda = lambda0
 
-cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kparam, algo)
+cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, algo)
 {
   n <- length(y)
-  IDmat <- cvsplitID(n, nfolds)
+  # IDmat <- cvsplitID(n, nfolds)
   len = length(cand.lambda)
   K = make_anovaKernel(x, x, type = type, kparam)
   d = K$numK
@@ -174,7 +174,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
 
-    out = list(IDmat = IDmat, measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
+    out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
                z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
                cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
   }
@@ -187,7 +187,7 @@ cv.sspline = function (x, y, mscale, nfolds, cand.lambda, obj, one.std, type, kp
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
 
-    out = list(IDmat = IDmat, measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
+    out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
                z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
                cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)  }
 
@@ -287,11 +287,11 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # init.theta = ifelse(init.theta < 0.5, 0, 1)
 # mean(y != ifelse(obj$linkinv(c(G %*% init.theta)) < 0.5, 0, 1))   # 이거는 잘됨. init.theta는 이거로 고정
 
-cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, nfolds, obj, one.std, algo)
+cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, algo)
 {
   n = length(y)
   d = length(mscale)
-  IDmat = model$IDmat
+  # IDmat = model$IDmat
 
   # solve theta
   G <- matrix(0, nrow(model$R[, ,1]), d)

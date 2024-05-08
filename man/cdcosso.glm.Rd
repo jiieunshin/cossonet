@@ -12,7 +12,6 @@ cdcosso.glm(
   lambda_theta,
   gamma,
   obj,
-  nfolds,
   one.std,
   type,
   kparam,
@@ -20,29 +19,27 @@ cdcosso.glm(
 )
 }
 \arguments{
-\item{x}{Explanation variable matrix or data frame.}
+\item{x}{Input matrix with $n$ observations and $p$ dimension.}
 
-\item{y}{Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).}
+\item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
 
-\item{wt}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
+\item{wt}{A weight vector for components.}
 
-\item{lambda0}{Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".}
+\item{lambda0}{A vector of tuning parameter to select optimal smoothing parameter.}
 
-\item{lambda_theta}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
+\item{lambda_theta}{A vector of tuning parameter to select optimal tuning parameter.}
 
-\item{gamma}{Kernel parameter values to use for SVM models.}
+\item{gamma}{The elastic net mixing parameter between 0 and 1. When \code{gamma = 1}, the penalty is to be LASSO. When \code{gamma = 0}, the penalty is to be ridge penalty. The default is \code{gamma = 0.95}.}
 
-\item{obj}{Penalty parameter vector for Lasso and Ridge regression.}
+\item{obj}{The type of family.}
 
-\item{nfolds}{Vector of penalty parameters to be applied to different parts of the model.}
+\item{one.std}{Boolean for whether to apply the one-standard error rule.}
 
-\item{one.std}{Vector of Lagrange multiplier.}
+\item{type}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
-\item{type}{Gamma value used in Stochastic Search Optimization.}
+\item{kparam}{Kernel parameter values that is used in gaussian kernel and polynomial kernel.}
 
-\item{kparam}{Number of folds for cross-validation.}
-
-\item{algo}{Logical value indicating whether to standardize explanatory variables.}
+\item{algo}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
 }
 \value{
 A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.

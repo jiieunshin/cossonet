@@ -5,22 +5,20 @@
 #' Because it is a type of nonparametric inference, various types of kernels can be selected.
 #' To select hyperparameters, the function is designed to perform cross-validation.
 #'
-#' @param x Explanation variable matrix or data frame.
-#' @param y Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).
-#' @param family Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
-#' @param kernel Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
-#' @param effect Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
+#' @param x Input matrix with $n$ observations and $p$ dimension.
+#' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
+#' @param family A character string representing one of the built-in families. The value depends on the type of response variable, `family='gaussian'` for continuous, `family='binomial'` forj binary class, `family='poisson'` for non-negative count , and `family='Cox'` for survival.
+#' @param kernel Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
+#' @param effect Effect of the component to be analyzed, `effect = "main"` for main effect (default), and `effect = "interaction"` for interaction.
 #' @param algo Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
-#' @param wt Weight vector for each explanatory variable. The default is to use the same weight of 1 for all variables.
-#' @param kparam Kernel parameter values to use for SVM models.
-#' @param lambda0 Penalty parameter vector for Lasso and Ridge regression.
-#' @param lambda_theta Vector of penalty parameters to be applied to different parts of the model.
-#' @param gamma Gamma value used in Stochastic Search Optimization.
-#' @param nfolds Number of folds for cross-validation.
-#' @param one.std Logical value indicating whether to standardize explanatory variables.
-#' @param scale A logical value indicating whether to scale the explanatory variable by min-max.
+#' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
+#' @param lambda0 A vector of tuning parameter to select optimal smoothing parameter.
+#' @param lambda_theta A vector of tuning parameter to select optimal tuning parameter.
+#' @param gamma The elastic net mixing parameter between 0 and 1. When `gamma = 1`, the penalty is to be LASSO. When `gamma = 0`, the penalty is to be ridge penalty. The default is `gamma = 0.95`.
+#' @param one.std Boolean for whether to apply the one-standard error rule.
+#' @param scale Boolean for whether to scale the input data to range between 0 and 1.
 #'
-#' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+#' @return A list containing information about the fitted model.
 #' @export
 
 # x = tr_x
@@ -39,10 +37,10 @@ cdcosso = function (x,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
                     algo = c("CD", "QP"),
-                    wt = rep(1, ncol(x)), kparam = 1,
+                    kparam = 1,
                     lambda0 = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-5}), log(2^{5}), length.out = 20)),
-                    gamma = 0.3, nfolds = 5, one.std = TRUE, scale = TRUE)
+                    gamma = 0.3, one.std = TRUE, scale = TRUE)
 {
   n = nrow(x)
   colnames(x) = NULL
@@ -91,10 +89,12 @@ cdcosso = function (x,
 
   objnm = ifelse(family == 'gaussian' | family == 'binomial' | family == 'poisson', 'glm', family)
 
+  wt = rep(1, ncol(x))
+
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, nfolds, one.std, type, kparam, algo),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
+               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj,  one.std, type, kparam, algo),
+               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma,  one.std, type, kparam, algo)
                # Negbin, svm 추???
   )
 

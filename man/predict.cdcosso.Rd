@@ -7,12 +7,12 @@
 \method{predict}{cdcosso}(object, testx)
 }
 \arguments{
-\item{object}{Model object fitted from the cdcosso package.}
+\item{object}{Fitted model from cdcosso.}
 
-\item{testx}{The test data you want to predict.}
+\item{testx}{A new dataset to predict.}
 }
 \value{
-a list containing the predicted value for the test data (f.new) and the transformed value of that predicted value (mu.new).
+A list containing the predicted value for the new dataset.
 }
 \description{
 The predict.cdcosso function is a function that receives the object and test data (testx) of the cdcosso package as input

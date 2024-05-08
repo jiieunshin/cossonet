@@ -7,12 +7,12 @@
 metric(true, est)
 }
 \arguments{
-\item{true}{Explanation variable matrix or data frame.}
+\item{true}{A vector of true value of binary class response.}
 
-\item{est}{Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).}
+\item{est}{A vector of estimated response by \code{cdcosso}.}
 }
 \value{
-A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+A list of contingency table for predicted results of binary class response.
 }
 \description{
 The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.

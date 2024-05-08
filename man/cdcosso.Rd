@@ -11,7 +11,6 @@ cdcosso(
   kernel = c("linear", "gaussian", "poly", "spline"),
   effect = c("main", "interaction"),
   algo = c("CD", "QP"),
-  wt = rep(1, ncol(x)),
   kparam = 1,
   lambda0 = exp(seq(log(2^{
      -5
@@ -24,42 +23,37 @@ cdcosso(
      5
  }), length.out = 20)),
   gamma = 0.3,
-  nfolds = 5,
   one.std = TRUE,
   scale = TRUE
 )
 }
 \arguments{
-\item{x}{Explanation variable matrix or data frame.}
+\item{x}{Input matrix with $n$ observations and $p$ dimension.}
 
-\item{y}{Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).}
+\item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
 
-\item{family}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
+\item{family}{A character string representing one of the built-in families. The value depends on the type of response variable, \code{family='gaussian'} for continuous, \code{family='binomial'} forj binary class, \code{family='poisson'} for non-negative count , and \code{family='Cox'} for survival.}
 
-\item{kernel}{Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".}
+\item{kernel}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
-\item{effect}{Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".}
+\item{effect}{Effect of the component to be analyzed, \code{effect = "main"} for main effect (default), and \code{effect = "interaction"} for interaction.}
 
 \item{algo}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
 
-\item{wt}{Weight vector for each explanatory variable. The default is to use the same weight of 1 for all variables.}
+\item{kparam}{Kernel parameter values that is used in gaussian kernel and polynomial kernel.}
 
-\item{kparam}{Kernel parameter values to use for SVM models.}
+\item{lambda0}{A vector of tuning parameter to select optimal smoothing parameter.}
 
-\item{lambda0}{Penalty parameter vector for Lasso and Ridge regression.}
+\item{lambda_theta}{A vector of tuning parameter to select optimal tuning parameter.}
 
-\item{lambda_theta}{Vector of penalty parameters to be applied to different parts of the model.}
+\item{gamma}{The elastic net mixing parameter between 0 and 1. When \code{gamma = 1}, the penalty is to be LASSO. When \code{gamma = 0}, the penalty is to be ridge penalty. The default is \code{gamma = 0.95}.}
 
-\item{gamma}{Gamma value used in Stochastic Search Optimization.}
+\item{one.std}{Boolean for whether to apply the one-standard error rule.}
 
-\item{nfolds}{Number of folds for cross-validation.}
-
-\item{one.std}{Logical value indicating whether to standardize explanatory variables.}
-
-\item{scale}{A logical value indicating whether to scale the explanatory variable by min-max.}
+\item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
 }
 \value{
-A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+A list containing information about the fitted model.
 }
 \description{
 The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
