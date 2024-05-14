@@ -483,10 +483,10 @@ nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
 # object = fit3
 # testx = te_x
 #
-# KLD = function(f, y, family = "binomial"){
-#   if(family == 'poisson') D = function(f, y) exp(f) - y*f
-#   if(family == 'binomial') D = function(f, y) log(exp(1-f)+1) - y*f
-#   if(family == 'Cox') D = function(f, y) log(exp(1-f)+1) - y*f
-#
-#   return(D(f, y))
-# }
+KLD = function(f, y, family = "binomial"){
+  if(family == 'poisson') D = function(f, y) exp(f) - y*f
+  if(family == 'binomial') D = function(f, y) log(exp(1-f)+1) - y*f
+  if(family == 'Cox') D = function(f, y) log(exp(1-f)+1) - y*f
+
+  return(D(f, y))
+}
