@@ -304,7 +304,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
   # init.theta = as.vector(glmnet(Gw, uw, family = "gaussian", lambda = lambda_theta[1])$beta)
   init.theta = rep(1, d)
 
-  if(algo == "QP") lambda_theta = exp(seq(log(0.01), log(80), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(0.2), log(80), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   # measure <- matrix(0, ncol = len, nrow = nfolds)
