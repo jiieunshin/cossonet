@@ -72,12 +72,17 @@ cdcosso = function (x,
 
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
-  if(missing(lambda0)){
+  if(missing(lambda0))
     lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
-  }
 
   if(missing(lambda_theta))
     lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
+
+  # if(missing(lambda0) & family == "Cox")
+  #   lambda0 = exp(seq(log(2^{-33}), log(2^{-12}), length.out = 20))
+  #
+  # if(missing(lambda_theta) & family == "Cox")
+  #   lambda_theta = exp(seq(log(2^{-33}), log(2^{-12}), length.out = 20))
 
   if (scale){   # min-max scale
     x = apply(x, 2, rescale)

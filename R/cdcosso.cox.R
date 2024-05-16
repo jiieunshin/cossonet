@@ -24,6 +24,7 @@
 # status = unlist(y[, "status"])
 # type = "spline"
 # algo = "CD"
+# lambda0 = exp(seq(log(2^{-22}), log(2^{2}), length.out = 20))
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.std, type, kparam, algo)
 {
   # library(survival)
@@ -32,7 +33,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.s
 
   par(mfrow = c(2,2))
   # solve theta
-  getc_cvfit = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, one.std, type, kparam, algo)
+  getc_cvfit  = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, one.std, type, kparam, algo)
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, one.std, type, kparam, algo)
 
   # solve (theta) - 2nd
@@ -41,9 +42,8 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.s
 
   par(mfrow = c(1,1))
 
-  object = list()
-  object$object = "object"
-  object$family = "Cox"
+  object = list("object" = "object", "family" = "Cox")
+
   out = list(data = list(x = x, time = time, status = status, R = getc_cvfit$R, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
