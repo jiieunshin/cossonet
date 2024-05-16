@@ -33,7 +33,7 @@ data_generation = function(n, p, rho,
   if(missing(p)) p = 10
   if(missing(rho)) rho = 0.5
 
-  if(p <= 5) stop("dimension size should be larger than 6.")
+  if(p <= 5) stop("dimension size should be larger than 5.")
 
   Sigma = matrix(rho, 5, 5)
   diag(Sigma) = 1
@@ -54,7 +54,7 @@ data_generation = function(n, p, rho,
   # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
   # par(mfrow = c(1,1))
 
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 3 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 5 * f5(x[,5])
 
 
   if(response == "regression"){
@@ -76,9 +76,6 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-
-    if(p <= 5) stop("dimension size should be larger than 6.")
-    if(missing(a)) a = 0.3
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 5))

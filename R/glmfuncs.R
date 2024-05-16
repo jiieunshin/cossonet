@@ -403,8 +403,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
   # abline(v = log(lambda_theta)[id], col = 'darkgrey', lty = 2)
 
   if(algo == "CD"){
-    theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
-    # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
+    # theta.new = nng.cd(Gw, uw, theta = init.theta, optlambda, gamma)
+    theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
     theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
   }
 

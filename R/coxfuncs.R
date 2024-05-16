@@ -28,10 +28,10 @@ PartialLik = function (time, status, RS, K, a, neg = FALSE) {
 # mscale = rep(1, d)/wt^2
 # nfolds = 5
 # cand.lambda = lambda0
-cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, kparam, algo)
+cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, algo)
 {
   n <- length(time)
-  IDmat <- cvsplitID(n, nfolds)
+  # IDmat <- cvsplitID(n, nfolds)
 
   K = make_anovaKernel(x, x, type = type, kparam)
   d = K$numK
@@ -45,90 +45,104 @@ cv.getc = function(x, time, status, mscale, nfolds, cand.lambda, one.std, type, 
 
   RS = RiskSet(time, status)
 
-  measure <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
-  miss <- matrix(NA, ncol = length(cand.lambda), nrow = nfolds)
-  for (f in 1:nfolds) {
-    testID <- IDmat[!is.na(IDmat[, f]), f]
-    trainID <- (1:n)[-testID]
-
-    # generate SS-ANOVA
-    tr_n = length(trainID)
-    te_n = length(testID)
-
-    tr_RS = RiskSet(time[trainID], status[trainID])
-    te_RS = RiskSet(time[testID], status[testID])
-
-    tr_R = array(NA, c(tr_n, tr_n, d))
-    te_R = array(NA, c(te_n, tr_n, d))
-
-    for(j in 1:d){
-      tr_R[, , j] = K$K[[j]][trainID, trainID]
-      te_R[, , j] = K$K[[j]][testID, trainID]
-    }
-
-    tr_Rtheta <- wsGram(tr_R, mscale)
-    te_Rtheta <- wsGram(te_R, mscale)
+  measure <- rep(NA, length(cand.lambda))
+  miss <- rep(NA, length(cand.lambda))
+  # for (f in 1:nfolds) {
+    # testID <- IDmat[!is.na(IDmat[, f]), f]
+    # trainID <- (1:n)[-testID]
+    #
+    # # generate SS-ANOVA
+    # tr_n = length(trainID)
+    # te_n = length(testID)
+    #
+    # tr_RS = RiskSet(time[trainID], status[trainID])
+    # te_RS = RiskSet(time[testID], status[testID])
+    #
+    # tr_R = array(NA, c(tr_n, tr_n, d))
+    # te_R = array(NA, c(te_n, tr_n, d))
+    #
+    # for(j in 1:d){
+    #   tr_R[, , j] = K$K[[j]][trainID, trainID]
+    #   te_R[, , j] = K$K[[j]][testID, trainID]
+    # }
+    #
+    # tr_Rtheta <- wsGram(tr_R, mscale)
+    # te_Rtheta <- wsGram(te_R, mscale)
 
     for (k in 1:length(cand.lambda)){
-      # dyn.load("src/coxfuncs.dll")
-      # .Call("Cget_c", tr_Rtheta, Rtheta, n, tr_n, tr_RS, c.init, cand.lambda[k])
       if(algo == "CD"){
-        c.init = as.vector(glmnet(tr_Rtheta, cbind(time = time[trainID], status = status[trainID]), family = 'cox', lambda = cand.lambda[k], alpha = 0)$beta)
-        fit = getc.cd(tr_Rtheta, c.init, time[trainID], status[trainID], cand.lambda[k], tr_RS)
+        c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox', lambda = cand.lambda[k], alpha = 0)$beta)
+        # zw = z * sqrt(w)
+        # Rw = Rtheta * w
+        # cw = c.init / sqrt(w)
+        # sw = sqrt(w)
+        fit = getc.cd(Rtheta, c.init, time, status, cand.lambda[k], RS)
+        # fit = .Call("Csspline", tr_Rtheta, Rtheta, n, n, RS, c.init, cand.lambda[k])
       }
 
       if(algo == "QP"){
         # fit = getc.QP(tr_Rtheta, Rtheta, time[trainID], status[trainID], tr_RS, cand.lambda[k])
       }
 
-      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_Rtheta, fit$c.new, neg = FALSE)
+      Lik = PartialLik(time, status, RS, Rtheta, fit$c.new, neg = FALSE)
 
       XX = fit$zw.new - fit$Rw %*% fit$cw.new - fit$b.new * fit$sw.new
       num = t(XX) %*% XX
-      den = (1 - sum(diag(tr_Rtheta %*% ginv(tr_Rtheta + diag(fit$w.new)/cand.lambda[k]))) / tr_n)^2
-      measure[f, k] <- as.vector(num / den / tr_n)
+      den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(fit$w.new)/cand.lambda[k]))) / n)^2
+      measure[k] <- as.vector(num / den / n)
 
-      miss[f, k] = Lik
+      miss[k] = Lik
     }
-  }
+  # }
   # print(measure)
-  rm(tr_Rtheta)
-  rm(te_Rtheta)
-  measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
-  cvm <- apply(measure, 2, mean, na.rm = T)
-  cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
+  # rm(tr_Rtheta)
+  # rm(te_Rtheta)
+  # measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
+  # cvm <- apply(measure, 2, mean, na.rm = T)
+  # cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
 
-  # optimal lambda1
-  id = which.min(cvm)[1]
+  ylab = "Cox family"
+  id = which.min(measure)[1]
   optlambda = cand.lambda[id]
 
-  # plotting error bar
-  main = "Cox family"
-  max_min <- c(min(cvm - cvsd), max(cvm + cvsd))
-  ylab = expression("GCV(" * lambda[0] * ")")
+  # optimal lambda1
+  plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  # try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  # points(log(cand.lambda), cvm, pch = 15, col = 'red')
+  # abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
+  ###
 
-  plot(log(cand.lambda), cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = max_min, type = 'n')
-  try(arrows(log(cand.lambda), cvm - cvsd, log(cand.lambda), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
-  points(log(cand.lambda), cvm, pch = 15, col = 'red')
-  abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
-  # if(one.std) abline(v = log(cand.lambda)[std.id], col = 'darkgrey')
+  # miss_cvm <- apply(miss, 2, mean, na.rm = T)
+  # misS_cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+  # max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
+
+  plot(log(cand.lambda), miss, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
+  # try(arrows(log(cand.lambda), miss_cvm - misS_cvsd, log(cand.lambda), miss_cvm + misS_cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  # points(log(cand.lambda), miss_cvm, pch = 15, col = 'red')
+  # abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
 
   ###
-  miss_cvm <- apply(miss, 2, mean, na.rm = T)
-  misS_cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
-  max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
-
-  plot(log(cand.lambda), miss_cvm, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = max_min, type = 'n')
-  try(arrows(log(cand.lambda), miss_cvm - misS_cvsd, log(cand.lambda), miss_cvm + misS_cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
-  points(log(cand.lambda), miss_cvm, pch = 15, col = 'red')
-  abline(v = log(cand.lambda)[id], col = 'darkgrey', lty = 2)
-  ###
+  # mu = obj$linkinv(f.init)
+  # w = obj$variance(mu)
+  # z = f.init + (y - mu) / w
 
   c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox', lambda = optlambda, alpha = 0)$beta)
+  # zw = z * sqrt(w)
+  # Rw = Rtheta * w
+  # cw = c.init / sqrt(w)
+  # sw = sqrt(w)
+
   fit = getc.cd(Rtheta, c.init, time, status, optlambda, RS)
+
+  # fit = .Call("Csspline", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
+  # f.new = c(fit$b.new + Rtheta %*% fit$c.new)
+  # mu.new = obj$linkinv(f.new)
+  # w.new = obj$variance(mu.new)
+  # z.new = f.new + (y - mu.new) / w.new
+
   # f.new = c(Rtheta %*% c.new)
-  out = list(IDmat = IDmat, RS = RS, measure = measure, R = R, w.new = fit$w.new, zw.new = fit$zw.new, b.new = fit$b.new,
-             cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+  out = list(measure = measure, R = R, zw.new = fit$zw.new, w.new = fit$w.new,
+             b.new = fit$b.new, cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
 
   rm(K)
   rm(Rtheta)
@@ -257,10 +271,12 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
 # model = getc_cvfit
 # lambda0 = getc_cvfit$optlambda
 # mscale = wt
-cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo){
+cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, one.std, type, kparam, algo){
   n = length(time)
   d = length(mscale)
   IDmat = model$IDmat
+
+  RS = RiskSet(time, status)
 
   # solve theta
   G <- matrix(0, nrow(model$R[, ,1]), d)
@@ -268,137 +284,92 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
-  # Gw = G * sqrt(model$w.new)
-  # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
+  Gw = G * sqrt(model$w.new)
+  uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
   init.theta = rep(1, d)
+
+  if(algo == "QP") lambda_theta = exp(seq(log(0.2), log(80), length.out = length(lambda_theta)))
   len = length(lambda_theta)
-  measure <- matrix(0, ncol = len, nrow = nfolds)
-  miss <- matrix(0, ncol = len, nrow = nfolds)
+  measure <- miss <- rep(0, len)
 
-  for (f in 1:nfolds) {
-    testID <- IDmat[!is.na(IDmat[, f]), f]
-    trainID <- (1:n)[-testID]
-
-    # generate SS-ANOVA
-    tr_n = length(trainID)
-    te_n = length(testID)
-
-    tr_G = G[trainID,]
-    te_G = G[testID,]
-
-    tr_RS = RiskSet(time[trainID], status[trainID])
-    te_RS = RiskSet(time[testID], status[testID])
+  # for (f in 1:nfolds) {
+  #   testID <- IDmat[!is.na(IDmat[, f]), f]
+  #   trainID <- (1:n)[-testID]
+  #
+  #   # generate SS-ANOVA
+  #   tr_n = length(trainID)
+  #   te_n = length(testID)
+  #
+  #   tr_G = G[trainID,]
+  #   te_G = G[testID,]
+  #
+  #   tr_RS = RiskSet(time[trainID], status[trainID])
+  #   te_RS = RiskSet(time[testID], status[testID])
     for (k in 1:len) {
-      # init.theta = as.vector(glmnet(Gw[trainID,], uw[trainID], family = "gaussian", lambda = lambda_theta[k])$beta)
-      fit = gettheta.cd(init.theta, tr_G, time[trainID], status[trainID], model$b.new, (tr_n/2) * lambda0 * model$cw.new[trainID], lambda_theta[k], gamma, tr_RS)
+      # init.theta = as.vector(glmnet(Gw, uw, family = "gaussian", lambda = lambda_theta[k])$beta)
+      fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
 
-      Gw = tr_G * sqrt(fit$w.new)
-      XX = fit$z.new - tr_G %*% fit$theta.new - model$b.new
+      Gw = G * sqrt(fit$w.new)
+      XX = fit$z.new - G %*% fit$theta.new - model$b.new
       num = t(XX) %*% diag(fit$w.new) %*% XX
-      den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / tr_n)^2
-      measure[f, k] <- as.vector(num / den / tr_n)
+      den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
+      measure[k] <- as.vector(num / den / n)
 
-      Lik = PartialLik(time[trainID], status[trainID], tr_RS, tr_G, fit$theta.new, neg = FALSE)
-      miss[f, k] = Lik
+      Lik = PartialLik(time, status, RS, G, fit$theta.new, neg = FALSE)
+      miss[k] = Lik
     }
-  }
-  print(measure)
-  print(miss)
-  measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
-  cvm <- apply(measure, 2, mean, na.rm = T)
-  cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
+  # }
 
-  id = which.min(cvm)[1]
+  # measure[measure == -Inf | measure == Inf | is.nan(measure)] <- NA
+  # cvm <- apply(measure, 2, mean, na.rm = T)
+  # cvsd <- apply(measure, 2, sd, na.rm = T) / sqrt(nrow(measure)) + 1e-22
 
-  if(one.std){
-    st1_err = cvm[id] + cvsd[id] # minimum cv err
-    std.id = max(which(cvm[id:len] <= st1_err & cvm[id] <= cvm[id:len]))
-    if(is.na(std.id)){
-      std.id = id
-      optlambda = lambda_theta[std.id]
-    } else{
-      std.id = ifelse(std.id > id, std.id, id)
-      optlambda = lambda_theta[std.id]
-    }
-  } else{
-    optlambda = lambda_theta[id]
-  }
+  id = which.min(measure)[1]
+  optlambda = lambda_theta[id]
+
+  # if(one.std){
+  #   st1_err = cvm[id] + cvsd[id] # minimum cv err
+  #   std.id = max(which(cvm[id:len] <= st1_err & cvm[id] <= cvm[id:len]))
+  #   if(is.na(std.id)){
+  #     std.id = id
+  #     optlambda = lambda_theta[std.id]
+  #   } else{
+  #     std.id = ifelse(std.id > id, std.id, id)
+  #     optlambda = lambda_theta[std.id]
+  #   }
+  # } else{
+  #   optlambda = lambda_theta[id]
+  # }
 
   # plotting error bar
-  main = "Cox Family"
-  max_min <- c(min(cvm - cvsd, na.rm = TRUE), max(cvm + cvsd, na.rm = TRUE))
   ylab = expression("GCV(" * lambda[theta] * ")")
 
   xrange = log(lambda_theta)
-  plot(xrange, cvm, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = max_min, type = 'n')
-  arrows(xrange, cvm - cvsd, xrange, cvm + cvsd, angle = 90, code = 3, length = 0.1, col = 'gray')
-  points(xrange, cvm, pch = 15, col = 'red')
-  abline(v = xrange[id], col = 'darkgrey')
+  plot(xrange, measure, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  # arrows(xrange, cvm - cvsd, xrange, cvm + cvsd, angle = 90, code = 3, length = 0.1, col = 'gray')
+  # points(xrange, cvm, pch = 15, col = 'red')
+  # abline(v = xrange[id], col = 'darkgrey')
   # text(log(lambda_theta), par("usr")[4], labels = selm, pos = 1)
-  if(one.std) abline(v = xrange[std.id], col = 'darkgrey')
+  # if(one.std) abline(v = xrange[std.id], col = 'darkgrey', lty = 2)
 
-  ##
-  cvm <- apply(miss, 2, mean, na.rm = T)
-  cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
-  max_min <- c(min(cvm - cvsd, na.rm = TRUE), max(cvm + cvsd, na.rm = TRUE))
+  # cvm <- apply(miss, 2, mean, na.rm = T)
+  # cvsd <- apply(miss, 2, sd, na.rm = T) / sqrt(nrow(miss)) + 1e-22
+  # max_min <- c(min(miss_cvm - misS_cvsd, na.rm = TRUE), max(miss_cvm + misS_cvsd, na.rm = TRUE))
 
-  plot(log(lambda_theta), cvm, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood", ylim = max_min, type = 'n')
-  try(arrows(log(lambda_theta), cvm - cvsd, log(lambda_theta), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
-  points(log(lambda_theta), cvm, pch = 15, col = 'red')
-  abline(v = log(lambda_theta)[id], col = 'darkgrey', lty = 2)
-  if(one.std) abline(v = log(lambda_theta)[std.id], col = 'darkgrey')
+  plot(log(lambda_theta), miss, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
+  # try(arrows(log(lambda_theta), cvm - cvsd, log(lambda_theta), cvm + cvsd, angle = 90, length = 0.01, col = 'gray'), silent = TRUE)
+  # points(log(lambda_theta), cvm, pch = 15, col = 'red')
+  # abline(v = log(lambda_theta)[id], col = 'darkgrey', lty = 2)
 
   if(algo == "CD"){
     # theta.new = .Call("Cnng", Gw, uw, n, d, init.theta, optlambda, gamma)
     # init.theta = as.vector(glmnet(Gw, uw, family = "gaussian", lambda = optlambda)$beta)
-    fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, optlambda, gamma, model$RS)
+    fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, optlambda, gamma, RS)
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit$theta.new)
   }
 
   return(out)
 }
-
-# G = tr_G
-# bhat = model$b.new
-# const = (tr_n/2) * lambda0 * model$cw.new[trainID]
-# lambda_theta = lambda_theta[1]
-# gamma
-# Risk = tr_RS
-gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, gamma, Risk){
-  n = nrow(G)
-  d = ncol(G)
-  r = lambda_theta * gamma * n
-
-  wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
-  w = wz$weight
-  z = wz$z
-
-  uw = (z * sqrt(w)) - bhat * sqrt(w) - const
-  Gw = G * sqrt(w)
-  # uw = u * sqrt(w)
-  theta = rep(1, d)
-  theta.new <- temp <- init.theta
-  for(iter in 1:20){
-    for(j in 1:d){
-      temp[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
-      temp[j] = ifelse(temp[j] > 0 & r < abs(temp[j]), temp[j], 0)
-      temp[j] = temp[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
-
-      loss = abs(theta - temp)
-      conv1 = max(loss) < 1e-6
-      # conv2 = sum(exp(G %*% theta.new) == Inf) > 0
-
-      if(conv1) break
-      theta[j] <- theta.new[j] <- temp[j]
-    }
-    if(conv1) break
-  }
-print(theta.new)
-  # if(i == 1 & (conv1 | conv2)) theta.new = rep(0, d)
-
-  return(list(z.new = z, w.new = w, theta.new = theta.new))
-}
-
 
 gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, gamma, Risk){
   n = nrow(G)
@@ -421,7 +392,7 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
       theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
 
       loss = abs(theta - theta.new)
-      conv = max(loss) < 1e-6
+      conv = max(loss) < 1e-6 | is.na(theta.new[j])
 
       if(conv) break
       theta[j] = theta.new[j]
@@ -429,7 +400,9 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
     if(conv) break
   }
 
-  return(list(z.new = z, w.new = w, theta.new = theta.new))
+  if(i == 1 & !conv) theta = rep(0, d)
+
+  return(list(z.new = z, w.new = w, theta.new = theta))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){

@@ -12,7 +12,6 @@
 #' @param lambda0 Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
 #' @param lambda_theta Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
 #' @param gamma Kernel parameter values to use for SVM models.
-#' @param nfolds Vector of penalty parameters to be applied to different parts of the model.
 #' @param one.std Vector of Lagrange multiplier.
 #' @param type Gamma value used in Stochastic Search Optimization.
 #' @param kparam Number of folds for cross-validation.
@@ -21,22 +20,24 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-# time = unlist(y[, 'time'])
-# status = unlist(y[, 'status'])
-cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
+# time = unlist(y[, "time"])
+# status = unlist(y[, "status"])
+# type = "spline"
+# algo = "CD"
+cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.std, type, kparam, algo)
 {
   # library(survival)
   n = nrow(x)
   d = length(wt)
 
-  par(mfrow = c(3,2))
+  par(mfrow = c(2,2))
   # solve theta
-  getc_cvfit = cv.getc(x, time, status, rep(1, d)/wt^2, nfolds, lambda0, one.std, type, kparam, algo)
-  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, nfolds, one.std, type, kparam, algo)
-print(theta_cvfit$theta.new)
+  getc_cvfit = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, one.std, type, kparam, algo)
+  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, one.std, type, kparam, algo)
+
   # solve (theta) - 2nd
   theta.new = rescale_theta(theta_cvfit$theta.new)
-  sspline_cvfit = cv.getc(x, time, status, theta.new/wt^2, nfolds, lambda0, one.std, type, kparam, algo)
+  sspline_cvfit = cv.getc(x, time, status, theta.new/wt^2, lambda0, one.std, type, kparam, algo)
 
   par(mfrow = c(1,1))
 
