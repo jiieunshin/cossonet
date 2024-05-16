@@ -12,7 +12,7 @@ void R_init_markovchain(DllInfo *dll) {
 
 
 // Define the sspline_cd function
-SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
+SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   int nc = INTEGER(n)[0];
   SEXP result = PROTECT(allocVector(VECSXP, 5)); // Extra space for b_new
 
@@ -154,7 +154,7 @@ SEXP Csspline(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
 }
 
 
-SEXP Cnng(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
+SEXP theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   // Convert R vectors to C arrays
   int nc = INTEGER(n)[0]; // Extract the value of n
   int dc = INTEGER(d)[0]; // Extract the value of d

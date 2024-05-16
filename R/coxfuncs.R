@@ -129,26 +129,27 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
   cw = c.init
   cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
-
-  for(i in 1:20){ # outer iteration
-    for(j in 1:n){
-      L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
-      R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
-      temp[j] = L/R
-
-      loss = abs(cw - temp)
-      conv1 = max(loss) < 1e-6
-
-      if(conv1) break
-      cw[j] <- cw.new[j] <- temp[j]
-    }
-    if(conv1) break
-  }
-
-  c.new = cw.new * sw
-  b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-
-  return(list(Rw = Rw, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
+  fit = .Call("c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
+  return(fit)
+  # for(i in 1:20){ # outer iteration
+  #   for(j in 1:n){
+  #     L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
+  #     R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
+  #     temp[j] = L/R
+  #
+  #     loss = abs(cw - temp)
+  #     conv = max(loss) < 1e-6
+  #
+  #     if(conv) break
+  #     cw[j] <- cw.new[j] <- temp[j]
+  #   }
+  #   if(conv) break
+  # }
+  #
+  # c.new = cw.new * sw
+  # b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
+  #
+  # return(list(Rw = Rw, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
 getc.QP = function (R, Rtheta, c.init, time, status, mscale, lambda0, RS)
