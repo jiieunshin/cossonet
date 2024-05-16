@@ -57,16 +57,14 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       # sw = sqrt(w)
       fit = getc.cd(Rtheta, c.init, time, status, cand.lambda[k], RS)
       # fit = .Call("Csspline", tr_Rtheta, Rtheta, n, n, RS, c.init, cand.lambda[k])
-      Lik = partial_liklihood(time, status, RS, Rtheta, fit$c.new, neg = FALSE)
+      Lik = partial_liklihood(time, status, RS, Rtheta, fit$c.new)
 
       Rw = Rtheta * fit$w.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * fit$w.new
       num = t(XX) %*% XX
       den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(fit$w.new)/cand.lambda[k]))) / n)^2
-
-      # measure[k] <- as.vector(num / den / n)
-      measure[k] <- -Lik
-      # miss[k] = -Lik
+      measure[k] <- as.vector(num / den / n)
+      miss[k] = -Lik
     }
 
     if(algo == "QP"){
@@ -225,10 +223,10 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       XX = fit$z.new - G %*% fit$theta.new - model$b.new
       num = t(XX) %*% diag(fit$w.new) %*% XX
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
-      # measure[k] <- as.vector(num / den / n)
-      measure[k] <- -Lik
-      Lik = partial_liklihood(time, status, RS, G, fit$theta.new, neg = FALSE)
-      # miss[k] = -Lik
+      measure[k] <- as.vector(num / den / n)
+
+      Lik = partial_liklihood(time, status, RS, G, fit$theta.new)
+      miss[k] = -Lik
     }
 
     if(algo == "QP"){
@@ -271,27 +269,29 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
 
   uw = (z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
-  # uw = u * sqrt(w)
-  theta = init.theta
-  theta.new = rep(0, d)
-  for(i in 1:20){
-    for(j in 1:d){
-      theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
-      theta.new[j] = ifelse(theta.new[j] > 0 & r < abs(theta.new[j]), theta.new[j], 0)
-      theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
 
-      loss = abs(theta - theta.new)
-      conv = max(loss) < 1e-6 | is.na(theta.new[j])
+  theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
 
-      if(conv) break
-      theta[j] = theta.new[j]
-    }
-    if(conv) break
-  }
+  # theta = init.theta
+  # theta.new = rep(0, d)
+  # for(i in 1:20){
+  #   for(j in 1:d){
+  #     theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
+  #     theta.new[j] = ifelse(theta.new[j] > 0 & r < abs(theta.new[j]), theta.new[j], 0)
+  #     theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
+  #
+  #     loss = abs(theta - theta.new)
+  #     conv = max(loss) < 1e-6 | is.na(theta.new[j])
+  #
+  #     if(conv) break
+  #     theta[j] = theta.new[j]
+  #   }
+  #   if(conv) break
+  # }
+  #
+  # if(i == 1 & !conv) theta = rep(0, d)
 
-  if(i == 1 & !conv) theta = rep(0, d)
-
-  return(list(z.new = z, w.new = w, theta.new = theta))
+  return(list(z.new = z, w.new = w, theta.new = theta.new))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){
