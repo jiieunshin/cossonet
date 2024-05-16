@@ -4,7 +4,7 @@
 \alias{Partial_Lik}
 \title{Load a matrix from a file}
 \usage{
-Partial_Lik(time, status, RS, K, a, neg = FALSE)
+Partial_Lik(time, status, RS, K, a)
 }
 \arguments{
 \item{time}{A vector of true response variable.}
@@ -16,8 +16,6 @@ Partial_Lik(time, status, RS, K, a, neg = FALSE)
 \item{K}{A family corresponding to the type of response variable.}
 
 \item{a}{A family corresponding to the type of response variable.}
-
-\item{neg}{A family corresponding to the type of response variable.}
 }
 \value{
 A vector of Kullback-Leibler divergence evaluated by test data.

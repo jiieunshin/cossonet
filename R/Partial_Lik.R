@@ -10,12 +10,11 @@
 #' @param RS A family corresponding to the type of response variable.
 #' @param K A family corresponding to the type of response variable.
 #' @param a A family corresponding to the type of response variable.
-#' @param neg A family corresponding to the type of response variable.
 #'
 #' @return A vector of Kullback-Leibler divergence evaluated by test data.
 #' @export
 #'
-Partial_Lik = function (time, status, RS, K, a, neg = FALSE) {
+Partial_Lik = function (time, status, RS, K, a) {
   pl = rep(NA, ncol(RS))
   eventtime = unique(time[status == 1])
   tie.size = as.numeric(table(time[status == 1]))
@@ -25,6 +24,5 @@ Partial_Lik = function (time, status, RS, K, a, neg = FALSE) {
   }
   pl = sum(pl) - t(status) %*% K %*% a
 
-  if(neg) pl = -pl
   return(pl)
 }
