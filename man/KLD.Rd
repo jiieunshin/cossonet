@@ -2,23 +2,18 @@
 % Please edit documentation in R/KLD.R
 \name{KLD}
 \alias{KLD}
-\title{Load a matrix from a file}
+\title{Compute Kullback-Leibler Divergence}
 \usage{
-KLD(f, y, family = "binomial")
+KLD(y, fhat)
 }
 \arguments{
 \item{y}{A vector of true response variable.}
 
 \item{fhat}{A vector of estimated response variable fitted by \code{cdcosso}.}
-
-\item{obj}{Argument corresponding to the type of response variable.}
 }
 \value{
-A value of Kullback-Leibler divergence evaluated by tes data.
+A vector of Kullback-Leibler divergence evaluated by test data.
 }
 \description{
-The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-Because it is a type of nonparametric inference, various types of kernels can be selected.
-To select hyperparameters, the function is designed to perform cross-validation.
+Compute Kullback-Leibler Divergence
 }
