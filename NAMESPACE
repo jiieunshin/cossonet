@@ -1,6 +1,7 @@
 # Load dynamic libraries
 useDynLib(cdcosso)
 
+import(cosso)
 import(stats)
 import(MASS)
 import(glmnet)
@@ -15,4 +16,4 @@ export(cdcosso)
 export(cdcosso.glm)
 export(cdcosso.cox)
 export(predict.cdcosso)
-
+export(KLD)

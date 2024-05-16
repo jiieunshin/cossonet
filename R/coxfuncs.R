@@ -82,7 +82,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
   optlambda = cand.lambda[id]
 
   # optimal lambda1
-  plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
 
   plot(log(cand.lambda), miss, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
 
@@ -157,7 +157,7 @@ getc.QP = function (R, Rtheta, c.init, time, status, mscale, lambda0, RS)
   p = length(mscale)
 
   GH = cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, lambda0, RS)
-  c.new = as.numeric(My_solve(GH$H, GH$H %*% c.init - GH$G))
+  c.new = as.numeric(cosso::My_solve(GH$H, GH$H %*% c.init - GH$G))
   # UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
   # print(cw.new)
   # out = list(cw.new = cw.new)
@@ -226,7 +226,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     }
 
     if(algo == "QP"){
-      fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda_theta[k], RS)
+      fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
       measure[k] <- cosso::PartialLik(time, status, RS, G %*% fit)
     }
   }
@@ -234,10 +234,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   optlambda = lambda_theta[id]
 
   # plotting error bar
-  ylab = expression("GCV(" * lambda[theta] * ")")
-
   xrange = log(lambda_theta)
-  plot(xrange, measure, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  plot(xrange, measure, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
 
   plot(xrange, miss, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
 
@@ -249,7 +247,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   }
 
   if(algo == "QP"){
-    fit = gettheta.QP(init.theta, model$c.new, G, time, status, optlambda, RS)
+    fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, optlambda, RS)
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit)
   }
 
@@ -313,7 +311,9 @@ calculate_wz_for_theta = function(init.theta, G, time, status, RS){
   return(list(z = z, weight = weight))
 }
 
-gettheta.QP = function(init.theta, c.hat, G, time, status, lambda_theta, Risk){
+gettheta.QP = function(init.theta, c.hat, G, time, status, lambda0, lambda_theta, Risk){
+  n = nrow(G)
+  p = ncol(G)
   Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta),
                                              length(init.theta),
                                              n)
@@ -332,7 +332,7 @@ gettheta.QP = function(init.theta, c.hat, G, time, status, lambda_theta, Risk){
     dvec = -(GH$G - GH$H %*% old.Theta)
     Amat = t(rbind(diag(p), rep(-1, p)))
     bvec = c(rep(0, p), -lambda_theta)
-    new.Theta = My_solve.QP(GH$H, dvec, Amat, bvec)
+    new.Theta = cosso::My_solve.QP(GH$H, dvec, Amat, bvec)
     new.Theta[new.Theta < 1e-07] = 0
     iter.diff = mean(abs(new.Theta - old.Theta))
     old.Theta = new.Theta
