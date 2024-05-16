@@ -130,7 +130,12 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
   cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
   fit = .Call("c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
-  return(fit)
+
+  b.new = fit$b.new
+  c.new = fit$c.new
+  cw.new = fit$cw.new
+
+  return(list(Rw = Rw, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
   # for(i in 1:20){ # outer iteration
   #   for(j in 1:n){
   #     L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
