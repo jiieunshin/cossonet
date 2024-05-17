@@ -26,3 +26,4 @@ Partial_Lik = function (time, status, K, a) {
 
   return(pl)
 }
+

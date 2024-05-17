@@ -43,7 +43,7 @@ predict.cdcosso = function(model, testx)
   }
 
   if(family == "Cox"){
-    out = list(K.new = K, f.new = f.new)
+    out = list(K.new = Rtheta, f.new = f.new)
   }
 
   return(out)
