@@ -42,13 +42,11 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.s
 
   par(mfrow = c(1,1))
 
-  object = list("object" = "object", "family" = "Cox")
-
   out = list(data = list(x = x, time = time, status = status, R = getc_cvfit$R, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,
-             object,
+             family = "Cox",
              algorithm = algo)
 
   return(out)

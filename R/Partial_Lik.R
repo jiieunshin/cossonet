@@ -7,14 +7,14 @@
 #'
 #' @param time A vector of true response variable.
 #' @param status A vector of estimated response variable fitted by `cdcosso`.
-#' @param RS A family corresponding to the type of response variable.
 #' @param K A family corresponding to the type of response variable.
 #' @param a A family corresponding to the type of response variable.
 #'
 #' @return A vector of Kullback-Leibler divergence evaluated by test data.
 #' @export
 #'
-Partial_Lik = function (time, status, RS, K, a) {
+Partial_Lik = function (time, status, K, a) {
+  RS = RiskSet(time, status)
   pl = rep(NA, ncol(RS))
   eventtime = unique(time[status == 1])
   tie.size = as.numeric(table(time[status == 1]))

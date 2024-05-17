@@ -4,10 +4,10 @@
 \alias{predict.cdcosso}
 \title{Load a matrix from a file}
 \usage{
-\method{predict}{cdcosso}(object, testx)
+\method{predict}{cdcosso}(model, testx)
 }
 \arguments{
-\item{object}{Fitted model from cdcosso.}
+\item{model}{Fitted model from cdcosso.}
 
 \item{testx}{A new dataset to predict.}
 }

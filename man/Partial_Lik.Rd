@@ -4,14 +4,12 @@
 \alias{Partial_Lik}
 \title{Load a matrix from a file}
 \usage{
-Partial_Lik(time, status, RS, K, a)
+Partial_Lik(time, status, K, a)
 }
 \arguments{
 \item{time}{A vector of true response variable.}
 
 \item{status}{A vector of estimated response variable fitted by \code{cdcosso}.}
-
-\item{RS}{A family corresponding to the type of response variable.}
 
 \item{K}{A family corresponding to the type of response variable.}
 
