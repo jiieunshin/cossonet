@@ -20,11 +20,16 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-# time = unlist(y[, "time"])
-# status = unlist(y[, "status"])
+# x = tr_x
+# time = unlist(tr_y[, "time"])
+# status = unlist(tr_y[, "status"])
 # type = "spline"
 # algo = "CD"
+# family = 'Cox'
+# gamma = 0.95,
+# kparam=1
 # lambda0 = exp(seq(log(2^{-22}), log(2^{2}), length.out = 20))
+# wt = rep(1, d)
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.std, type, kparam, algo)
 {
   # library(survival)

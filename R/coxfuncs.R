@@ -9,8 +9,8 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-# time = unlist(y[, 'time'])
-# status = unlist(y[, 'status'])
+# time = unlist(tr_y[, 'time'])
+# status = unlist(tr_y[, 'status'])
 # mscale = rep(1, d)/wt^2
 # nfolds = 5
 # cand.lambda = lambda0
@@ -172,7 +172,7 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
 
     Grad.Term = status[k] - Sum.exp.eta.Grad
     weight[k] = Sum.exp.eta.Hess
-    z[k] = eta + Grad.Term / weight[k]
+    z[k] = eta + (Grad.Term + 0.1) / (weight[k] + 0.1)
   }
 
   return(list(z = z, weight = weight))

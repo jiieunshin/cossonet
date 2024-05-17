@@ -22,7 +22,7 @@ Partial_Lik = function (time, status, K, a) {
     failid = which(time == eventtime[k])
     pl[k] = tie.size[k] * log(sum(exp(K[RS[,  k],] %*% a), na.rm = T) + 1e-10)
   }
-  pl = sum(pl) - t(status) %*% K %*% a
+  pl = as.numeric(sum(pl) - t(status) %*% K %*% a)
 
   return(pl)
 }
