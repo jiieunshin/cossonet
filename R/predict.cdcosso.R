@@ -43,7 +43,7 @@ predict.cdcosso = function(model, testx)
   }
 
   if(family == "Cox"){
-    out = list(f.new = f.new)
+    out = list(K.new = K$numK, f.new = f.new)
   }
 
   return(out)

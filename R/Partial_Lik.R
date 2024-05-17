@@ -5,12 +5,12 @@
 #' Because it is a type of nonparametric inference, various types of kernels can be selected.
 #' To select hyperparameters, the function is designed to perform cross-validation.
 #'
-#' @param time A vector of true response variable.
-#' @param status A vector of estimated response variable fitted by `cdcosso`.
-#' @param K A family corresponding to the type of response variable.
-#' @param a A family corresponding to the type of response variable.
+#' @param time A vector of obbseved time.
+#' @param status A vector of observed event indicator.
+#' @param K Kernel function evaluated in every component.
+#' @param a A vector evaluating observation.
 #'
-#' @return A vector of Kullback-Leibler divergence evaluated by test data.
+#' @return Partial log-likelihood of Cox proportional model.
 #' @export
 #'
 Partial_Lik = function (time, status, K, a) {

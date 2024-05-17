@@ -9,20 +9,6 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-partial_liklihood = function (time, status, RS, K, a, neg = FALSE) {
-  pl = rep(NA, ncol(RS))
-  eventtime = unique(time[status == 1])
-  tie.size = as.numeric(table(time[status == 1]))
-  for (k in 1:ncol(RS)) {
-    failid = which(time == eventtime[k])
-    pl[k] = tie.size[k] * log(sum(exp(K[RS[,  k],] %*% a), na.rm = T) + 1e-10)
-  }
-  pl = sum(pl) - t(status) %*% K %*% a
-
-  if(neg) pl = -pl
-  return(pl)
-}
-
 # time = unlist(y[, 'time'])
 # status = unlist(y[, 'status'])
 # mscale = rep(1, d)/wt^2
@@ -57,7 +43,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       # sw = sqrt(w)
       fit = getc.cd(Rtheta, c.init, time, status, cand.lambda[k], RS)
       # fit = .Call("Csspline", tr_Rtheta, Rtheta, n, n, RS, c.init, cand.lambda[k])
-      Lik = partial_liklihood(time, status, RS, Rtheta, fit$c.new)
+      Lik = Partial_Lik(time, status, Rtheta, fit$c.new)
 
       Rw = Rtheta * fit$w.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * fit$w.new
@@ -225,7 +211,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
       measure[k] <- as.vector(num / den / n)
 
-      Lik = partial_liklihood(time, status, RS, G, fit$theta.new)
+      Lik = Partial_Lik(time, status, G, fit$theta.new)
       miss[k] = -Lik
     }
 

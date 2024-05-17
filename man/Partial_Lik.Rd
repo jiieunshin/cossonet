@@ -7,16 +7,16 @@
 Partial_Lik(time, status, K, a)
 }
 \arguments{
-\item{time}{A vector of true response variable.}
+\item{time}{A vector of obbseved time.}
 
-\item{status}{A vector of estimated response variable fitted by \code{cdcosso}.}
+\item{status}{A vector of observed event indicator.}
 
-\item{K}{A family corresponding to the type of response variable.}
+\item{K}{Kernel function evaluated in every component.}
 
-\item{a}{A family corresponding to the type of response variable.}
+\item{a}{A vector evaluating observation.}
 }
 \value{
-A vector of Kullback-Leibler divergence evaluated by test data.
+Partial log-likelihood of Cox proportional model.
 }
 \description{
 The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
