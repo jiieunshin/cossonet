@@ -60,7 +60,9 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
 
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
       num = t(XX) %*% XX
-      den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
+      # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
+      S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
+      den = (1 - sum(diag(S)) / n)^2
       measure[k] <- as.vector( num / den / n)
 
       if(obj$family == "binomial") miss[k] <- mean(ifelse(testmu < 0.5, 0, 1) != y)
@@ -236,8 +238,8 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
     testfhat = c(G %*% theta.new)
     testmu = obj$linkinv(testfhat)
 
-    XX = model$z.new - G %*% theta.new - model$b.new
-    num = t(XX) %*% diag(model$w.new) %*% XX
+    XX = model$zw.new - Gw %*% theta.new
+    num = t(XX) %*% XX
     den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
     measure[k] <- as.vector(num / den /n)
 

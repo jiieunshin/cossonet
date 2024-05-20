@@ -297,7 +297,7 @@ calculate_wz_for_theta = function(init.theta, G, time, status, RS){
 
     Grad.Term = status[k] - Sum.exp.eta.Grad
     weight[k] = Sum.exp.eta.Hess
-    z[k] = eta + Grad.Term / weight[k]
+    z[k] = eta + (Grad.Term + 0.1) / (weight[k] + 0.1)
   }
 
   return(list(z = z, weight = weight))
