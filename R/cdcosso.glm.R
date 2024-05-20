@@ -42,7 +42,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
                tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
                c_step = sspline_cvfit,
                theta_step = nng_fit,
-               family = obj,
+               family = obj$family,
                algorithm = algo)
 
   if(algo == "QP")
@@ -50,7 +50,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
                tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
                c_step = sspline_cvfit,
                theta_step = nng_fit,
-               family = obj,
+               family = obj$family,
                algorithm = algo)
 
   return(out)
