@@ -27,7 +27,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
     R[, , j] = K$K[[j]]
   }
 
-  Rtheta <- wsGram(R, mscale)
+  Rtheta <- combine_kernel(R, mscale)
 
   RS = RiskSet(time, status)
 
@@ -46,10 +46,12 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       Lik = Partial_Lik(time, status, Rtheta, fit$c.new)
 
       Rw = Rtheta * fit$w.new
-      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * fit$w.new
+      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
       num = t(XX) %*% XX
-      den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(fit$w.new)/cand.lambda[k]))) / n)^2
-      measure[k] <- as.vector(num / den / n)
+      # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
+      S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
+      den = (1 - sum(diag(S)) / n)^2
+      measure[k] <- as.vector( num / den / n)
       miss[k] = -Lik
     }
 

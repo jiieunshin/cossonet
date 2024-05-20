@@ -11,7 +11,7 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
     R[, , j] = K$K[[j]]
   }
 
-  Rtheta <- wsGram(R, mscale)
+  Rtheta <- combine_kernel(R, mscale)
   f.init = rep(0.5, n)
 
   measure <- miss <- rep(NA, len)
