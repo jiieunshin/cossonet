@@ -23,7 +23,7 @@
 
 # x = tr_x
 # y = tr_y
-# family = 'binomial'
+# family = 'Cox'
 # gamma = 0.8
 # kernel = "spline"
 # one.std = TRUE

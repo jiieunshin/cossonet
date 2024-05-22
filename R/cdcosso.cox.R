@@ -29,7 +29,7 @@
 # gamma = 0.95
 # kparam=1
 # lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
-# wt = rep(1, d)
+# wt = rep(1, ncol(x))
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.std, type, kparam, algo)
 {
   # library(survival)
