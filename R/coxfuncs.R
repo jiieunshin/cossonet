@@ -207,11 +207,10 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   for (k in 1:len) {
     if(algo == "CD"){
       fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
-      testfhat = c(G %*% theta.new)
-      testmu = obj$linkinv(testfhat)
+      testfhat = c(G %*% fit$theta.new)
 
       Gw = G * sqrt(fit$w.new)
-      XX = model$zw.new - Gw %*% theta.new
+      XX = model$zw.new - Gw %*% fit$theta.new
       num = t(XX) %*% XX
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
       measure[k] <- as.vector(num / den /n)
