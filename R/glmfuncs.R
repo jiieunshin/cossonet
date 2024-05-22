@@ -1,4 +1,4 @@
-cv.sspline = function (K, y, mscale, cand.lambda, obj, one.std, type, kparam, algo)
+cv.sspline = function (K, y, mscale, cand.lambda, obj, one.std, type, kparam, algo, show)
 {
   cat("-- c-step -- \n")
   cat("proceding... \n")
@@ -83,7 +83,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, one.std, type, kparam, al
   id = which.min(measure)[1]
   optlambda = cand.lambda[id]
 
-  plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  if(show) plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
     mu = obj$linkinv(f.init)
