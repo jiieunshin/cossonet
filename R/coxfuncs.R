@@ -46,8 +46,9 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       Lik = Partial_Lik(time, status, Rtheta, fit$c.new)
 
       Rw = Rtheta * fit$w.new
-      XX = fit$z.new - Rw %*% fit$c.new - fit$b.new
-      num = t(XX) %*% diag(fit$w.new) %*% XX
+      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
+      num = t(XX) %*% XX
+
       # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2
@@ -206,12 +207,14 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   for (k in 1:len) {
     if(algo == "CD"){
       fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
+      testfhat = c(G %*% theta.new)
+      testmu = obj$linkinv(testfhat)
 
       Gw = G * sqrt(fit$w.new)
-      XX = fit$z.new - G %*% fit$theta.new - model$b.new
-      num = t(XX) %*% diag(fit$w.new) %*% XX
+      XX = model$zw.new - Gw %*% theta.new
+      num = t(XX) %*% XX
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
-      measure[k] <- as.vector(num / den / n)
+      measure[k] <- as.vector(num / den /n)
 
       Lik = Partial_Lik(time, status, G, fit$theta.new)
       miss[k] = -Lik

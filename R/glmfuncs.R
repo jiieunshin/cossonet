@@ -14,7 +14,7 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
   Rtheta <- combine_kernel(R, mscale)
   f.init = rep(0.5, n)
 
-  measure <- miss <- rep(NA, len)
+  measure <- rep(NA, len)
   for (k in 1:len) {
 
     if(algo == "CD"){
@@ -64,10 +64,6 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2
       measure[k] <- as.vector( num / den / n)
-
-      if(obj$family == "binomial") miss[k] <- mean(ifelse(testmu < 0.5, 0, 1) != y)
-      if(obj$family == "gaussian") miss[k] <- mean((testfhat - y)^2)
-      if(obj$family == "poisson") miss[k] <- mean(-obj$dev.resids(y, testmu, rep(1, n)))
     }
   }
 
@@ -89,8 +85,6 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
   optlambda = cand.lambda[id]
 
   plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
-
-  plot(log(cand.lambda), miss, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
 
   if(algo == "CD"){
     mu = obj$linkinv(f.init)
@@ -224,7 +218,7 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
   if(algo == "QP") lambda_theta = exp(seq(log(0.2), log(80), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
-  measure <- miss <- rep(NA, len)
+  measure <- rep(NA, len)
 
   for (k in 1:len) {
     if(algo == "CD") {
@@ -242,10 +236,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
     num = t(XX) %*% XX
     den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
     measure[k] <- as.vector(num / den /n)
-
-    if(obj$family == "binomial") miss[k] <- mean(ifelse(testmu < 0.5, 0, 1) != y)
-    if(obj$family == "gaussian") miss[k] <- mean((testfhat - y)^2)
-    if(obj$family == "poisson") miss[k] <- mean(-obj$dev.resids(y, testmu, rep(1, n)))
   }
 
   # plotting error bar
@@ -266,8 +256,6 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
 
   xrange = log(lambda_theta)
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
-
-  plot(log(lambda_theta), miss, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
 
   if(algo == "CD"){
     theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
