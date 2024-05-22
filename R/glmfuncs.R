@@ -1,17 +1,12 @@
-cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, algo)
+cv.sspline = function (K, y, mscale, cand.lambda, obj, one.std, type, kparam, algo)
 {
-  n <- length(y)
-
-  len = length(cand.lambda)
-  K = make_anovaKernel(x, x, type = type, kparam)
-  d = K$numK
-  cat("kernel:", type, "and d =", d, "\n")
-
   cat("-- c-step -- \n")
   cat("proceding... \n")
+  d = K$numK
+  n <- length(y)
+  len = length(cand.lambda)
 
   R = array(NA, c(n, n, d))
-
   for(j in 1:d){
     R[, , j] = K$K[[j]]
   }
@@ -209,7 +204,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
-cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, algo)
+cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, algo)
 {
   cat("-- theta-step -- \n")
   cat("proceding... \n")

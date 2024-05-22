@@ -28,16 +28,20 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
   cat("fit COSSO  with \n")
   cat("n = ", n, "p =", ncol(x), "\n")
 
+  K = make_anovaKernel(x, x, type = type, kparam)
+  d = K$numK
+  cat("kernel:", type, "and d =", d, "\n")
+
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(x, y, rep(1, p)/wt^2, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(K, y, rep(1, p)/wt^2, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 
   par(mfrow = c(1,2))
   # solve (b, c) - 1st
-  nng_fit = cv.nng(sspline_cvfit, x, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, one.std, algo)
+  nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd
-  sspline_cvfit = try({cv.sspline(x, y, theta.new/wt^2, lambda0, obj, one.std, type, kparam, algo)}) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = try({cv.sspline(K, y, theta.new/wt^2, lambda0, obj, one.std, type, kparam, algo)}) ## 초기값 설정. 수정할 함수
   par(mfrow = c(1,1))
 
   if(algo == "CD")
