@@ -25,8 +25,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
   n = length(y)
   p = length(wt)
 
-  cat("fit COSSO  with \n")
-  cat("n = ", n, "p =", ncol(x), "\n")
+  cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
   K = make_anovaKernel(x, x, type = type, kparam)
   d = K$numK

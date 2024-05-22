@@ -1,7 +1,7 @@
 cv.sspline = function (K, y, mscale, cand.lambda, obj, one.std, type, kparam, algo, show)
 {
   cat("-- c-step -- \n")
-  cat("proceding... \n")
+  cat("proceeding... \n")
   d = K$numK
   n <- length(y)
   len = length(cand.lambda)
@@ -207,7 +207,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, algo)
 {
   cat("-- theta-step -- \n")
-  cat("proceding... \n")
+  cat("proceeding... \n")
   n = length(y)
   d = length(mscale)
 
