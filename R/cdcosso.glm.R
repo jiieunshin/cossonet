@@ -23,10 +23,13 @@
 cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, type, kparam, algo)
 {
   n = length(y)
-  d = length(wt)
+  p = length(wt)
+
+  cat("fit COSSO  with \n")
+  cat("n = ", n, "p =", ncol(x), "\n")
 
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(x, y, rep(1, d)/wt^2, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(x, y, rep(1, p)/wt^2, lambda0, obj, one.std, type, kparam, algo) ## 초기값 설정. 수정할 함수
 
   par(mfrow = c(1,2))
   # solve (b, c) - 1st

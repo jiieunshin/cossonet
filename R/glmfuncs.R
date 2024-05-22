@@ -5,6 +5,11 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
   len = length(cand.lambda)
   K = make_anovaKernel(x, x, type = type, kparam)
   d = K$numK
+  cat("kernel:", type, "and d =", d, "\n")
+
+  cat("-- c-step -- \n")
+  cat("proceding... \n")
+
   R = array(NA, c(n, n, d))
 
   for(j in 1:d){
@@ -56,7 +61,6 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
       testfhat = c(b.new + Rtheta %*% c.new)
       testmu = obj$linkinv(testfhat)
       testw = obj$variance(testmu)
-      testz = testfhat + (y - testmu) / testw
 
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
       num = t(XX) %*% XX
@@ -102,6 +106,12 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
+
+    if(obj$family == "binomial") miss <- mean(y != f.new)
+    if(obj$family == "gaussian") miss <- sum((y - f.new)^2)
+    if(obj$family == "poisson") miss <- obj$deviance(y, mu.new, rep(1, nrow(x)))
+
+    cat("training error:", miss, "\n")
 
     out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
                z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
@@ -201,6 +211,8 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 
 cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, algo)
 {
+  cat("-- theta-step -- \n")
+  cat("proceding... \n")
   n = length(y)
   d = length(mscale)
 
@@ -260,6 +272,15 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
   if(algo == "CD"){
     theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
     theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
+
+    f.new = c(G %*% theta.new)
+    mu.new = obj$linkinv(f.new)
+
+    if(obj$family == "binomial") miss <- mean(y != f.new)
+    if(obj$family == "gaussian") miss <- sum((y - f.new)^2)
+    if(obj$family == "poisson") miss <- obj$deviance(y, mu.new, rep(1, nrow(x)))
+
+    cat("training error:", miss, "\n")
   }
 
   if(algo == "QP"){
