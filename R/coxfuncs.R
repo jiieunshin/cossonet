@@ -46,7 +46,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       Lik = Partial_Lik(time, status, Rtheta, fit$c.new)
 
       Rw = Rtheta * fit$w.new
-      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
+      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
       num = t(XX) %*% XX
 
       # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
