@@ -188,7 +188,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
     if(algo == "QP"){
       fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
-      measure[k] <- cosso::PartialLik(time, status, RS, G %*% fit)
+      measure[k] <- cosso::PartialLik(time, status, RS, G %*% fit$theta.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
   }
   id = which.min(measure)[1]
@@ -209,7 +209,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
   if(algo == "QP"){
     fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, optlambda, RS)
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit)
+    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit$theta.new)
   }
 
   return(out)
