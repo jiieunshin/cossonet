@@ -107,9 +107,9 @@ cv.sspline = function (x, y, mscale, cand.lambda, obj, one.std, type, kparam, al
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
 
-    if(obj$family == "binomial") miss <- mean(y != f.new)
-    if(obj$family == "gaussian") miss <- sum((y - f.new)^2)
-    if(obj$family == "poisson") miss <- obj$deviance(y, mu.new, rep(1, nrow(x)))
+    if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+    if(obj$family == "gaussian") miss <- mean((y - f.new)^2)
+    if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
 
     cat("training error:", miss, "\n")
 
@@ -276,9 +276,9 @@ cv.nng = function(model, x, y, mscale, lambda0, lambda_theta, gamma, obj, one.st
     f.new = c(G %*% theta.new)
     mu.new = obj$linkinv(f.new)
 
-    if(obj$family == "binomial") miss <- mean(y != f.new)
-    if(obj$family == "gaussian") miss <- sum((y - f.new)^2)
-    if(obj$family == "poisson") miss <- obj$deviance(y, mu.new, rep(1, nrow(x)))
+    if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+    if(obj$family == "gaussian") miss <- mean((y - f.new)^2)
+    if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
 
     cat("training error:", miss, "\n")
   }
