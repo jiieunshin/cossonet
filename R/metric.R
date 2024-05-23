@@ -42,7 +42,12 @@ metric = function(true, est){
   fn = result_tab[2]
   precision = tp/(tp+fp)
   recall = tp/(tp+fn)
-  f1_score = 2 * (precision * recall)/(precision + recall)
+
+  if((precision + recall) == 0){
+    f1_score = 0
+  } else{
+    f1_score = 2 * (precision * recall)/(precision + recall)
+  }
 
   return(list(tp = tp, fp = fp, precision = precision, recall = recall, f1_score = f1_score))
 }
