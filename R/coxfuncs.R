@@ -166,7 +166,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
   init.theta = rep(1, d)
 
-  if(algo == "QP") lambda_theta = exp(seq(log(0.0001), log(80), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(0.001), log(80), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- miss <- rep(0, len)
@@ -191,7 +191,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       measure[k] <- - cosso::PartialLik(time, status, RS, G %*% fit$theta.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
   }
-  id = which.min(miss)[1]
+  id = which.min(measure)[1]
   optlambda = lambda_theta[id]
 
   # plotting error bar
