@@ -46,7 +46,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2
-      measure[k] <- as.vector( num / den / n)
+      measure[k] <- as.vector( num / den / n )
       miss[k] = - Lik
     }
 
@@ -54,7 +54,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
       fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
-      measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      measure[k] <- - cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
 
   }
@@ -180,18 +180,18 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       XX = model$zw.new - Gw %*% fit$theta.new
       num = t(XX) %*% XX
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
-      measure[k] <- as.vector(num / den /n)
+      measure[k] <- as.vector(num / den / n)
 
-      Lik = Partial_Lik(time, status, G, fit$theta.new)
-      miss[k] = -Lik
+      Lik = - Partial_Lik(time, status, G, fit$theta.new)
+      miss[k] = - Lik
     }
 
     if(algo == "QP"){
       fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
-      measure[k] <- cosso::PartialLik(time, status, RS, G %*% fit$theta.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      measure[k] <- - cosso::PartialLik(time, status, RS, G %*% fit$theta.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
   }
-  id = which.min(measure)[1]
+  id = which.min(miss)[1]
   optlambda = lambda_theta[id]
 
   # plotting error bar
