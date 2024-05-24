@@ -58,6 +58,7 @@ data_generation = function(n, p, rho,
 
 
   if(response == "regression"){
+    f = f + rnorm(n, 0, 1)
     out = list(x = x, y = f)
   }
 
@@ -78,7 +79,7 @@ data_generation = function(n, p, rho,
   if(response == 'survival'){
 
     surTime = rexp(n, exp(f))
-    cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
+    cenTime = rexp(n, exp(-f) + runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
     out = list(x = x, f = f, y = y)
   }
