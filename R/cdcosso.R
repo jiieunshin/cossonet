@@ -38,8 +38,8 @@ cdcosso = function (x,
                     effect = c("main", "interaction"),
                     algo = c("CD", "QP"),
                     kparam = 1,
-                    lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
-                    lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
+                    lambda0 = exp(seq(log(2^{-22}), log(2^{2}), length.out = 20)),
+                    lambda_theta = exp(seq(log(2^{-22}), log(2^{2}), length.out = 20)),
                     gamma = 0.3, one.std = TRUE, scale = TRUE)
 {
   n = nrow(x)
@@ -72,11 +72,11 @@ cdcosso = function (x,
 
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
-  if(missing(lambda0))
-    lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
-
-  if(missing(lambda_theta))
-    lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
+  # if(missing(lambda0))
+  #   lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
+  #
+  # if(missing(lambda_theta))
+  #   lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
 
   # if(missing(lambda0) & family == "Cox")
   #   lambda0 = exp(seq(log(2^{-33}), log(2^{-12}), length.out = 20))

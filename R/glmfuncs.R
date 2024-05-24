@@ -222,7 +222,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
 
   init.theta = rep(1, d)
 
-  if(algo == "QP") lambda_theta = exp(seq(log(0.2), log(80), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(NA, len)
