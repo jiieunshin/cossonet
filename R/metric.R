@@ -14,12 +14,6 @@
 
 metric = function(true, est){
   result_tab = table(true, est)
-  if(dim(result_tab)[2] == 1){
-    result_tab = cbind(0, result_tab)}
-
-  tp = result_tab[4]
-  fp = result_tab[3]
-  result_tab = table(true, est)
   is.col = colnames(result_tab) == c("0", "1")
 
   # if no one class are exist,
@@ -27,12 +21,12 @@ metric = function(true, est){
     colid = which(!is.col)
 
     if(colid == 1){
-      result_tab = cbind(result_tab, 0)
+      result_tab = cbind(0, result_tab)
       colnames(result_tab) = c("0", "1")
     }
 
     if(colid == 2){
-      result_tab = cbind(0, result_tab)
+      result_tab = cbind(result_tab, 0)
       colnames(result_tab) = c("0", "1")
     }
   }
@@ -40,8 +34,8 @@ metric = function(true, est){
   tp = result_tab[4]
   fp = result_tab[3]
   fn = result_tab[2]
-  precision = tp/(tp+fp)
-  recall = tp/(tp+fn)
+  precision = tp/(tp + fp + 1e-10)
+  recall = tp/(tp + fn + 1e-10)
 
   if((precision + recall) == 0){
     f1_score = 0
