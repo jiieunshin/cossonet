@@ -222,18 +222,20 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
 
   init.theta = rep(1, d)
 
-  if(algo == "QP") lambda_theta = exp(seq(log(0.2), log(100), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(0.2), log(80), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(NA, len)
-
+  save_theta <- list()
   for (k in 1:len) {
     if(algo == "CD") {
       theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      save_theta[[k]] <- theta.new
     }
 
     if(algo == "QP") {
       theta.new = nng.QP(Gw, uw, theta = init.theta, lambda_theta[k], gamma)
+      save_theta[[k]] <- theta.new
     }
 
     testfhat = c(G %*% theta.new)
@@ -265,7 +267,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
-    theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
+    theta.new = save_theta[[id]]
     theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
 
     f.new = c(G %*% theta.new)
@@ -279,7 +281,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
   }
 
   if(algo == "QP"){
-    theta.new = nng.QP(Gw, uw, theta = init.theta, optlambda, gamma)
+    theta.new = save_theta[[id]]
   }
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   return(out)
