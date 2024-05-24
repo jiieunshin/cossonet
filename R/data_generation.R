@@ -54,7 +54,7 @@ data_generation = function(n, p, rho,
   # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
   # par(mfrow = c(1,1))
 
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  f = 6 * f1(x[,1]) + 4 * f2(x[,2]) + 5 * f3(x[,3]) + 8 * f4(x[,4]) + 4 * f5(x[,5])
 
 
   if(response == "regression"){
@@ -77,7 +77,6 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) + runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
