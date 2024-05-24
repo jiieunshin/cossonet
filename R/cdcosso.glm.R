@@ -25,11 +25,11 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
   n = length(y)
   p = length(wt)
 
-  # cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
+  cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
   K = make_anovaKernel(x, x, type = type, kparam)
   d = K$numK
-  # cat("kernel:", type, "and d =", d, "\n")
+  cat("kernel:", type, "and d =", d, "\n")
 
   par(mfrow = c(2,2))
   # solve (theta) - 1st
