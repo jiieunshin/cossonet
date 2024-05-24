@@ -58,10 +58,10 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, one.std, type, kparam, al
       testw = obj$variance(testmu)
 
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
-      num = t(XX) %*% XX
+      num = t(XX) %*% XX + 1
       # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
-      den = (1 - sum(diag(S)) / n)^2
+      den = (1 - sum(diag(S)) / n)^2 + 1
       measure[k] <- as.vector( num / den / n)
     }
   }
@@ -238,12 +238,11 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
       save_theta[[k]] <- theta.new
     }
 
-    testfhat = c(G %*% theta.new)
-    testmu = obj$linkinv(testfhat)
+    theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-    XX = model$zw.new - Gw %*% theta.new
-    num = t(XX) %*% XX
-    den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2
+    XX = model$zw.new - Gw %*% theta.adj
+    num = t(XX) %*% XX + 1
+    den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
     measure[k] <- as.vector(num / den /n)
   }
 
@@ -267,10 +266,11 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
+    print(save_theta)
     theta.new = save_theta[[id]]
-    theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
+    theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-    f.new = c(G %*% theta.new)
+    f.new = c(G %*% theta.adj)
     mu.new = obj$linkinv(f.new)
 
     if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))

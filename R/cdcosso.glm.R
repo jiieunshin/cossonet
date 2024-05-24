@@ -32,7 +32,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
   cat("kernel:", type, "and d =", d, "\n")
 
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(K, y, rep(1, p)/wt^2, lambda0, obj, one.std, type, kparam, algo, show = FALSE) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(K, y, rep(1, p)/wt^2, lambda0, obj, one.std, type, kparam, algo, show = TRUE) ## 초기값 설정. 수정할 함수
 
   par(mfrow = c(1,2))
   # solve (b, c) - 1st
