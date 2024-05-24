@@ -266,7 +266,6 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
-    print(save_theta)
     theta.new = save_theta[[id]]
     theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 

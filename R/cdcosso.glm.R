@@ -31,10 +31,10 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
   d = K$numK
   cat("kernel:", type, "and d =", d, "\n")
 
+  par(mfrow = c(1,2))
   # solve (theta) - 1st
   sspline_cvfit = cv.sspline(K, y, rep(1, p)/wt^2, lambda0, obj, one.std, type, kparam, algo, show = TRUE) ## 초기값 설정. 수정할 함수
 
-  par(mfrow = c(1,2))
   # solve (b, c) - 1st
   nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, one.std, algo)
   theta.new = rescale_theta(nng_fit$theta.new)
