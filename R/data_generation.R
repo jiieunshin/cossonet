@@ -55,7 +55,7 @@ data_generation = function(n, p, rho,
   # par(mfrow = c(1,1))
 
   # f = 7 * f1(x[,1]) + 5 * f2(x[,2]) + 6 * f3(x[,3]) + 8 * f4(x[,4]) + 6 * f5(x[,5])
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 5 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
 
   if(response == "regression"){
     f = f + rnorm(n, 0, 1)
