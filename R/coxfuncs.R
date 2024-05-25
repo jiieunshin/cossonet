@@ -47,7 +47,13 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
       fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
-      measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+
+      z = (fit$H %*% fit$c.new - fit$G)/cand.lambda[k]
+      num = t(z - Rtheta %*% fit$c.new) %*% ginv(fit$H) %*% (z - Rtheta %*% fit$c.new) + 1
+      den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + fit$H/cand.lambda[k]))) / n)^2 + 1
+      measure[k] <- as.vector( num / den / n )
+
+      # measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
 
   }
@@ -111,7 +117,7 @@ getc.QP = function (R, Rtheta, c.init, time, status, mscale, lambda0, RS)
   GH = cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, lambda0, RS)
   c.new = as.numeric(cosso::My_solve(GH$H, GH$H %*% c.init - GH$G))
   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
-  return(list(c.new = c.new, UHU = UHU))
+  return(list(c.new = c.new, G = GH$G, H = GH$H, UHU = UHU))
 }
 
 calculate_wz_for_c = function(c.init, R, time, status, RS){
@@ -180,7 +186,19 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       save_theta[[k]] <- fit$theta.new
       theta.adj <- rescale_theta(fit$theta.new)
 
-      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      z = (fit$H %*% theta.adj - fit$G)/lambda_theta[k]
+      num = t(z - G %*% theta.adj) %*% ginv(fit$H) %*% (z - G %*% theta.adj) + 1
+      den = (1 - sum(diag(G %*% ginv(G + fit$H/lambda_theta[k]))) / n)^2 + 1
+      measure[k] <- as.vector( num / den / n )
+
+      # testfhat = c(G %*% theta.adj)
+      # Gw = G * sqrt(fit$w.new)
+      # XX = model$zw.new - Gw %*% theta.adj
+      # num = t(XX) %*% XX + 1
+      # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+      # measure[k] <- as.vector(num / den / n)
+
+      # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
   }
   id = which.min(measure)[1]
@@ -272,5 +290,5 @@ gettheta.QP = function(init.theta, c.hat, G, time, status, lambda0, lambda_theta
   }
 
   UHU = G %*% My_solve(GH$H, t(G))
-  return(list(theta.new = new.Theta, UHU = UHU))
+  return(list(theta.new = new.Theta, G = GH$G, H = GH$H, UHU = UHU))
 }
