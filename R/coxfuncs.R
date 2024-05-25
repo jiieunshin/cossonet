@@ -47,7 +47,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
       fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
-      measure[k] <- - cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
 
   }
@@ -180,7 +180,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       save_theta[[k]] <- fit$theta.new
       theta.adj <- rescale_theta(fit$theta.new)
 
-      measure[k] <- - cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
   }
   id = which.min(measure)[1]
