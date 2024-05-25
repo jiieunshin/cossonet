@@ -76,8 +76,9 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
     fit = getc.QP(R, Rtheta, c.init, time, status, mscale, optlambda, RS)
-
-    out = list(measure = measure, R = R, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+    z.new = (fit$H %*% fit$c.new - fit$G)/optlambda
+    cw.new = fit$c.new / sqrt(fit$w.new)
+    out = list(measure = measure, R = R, w.new = ginv(fit$H), z.new = z.new, cw.new = cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
   }
 
   rm(K)
@@ -186,16 +187,12 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       save_theta[[k]] <- fit$theta.new
       theta.adj <- rescale_theta(fit$theta.new)
 
-      z = (fit$H %*% theta.adj - fit$G)/lambda_theta[k]
-      num = t(z - G %*% theta.adj) %*% ginv(fit$H) %*% (z - G %*% theta.adj) + 1
-      den = (1 - sum(diag(G %*% ginv(G + fit$H/lambda_theta[k]))) / n)^2 + 1
-      measure[k] <- as.vector( num / den / n )
-
       # testfhat = c(G %*% theta.adj)
-      # Gw = G * sqrt(fit$w.new)
-      # XX = model$zw.new - Gw %*% theta.adj
-      # num = t(XX) %*% XX + 1
-      # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+      Gw = sqrt(model$w.new) %*% G
+      zw.new = sqrt(model$w.new) %*% (model$z.new) - (n/2) * lambda0 * model$cw.new
+      XX = zw.new - Gw %*% theta.adj
+      num = t(XX) %*% XX + 1
+      den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
       # measure[k] <- as.vector(num / den / n)
 
       # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
@@ -209,7 +206,6 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   plot(xrange, measure, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
-
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
     # fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, optlambda, gamma, RS)
     # out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit$theta.new)
