@@ -178,7 +178,9 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     if(algo == "QP"){
       fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
       save_theta[[k]] <- fit$theta.new
-      measure[k] <- - cosso::PartialLik(time, status, RS, G %*% fit$theta.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      theta.adj <- rescale_theta(fit$theta.new)
+
+      measure[k] <- - cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
   }
   id = which.min(measure)[1]
@@ -258,7 +260,7 @@ gettheta.QP = function(init.theta, c.hat, G, time, status, lambda0, lambda_theta
     GH = cosso::gradient.Hessian.Theta(old.Theta, c.hat, G, G,
                                        lambda0, lambda_theta, time, status, Risk, Hess.FullNumer.unScale)
     if(min(eigen(GH$H)$value) < 0)
-      GH$H = GH$H + max(1e-07, 1.5 * abs(min(eigen(GH$H)$value))) * diag(length(init.theta))
+      GH$H = GH$H + max(1e-07, 1.5 * abs(min(eigen(GH$H)$value))) * diag(length(old.Theta))
 
     dvec = -(GH$G - GH$H %*% old.Theta)
     Amat = t(rbind(diag(p), rep(-1, p)))
