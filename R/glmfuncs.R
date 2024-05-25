@@ -266,7 +266,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
-    theta.new = save_theta[[id]]
+    theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
+    # theta.new = save_theta[[id]]
     theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
     f.new = c(G %*% theta.adj)
@@ -280,7 +281,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, 
   }
 
   if(algo == "QP"){
-    theta.new = save_theta[[id]]
+    theta.new = nng.QP(Gw, uw, theta = init.theta, optlambda, gamma)
+    # theta.new = save_theta[[id]]
   }
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   return(out)

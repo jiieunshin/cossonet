@@ -38,10 +38,8 @@ cdcosso = function (x,
                     effect = c("main", "interaction"),
                     algo = c("CD", "QP"),
                     kparam = 1,
-                    lambda0 = seq(2^{-11}, 2^{2}, length.out = 20),
-                    lambda_theta = seq(2^{-11}, 2^{2}, length.out = 20),
-                    # lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
-                    # lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
+                    lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
+                    lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
                     gamma = 0.3, one.std = TRUE, scale = TRUE)
 {
   n = nrow(x)
