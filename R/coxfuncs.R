@@ -170,11 +170,11 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   len = length(lambda_theta)
 
   measure <- miss <- rep(0, len)
-  save_theta <- list()
+  # save_theta <- list()
   for (k in 1:len) {
     if(algo == "CD"){
       fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
-      save_theta[[k]] <- fit$theta.new
+      # save_theta[[k]] <- fit$theta.new
 
       testfhat = c(G %*% fit$theta.new)
       Gw = G * sqrt(fit$w.new)
@@ -189,7 +189,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
     if(algo == "QP"){
       fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
-      save_theta[[k]] <- fit$theta.new
+      # save_theta[[k]] <- fit$theta.new
       measure[k] <- - cosso::PartialLik(time, status, RS, G %*% fit$theta.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
   }
@@ -202,8 +202,14 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
   plot(xrange, miss, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
 
-  if(algo == "CD") out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
-  if(algo == "QP") out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
+  if(algo == "CD"){
+    fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, optlambda, gamma, RS)
+    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit$theta.new)
+  }
+  if(algo == "QP"){
+    fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, optlambda, RS)
+    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit$theta.new)
+  }
 
   return(out)
 }
