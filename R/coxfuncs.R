@@ -9,7 +9,7 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, algo)
+cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, algo, show)
 {
   n <- length(time)
 
@@ -25,29 +25,22 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
 
   RS = RiskSet(time, status)
 
-  measure <- miss <- rep(0, length(cand.lambda))
+  measure <- rep(0, length(cand.lambda))
 
   for (k in 1:length(cand.lambda)){
     if(algo == "CD"){
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
-      # zw = z * sqrt(w)
-      # Rw = Rtheta * w
-      # cw = c.init / sqrt(w)
-      # sw = sqrt(w)
       fit = getc.cd(Rtheta, c.init, time, status, cand.lambda[k], RS)
-      # fit = .Call("Csspline", Rtheta, Rtheta, n, n, RS, c.init, cand.lambda[k])
       Lik = Partial_Lik(time, status, Rtheta, fit$c.new)
 
       Rw = Rtheta * fit$w.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
       num = t(XX) %*% XX + 1
 
-      # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2 + 1
       measure[k] <- as.vector( num / den / n )
-      miss[k] = - Lik
     }
 
     if(algo == "QP"){
@@ -63,10 +56,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
   optlambda = cand.lambda[id]
 
   # optimal lambda1
-  plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
-
-  plot(log(cand.lambda), miss, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
-
+  if(show) plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
@@ -166,25 +156,23 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
   init.theta = rep(1, d)
 
-  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(80), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
-  measure <- miss <- rep(0, len)
+  measure <- rep(0, len)
   save_theta <- list()
   for (k in 1:len) {
     if(algo == "CD"){
       fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
       save_theta[[k]] <- fit$theta.new
 
-      testfhat = c(G %*% fit$theta.new)
+      theta.adj <- rescale_theta(fit$theta.new)
+      testfhat = c(G %*% theta.adj)
       Gw = G * sqrt(fit$w.new)
-      XX = model$zw.new - Gw %*% fit$theta.new
+      XX = model$zw.new - Gw %*% theta.adj
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
       measure[k] <- as.vector(num / den / n)
-
-      Lik = - Partial_Lik(time, status, G, fit$theta.new)
-      miss[k] = - Lik
     }
 
     if(algo == "QP"){
@@ -199,8 +187,6 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   # plotting error bar
   xrange = log(lambda_theta)
   plot(xrange, measure, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
-
-  plot(xrange, miss, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "miss", ylim = range(miss), pch = 15, col = 'red')
 
   if(algo == "CD"){
 
