@@ -49,8 +49,8 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
     if(algo == "QP"){
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
-      # fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
-      #
+      fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
+
       # z = (fit$H %*% fit$c.new - fit$G)/cand.lambda[k]
       # num = t(z - Rtheta %*% fit$c.new) %*% ginv(fit$H) %*% (z - Rtheta %*% fit$c.new) + 1
       # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + fit$H/cand.lambda[k]))) / n)^2 + 1
