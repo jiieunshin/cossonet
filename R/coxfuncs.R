@@ -177,7 +177,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
-  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(100), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(80), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(0, len)
