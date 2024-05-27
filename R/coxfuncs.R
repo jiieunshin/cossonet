@@ -199,8 +199,9 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # num = t(z - G %*% theta.adj) %*% ginv(fit$H) %*% (z - G %*% theta.adj) + 1
       # den = (1 - sum(diag( G %*% ginv( fit$H + lambda_theta[k] * (1-gamma) * diag(1, nrow = nrow(fit$H), ncol = ncol(fit$H)) ))) / n)^2 + 1
 
-      z = fit$H %*% theta.adj - fit$G - c(lambda0 * t(model$c.new) %*% G)
-      num = t(z - G %*% theta.adj) %*% ginv(fit$H) %*% (z - G %*% theta.adj) + 1
+      z = fit$H %*% theta.adj - fit$G - as.numeric(lambda0 * t(model$c.new) %*% G)
+      GT = as.numeric(G %*% theta.adj)
+      num = t(z - GT) %*% ginv(fit$H) %*% (z - GT) + 1
       den = (1 - sum(diag( G %*% ginv( fit$H ))) / n)^2 + 1
 
       # Gw = G * sqrt(model$w.new)
