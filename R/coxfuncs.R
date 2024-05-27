@@ -43,19 +43,18 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       # den = (1 - sum(diag(S)) / n)^2 + 1
       # measure[k] <- as.vector( num / den / n )
-      measure[k] <- Partial_Lik(time, status, Rtheta, fit$c.new)
+      # measure[k] <- Partial_Lik(time, status, Rtheta, fit$c.new)
+
+      GH = cosso::gradient.Hessian.C(fit$c.new, R, R, time, status, mscale, cand.lambda[k], RS)
+      UHU = Rtheta %*% cosso::My_solve(GH$H, t(Rtheta))
+
+      measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
     }
 
     if(algo == "QP"){
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
       fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
-
-      # z = (fit$H %*% fit$c.new - fit$G)/cand.lambda[k]
-      # num = t(z - Rtheta %*% fit$c.new) %*% ginv(fit$H) %*% (z - Rtheta %*% fit$c.new) + 1
-      # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + fit$H/cand.lambda[k]))) / n)^2 + 1
-      # measure[k] <- as.vector( num / den / n )
-
       measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
 
@@ -126,7 +125,7 @@ getc.QP = function (R, Rtheta, c.init, time, status, mscale, lambda0, RS)
 
   GH = cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, lambda0, RS)
   c.new = as.numeric(cosso::My_solve(GH$H, GH$H %*% c.init - GH$G))
-  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
+  UHU = Rtheta %*% cosso::My_solve(GH$H, t(Rtheta))
   return(list(c.new = c.new, G = GH$G, H = GH$H, UHU = UHU))
 }
 
@@ -190,7 +189,19 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
       # measure[k] <- as.vector(num / den / n)
 
-      measure[k] <- Partial_Lik(time, status, G, theta.adj)
+      Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta),
+                                                 length(init.theta),
+                                                 n)
+                                    )
+      for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
+
+      GH = cosso::gradient.Hessian.Theta(theta.adj, model$c.new, G, G,
+                                         lambda0, lambda_theta[k], time, status, RS, Hess.FullNumer.unScale)
+      if(min(eigen(GH$H)$value) < 0)
+        GH$H = GH$H + max(1e-07, 1.5 * abs(min(eigen(GH$H)$value))) * diag(length(theta.adj))
+      UHU = G %*% My_solve(GH$H, t(G))
+
+      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
     }
 
     if(algo == "QP"){
