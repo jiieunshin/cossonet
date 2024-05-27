@@ -195,7 +195,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       save_theta[[k]] <- fit$theta.new
       theta.adj <- rescale_theta(fit$theta.new)
 
-      z = fit$H %*% theta.adj - fit$G - lambda0 * t(model$c.new) %*% fit$G
+      z = fit$H %*% theta.adj - fit$G - lambda0 * t(model$c.new) %*% G
       num = t(z - G %*% theta.adj) %*% ginv(fit$H) %*% (z - G %*% theta.adj) + 1
       den = (1 - sum(diag( G %*% ginv( t(G) %*% G) %*% t(G) )) / n)^2 + 1
       # Gw = G * sqrt(model$w.new)
