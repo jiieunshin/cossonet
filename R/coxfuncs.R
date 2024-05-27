@@ -45,7 +45,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
       # measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new)
 
       # GH = cosso::gradient.Hessian.C(fit$c.new, R, R, time, status, mscale, cand.lambda[k], RS)
-      W = fit$gradient
+      W = outer(fit$gradient, fit$gradient)
       UHU = Rtheta %*% W %*% t(Rtheta)
 
       measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
@@ -187,7 +187,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # num = t(XX) %*% XX + 1
       # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
       # measure[k] <- as.vector(num / den / n)
-      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
+
+      # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
 
       # Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta),
       #                                            length(init.theta),
