@@ -38,7 +38,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.s
 
   par(mfrow = c(1,2))
   # solve theta
-  getc_cvfit  = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, one.std, type, kparam, algo, show = FALSE)
+  getc_cvfit  = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, one.std, type, kparam, algo, show = TRUE)
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, one.std, type, kparam, algo)
 
   # solve (theta) - 2nd

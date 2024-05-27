@@ -9,6 +9,8 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
+# mscale = wt
+# cand.lambda = lambda0
 cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, algo, show)
 {
   n <- length(time)
@@ -77,8 +79,14 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
     fit = getc.QP(R, Rtheta, c.init, time, status, mscale, optlambda, RS)
     z.new = (fit$H %*% fit$c.new - fit$G)/optlambda
-    cw.new = fit$c.new / sqrt(fit$w.new)
-    out = list(measure = measure, R = R, w.new = ginv(fit$H), z.new = z.new, cw.new = cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+    W.new = ginv(fit$H)
+    w.new = 1/diag(fit$H)
+
+    zw.new = z.new * sqrt(w.new)
+    cw.new = fit$c.new / sqrt(w.new)
+    b.new = sum((zw.new - Rtheta %*% cw.new) * sqrt(w.new)) / sum(w.new)
+    out = list(measure = measure, R = R, W.new = W.new, w.new = w.new, zw.new = zw.new, cw.new = cw.new, c.new = fit$c.new, b.new = b.new,
+               optlambda = optlambda, conv = TRUE)
   }
 
   rm(K)
@@ -187,13 +195,15 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       save_theta[[k]] <- fit$theta.new
       theta.adj <- rescale_theta(fit$theta.new)
 
-      # testfhat = c(G %*% theta.adj)
-      Gw = sqrt(model$w.new) %*% G
-      zw.new = sqrt(model$w.new) %*% (model$z.new) - (n/2) * lambda0 * model$cw.new
-      XX = zw.new - Gw %*% theta.adj
-      num = t(XX) %*% XX + 1
-      den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
-      # measure[k] <- as.vector(num / den / n)
+      z = fit$H %*% theta.adj - fit$G - lambda0 * t(model$c.new) %*% fit$G
+      num = t(z - G %*% theta.adj) %*% ginv(fit$H) %*% (z - G %*% theta.adj) + 1
+      den = (1 - sum(diag( G %*% ginv( t(G) %*% G) %*% t(G) )) / n)^2 + 1
+      # Gw = G * sqrt(model$w.new)
+      # zw.new = model$zw.new - (n/2) * lambda0 * model$cw.new - model$b.new
+      # XX = zw.new - Gw %*% theta.adj
+      # num = t(XX) %*% XX + 1
+      # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+      measure[k] <- as.vector(num / den / n)
 
       # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
     }
