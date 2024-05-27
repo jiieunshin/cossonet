@@ -79,7 +79,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
     fit = getc.cd(Rtheta, c.init, time, status, optlambda, RS)
-    out = list(measure = measure, R = R, zw.new = fit$zw.new, w.new = fit$w.new,
+    out = list(measure = measure, R = R, f.new = Rtheta %*% fit$c.new, zw.new = fit$zw.new, w.new = fit$w.new,
                b.new = fit$b.new, cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
     }
 
@@ -94,7 +94,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, 
     zw.new = z.new * sqrt(w.new)
     cw.new = fit$c.new / sqrt(w.new)
     b.new = sum((zw.new - Rtheta %*% cw.new) * sqrt(w.new)) / sum(w.new)
-    out = list(measure = measure, R = R, W.new = W.new, w.new = w.new, zw.new = zw.new, cw.new = cw.new, c.new = fit$c.new, b.new = b.new,
+    out = list(measure = measure, R = R, f.new = Rtheta %*% fit$c.new, W.new = W.new, w.new = w.new, zw.new = zw.new, cw.new = cw.new, c.new = fit$c.new, b.new = b.new,
                optlambda = optlambda, conv = TRUE)
   }
 
@@ -177,7 +177,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
-  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(80), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(100), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(0, len)

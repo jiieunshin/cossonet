@@ -18,7 +18,10 @@ data_generation = function(n, p, rho,
   f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) - 0.1
   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
   f5 = function(t) sin(pi * t^4) + t^4 - 0.5
-
+  f6 = function(t) 3 * (3 * t - 2)^2
+  f7 = function(t) 4 * cos((3 * t - 15) * pi / 5)
+  f8 = function(t) exp(3.5 * t) / (1 + exp(3.5 * t))
+  f9 = function(t) t / 3
   # f1 = function(t) 3*t - 1.5
   # f2 = function(t) pi * sin(pi * t) - 2
   # f3 = function(t) (cos(2 * t) + sin(7 * t)) - 0.5
@@ -47,16 +50,16 @@ data_generation = function(n, p, rho,
   # Set the inner margin
   # par(mar = c(4, 4, 3, 1))
   # par(mfrow = c(1,5))
-  # plot(x[,1], f1(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
-  # plot(x[,2], f2(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
-  # plot(x[,3], f3(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
-  # plot(x[,4], f4(x[,4]), cex = .6, pch = 16, xlab = 'x4', ylab = 'f4')
+  # plot(x[,1], f6(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
+  # plot(x[,2], f7(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
+  # plot(x[,3], f8(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
+  # plot(x[,4], f9(x[,4]), cex = .6, pch = 16, xlab = 'x4', ylab = 'f4')
   # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
   # par(mfrow = c(1,1))
 
-  f = 7 * f1(x[,1]) + 5 * f2(x[,2]) + 6 * f3(x[,3]) + 8 * f4(x[,4]) + 6 * f5(x[,5])
-  # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
-
+  # f = 7 * f1(x[,1]) + 5 * f2(x[,2]) + 6 * f3(x[,3]) + 8 * f4(x[,4]) + 6 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  f = f1(x[,1]) + f3(x[,2]) + f6(x[,3]) + f7(x[,4]) + f8(x[,5])
   if(response == "regression"){
     f = f + rnorm(n, 0, 1)
     out = list(x = x, y = f)
