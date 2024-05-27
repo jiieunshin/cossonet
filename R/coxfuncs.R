@@ -201,6 +201,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     }
 
     if(algo == "QP"){
+      init.theta = rep(1, d)
       fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
       save_theta[[k]] <- fit$theta.new
       theta.adj <- rescale_theta(fit$theta.new)
