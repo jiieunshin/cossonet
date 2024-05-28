@@ -4,19 +4,7 @@
 \alias{cdcosso.glm}
 \title{Load a matrix from a file}
 \usage{
-cdcosso.glm(
-  x,
-  y,
-  wt,
-  lambda0,
-  lambda_theta,
-  gamma,
-  obj,
-  one.std,
-  type,
-  kparam,
-  algo
-)
+cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, algo)
 }
 \arguments{
 \item{x}{Input matrix with $n$ observations and $p$ dimension.}
@@ -32,8 +20,6 @@ cdcosso.glm(
 \item{gamma}{The elastic net mixing parameter between 0 and 1. When \code{gamma = 1}, the penalty is to be LASSO. When \code{gamma = 0}, the penalty is to be ridge penalty. The default is \code{gamma = 0.95}.}
 
 \item{obj}{The type of family.}
-
-\item{one.std}{Boolean for whether to apply the one-standard error rule.}
 
 \item{type}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 

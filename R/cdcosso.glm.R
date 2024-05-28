@@ -12,7 +12,6 @@
 #' @param lambda_theta A vector of tuning parameter to select optimal tuning parameter.
 #' @param gamma The elastic net mixing parameter between 0 and 1. When `gamma = 1`, the penalty is to be LASSO. When `gamma = 0`, the penalty is to be ridge penalty. The default is `gamma = 0.95`.
 #' @param obj The type of family.
-#' @param one.std Boolean for whether to apply the one-standard error rule.
 #' @param type Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
 #' @param algo Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
@@ -20,7 +19,7 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, type, kparam, algo)
+cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, algo)
 {
   n = length(y)
   p = length(wt)
@@ -33,15 +32,15 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, one.std, ty
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(K, y, rep(1, p)/wt^2, lambda0, obj, one.std, type, kparam, algo, show = TRUE) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(K, y, rep(1, p)/wt^2, lambda0, obj, type, kparam, algo, show = TRUE) ## 초기값 설정. 수정할 함수
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, one.std, algo)
+  nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd
-  sspline_cvfit = try({cv.sspline(K, y, theta.new/wt^2, lambda0, obj, one.std, type, kparam, algo, show = TRUE)}) ## 초기값 설정. 수정할 함수
-  # nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, one.std, algo)
+  sspline_cvfit = try({cv.sspline(K, y, theta.new/wt^2, lambda0, obj, type, kparam, algo, show = TRUE)}) ## 초기값 설정. 수정할 함수
+  # nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
   par(mfrow = c(1,1))
 
   if(algo == "CD")

@@ -15,7 +15,6 @@
 #' @param lambda0 A vector of tuning parameter to select optimal smoothing parameter.
 #' @param lambda_theta A vector of tuning parameter to select optimal tuning parameter.
 #' @param gamma The elastic net mixing parameter between 0 and 1. When `gamma = 1`, the penalty is to be LASSO. When `gamma = 0`, the penalty is to be ridge penalty. The default is `gamma = 0.95`.
-#' @param one.std Boolean for whether to apply the one-standard error rule.
 #' @param scale Boolean for whether to scale the input data to range between 0 and 1.
 #'
 #' @return A list containing information about the fitted model.
@@ -40,7 +39,7 @@ cdcosso = function (x,
                     kparam = 1,
                     lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
-                    gamma = 0.3, one.std = TRUE, scale = TRUE)
+                    gamma = 0.95, scale = TRUE)
 {
   n = nrow(x)
   colnames(x) = NULL
@@ -92,8 +91,8 @@ cdcosso = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj,  one.std, type, kparam, algo),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, one.std, type, kparam, algo)
+               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, algo),
+               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, type, kparam, algo)
                # Negbin, svm 추???
   )
 

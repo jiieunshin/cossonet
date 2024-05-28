@@ -22,8 +22,7 @@ cdcosso(
  }), log(2^{
      2
  }), length.out = 20)),
-  gamma = 0.3,
-  one.std = TRUE,
+  gamma = 0.95,
   scale = TRUE
 )
 }
@@ -47,8 +46,6 @@ cdcosso(
 \item{lambda_theta}{A vector of tuning parameter to select optimal tuning parameter.}
 
 \item{gamma}{The elastic net mixing parameter between 0 and 1. When \code{gamma = 1}, the penalty is to be LASSO. When \code{gamma = 0}, the penalty is to be ridge penalty. The default is \code{gamma = 0.95}.}
-
-\item{one.std}{Boolean for whether to apply the one-standard error rule.}
 
 \item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
 }

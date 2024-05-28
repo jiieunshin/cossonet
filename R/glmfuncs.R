@@ -1,4 +1,4 @@
-cv.sspline = function (K, y, mscale, cand.lambda, obj, one.std, type, kparam, algo, show)
+cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -204,7 +204,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
-cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, one.std, algo)
+cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
