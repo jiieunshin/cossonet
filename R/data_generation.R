@@ -78,11 +78,8 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-    f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
-    # f = 2 * x[,1:5]
-
     surTime = rexp(n, (exp(f)))
-    cenTime = rexp(n, (exp(-f) * runif(1, 4, 6)))
+    cenTime = rexp(n, (exp(-f) * runif(1, 8, 10)))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
     # mean(y[,"status"])
 
@@ -90,28 +87,3 @@ data_generation = function(n, p, rho,
   }
   return(out)
 }
-# mean(f)
-# mean(f1(x[,1]))
-# mean(f2(x[,2]))
-# mean(f3(x[,3]))
-# mean(f4(x[,4]))
-# mean(f5(x[,5]))
-
-# mean(f1(x[,1])) + mean(f2(x[,2])) + mean(3*f3(x[,3])) + mean(f4(x[,4])) + mean(f5(x[,5]))
-# mean(y[,"status"])
-
-# tt = data_generation(200, p, type = "additive", response = "classification")
-# range(exp(tt$f))
-
-
-# mean(x[,1])
-# mean(sin(2*pi*x[,2]))
-# mean(5*(x[,4]-0.4)^2)
-#
-# ff = function(t) 5*(x[,4]-0.4)^2
-# plot(x[,1], ff(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
-# fff = ff(x[,1]) - .4
-# prob = exp(fff)/(exp(fff) + 1)
-# y = rbinom(n, 1, prob)
-# plot(prob)
-

@@ -12,7 +12,6 @@
 #' @param lambda0 Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
 #' @param lambda_theta Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
 #' @param gamma Kernel parameter values to use for SVM models.
-#' @param one.std Vector of Lagrange multiplier.
 #' @param type Gamma value used in Stochastic Search Optimization.
 #' @param kparam Number of folds for cross-validation.
 #' @param algo Logical value indicating whether to standardize explanatory variables.
@@ -30,7 +29,7 @@
 # kparam=1
 # lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
 # wt = rep(1, ncol(x))
-cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.std, type, kparam, algo)
+cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, algo)
 {
   # library(survival)
   n = nrow(x)
@@ -38,12 +37,12 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, one.s
 
   par(mfrow = c(1,3))
   # solve theta
-  getc_cvfit  = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, one.std, type, kparam, algo, show = TRUE)
-  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, one.std, type, kparam, algo)
+  getc_cvfit  = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo, show = TRUE)
+  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)
 
   # solve (theta) - 2nd
   theta.new = rescale_theta(theta_cvfit$theta.new)
-  getc_cvfit = cv.getc(x, time, status, theta.new/wt^2, lambda0, one.std, type, kparam, algo, show = TRUE)
+  getc_cvfit = cv.getc(x, time, status, theta.new/wt^2, lambda0, type, kparam, algo, show = TRUE)
 
   par(mfrow = c(1,1))
 

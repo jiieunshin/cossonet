@@ -12,7 +12,6 @@ cdcosso.cox(
   lambda0,
   lambda_theta,
   gamma,
-  one.std,
   type,
   kparam,
   algo
@@ -32,8 +31,6 @@ cdcosso.cox(
 \item{lambda_theta}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
 
 \item{gamma}{Kernel parameter values to use for SVM models.}
-
-\item{one.std}{Vector of Lagrange multiplier.}
 
 \item{type}{Gamma value used in Stochastic Search Optimization.}
 

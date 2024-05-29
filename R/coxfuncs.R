@@ -11,7 +11,7 @@ RiskSet = function (time, status)
 
 # mscale = wt
 # cand.lambda = lambda0
-cv.getc = function(x, time, status, mscale, cand.lambda, one.std, type, kparam, algo, show)
+cv.getc = function(x, time, status, mscale, cand.lambda, type, kparam, algo, show)
 {
   n <- length(time)
 
@@ -164,7 +164,7 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
 # model = getc_cvfit
 # lambda0 = getc_cvfit$optlambda
 # mscale = wt
-cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, one.std, type, kparam, algo){
+cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, type, kparam, algo){
   n = length(time)
   d = length(mscale)
   IDmat = model$IDmat
