@@ -42,7 +42,7 @@ cv.getc = function(x, time, status, mscale, cand.lambda, type, kparam, algo, sho
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2 + 1
       measure[k] <- as.vector( num / den / n )
-      # measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new)
+      measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new)
 
       # W = outer(fit$gradient, fit$gradient)
       # UHU = Rtheta %*% W %*% t(Rtheta)
@@ -177,7 +177,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
-  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(80), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(0, len)
@@ -186,18 +186,22 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     if(algo == "CD"){
       init.theta = rep(1, d)
 
-      fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
-      save_theta[[k]] <- fit$theta.new
+      Gw = G * sqrt(model$w.new)
+      uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
+      theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      save_theta[[k]] <- theta.new
+      # fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
+      # save_theta[[k]] <- fit$theta.new
 
-      theta.adj <- rescale_theta(fit$theta.new)
+      theta.adj <- rescale_theta(theta.new)
 
-      Gw = G * sqrt(fit$w.new)
+      Gw = G * sqrt(model$w.new)
       XX = model$zw.new - Gw %*% theta.adj
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
       measure[k] <- as.vector(num / den / n)
 
-      # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
+      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
     }
 
     if(algo == "QP"){
@@ -243,6 +247,7 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
   Gw = G * sqrt(w)
 
   theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
+  theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
   return(list(z.new = z, gradient = wz$gradient, w.new = w, theta.new = theta.new))
 }
 
@@ -263,35 +268,11 @@ calculate_wz_for_theta = function(init.theta, G, time, status, RS){
 
     Grad.Term[k] = status[k] - Sum.exp.eta.Grad
     weight[k] = Sum.exp.eta.Hess
-    z[k] = eta + (Grad.Term + 0.1) / (weight[k] + 0.1)
+    z[k] = eta + (Grad.Term[k] + 0.1) / (weight[k] + 0.1)
   }
 
   return(list(z = z, gradient = Grad.Term, weight = weight))
 }
-
-# gettheta.QP = function(init.theta, c.hat, G, time, status, lambda0, lambda_theta, Risk){
-#   n = nrow(Gw)
-#   d = ncol(Gw)
-#   r = lambda_theta * gamma * n
-#   theta.new = rep(0, d)
-#
-#   for(i in 1:10){ # outer iteration
-#     Dmat = t(Gw) %*% Gw + diag(n * lambda_theta * gamma, d)
-#     dvec = as.vector(2 * t(uw) %*% Gw)
-#     Amat = t(rbind(diag(1, d), rep(-1, d)))
-#     bvec = c(rep(0, d), -lambda_theta)
-#     theta.new = solve.QP(2 * Dmat, dvec, Amat, bvec)$solution
-#     theta.new[theta.new < 1e-8] = 0
-#
-#     loss = abs(theta - theta.new)
-#     conv = max(loss) < 1e-8
-#
-#     if(conv) break
-#     theta = theta.new
-#   }
-#
-#   return(theta.new)
-# }
 
 gettheta.QP = function(init.theta, c.hat, G, time, status, lambda0, lambda_theta, Risk){
   n = nrow(G)
