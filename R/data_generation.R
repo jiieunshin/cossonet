@@ -60,7 +60,7 @@ data_generation = function(n, p, rho,
 
   if(response == "regression"){
     f = f + rnorm(n, 0, 1)
-    out = list(x = x, y = f)
+    out = list(x = data.frame(x), y = f)
   }
 
   if(response == "classification"){
@@ -68,25 +68,25 @@ data_generation = function(n, p, rho,
     y = rbinom(n, 1, prob)
     # plot(prob)
     # print(table(y))
-    out = list(x = x, f = f, y = y)
+    out = list(x = data.frame(x), f = f, y = y)
   }
 
   if(response == "count"){
     mu = exp(f/sqrt(2)/p)
     y = rpois(n, mu)
-    out = list(x = x, f = f, y = y)
+    out = list(x = data.frame(x), f = f, y = y)
   }
 
   if(response == 'survival'){
-    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 5 * f3(x[,3]) + 4 * f4(x[,4]) + 1 * f5(x[,5])
-    f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 3 * f3(x[,3]) + 2 * f4(x[,4]) + 1 * f5(x[,5]) # 잘 된 세팅. 근데 FP구분을 못함
+    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 1 * f4(x[,4]) + 2 * f5(x[,5])
+    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 3 * f3(x[,3]) + 2 * f4(x[,4]) + 1 * f5(x[,5]) # 잘 된 세팅. 근데 FP구분을 못함
     # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 5 * f3(x[,3]) + 4 * f4(x[,4]) + 1 * f5(x[,5]) #두 번째 세팅
     surTime = rexp(n, (exp(f)))
     cenTime = rexp(n, (exp(-f) * runif(1, 8, 10)))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
     # mean(y[,"status"])
 
-    out = list(x = x, f = f, y = y)
+    out = list(x = data.frame(x), f = f, y = y)
   }
   return(out)
 }
