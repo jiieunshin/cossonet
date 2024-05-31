@@ -290,6 +290,8 @@ gettheta.QP = function(init.theta, c.hat, G, time, status, lambda0, lambda_theta
     loop = loop + 1
     GH = cosso::gradient.Hessian.Theta(old.Theta, c.hat, G, G,
                                        lambda0, lambda_theta, time, status, Risk, Hess.FullNumer.unScale)
+
+    print(GH$H)
     if(min(eigen(GH$H)$value) < 0)
       GH$H = GH$H + max(1e-07, 1.5 * abs(min(eigen(GH$H)$value))) * diag(length(old.Theta))
 
