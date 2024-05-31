@@ -14,6 +14,7 @@
 #' @param gamma Kernel parameter values to use for SVM models.
 #' @param type Gamma value used in Stochastic Search Optimization.
 #' @param kparam Number of folds for cross-validation.
+#' @param scale Boolean for whether to scale the input data to range between 0 and 1.
 #' @param algo Logical value indicating whether to standardize explanatory variables.
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
@@ -29,15 +30,19 @@
 # kparam=1
 # lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
 # wt = rep(1, ncol(x))
-cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, algo)
+cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
 {
-  # library(survival)
-  n = nrow(x)
-  d = length(wt)
+  n = length(time)
+  p = length(wt)
+  # cat("fit COSSO  with n = ", n, "p =", p, "\n")
+
+  K = make_anovaKernel(x, x, type = type, kparam, scale)
+  d = K$numK
+  # cat("kernel:", type, "and d =", d, "\n")
 
   par(mfrow = c(1,3))
   # solve theta
-  getc_cvfit  = cv.getc(x, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo, show = TRUE)
+  getc_cvfit  = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo, show = TRUE)
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)
 
   # solve (theta) - 2nd

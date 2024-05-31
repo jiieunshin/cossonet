@@ -14,6 +14,7 @@ cdcosso.cox(
   gamma,
   type,
   kparam,
+  scale,
   algo
 )
 }
@@ -35,6 +36,8 @@ cdcosso.cox(
 \item{type}{Gamma value used in Stochastic Search Optimization.}
 
 \item{kparam}{Number of folds for cross-validation.}
+
+\item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
 
 \item{algo}{Logical value indicating whether to standardize explanatory variables.}
 }

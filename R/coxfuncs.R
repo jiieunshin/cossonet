@@ -11,20 +11,21 @@ RiskSet = function (time, status)
 
 # mscale = wt
 # cand.lambda = lambda0
-cv.getc = function(x, time, status, mscale, cand.lambda, type, kparam, algo, show)
+cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, show)
 {
-  n <- length(time)
-
-  K = make_anovaKernel(x, x, type = type, kparam)
   d = K$numK
-  R = array(NA, c(n, n, d))
+  n <- length(time)
+  len = length(cand.lambda)
 
+
+  R = array(NA, c(n, n, d))
   for(j in 1:d){
     R[, , j] = K$K[[j]]
   }
 
   Rtheta <- combine_kernel(R, mscale)
 
+  f.init = rep(0.5, n)
   RS = RiskSet(time, status)
 
   measure <- rep(0, length(cand.lambda))
@@ -41,8 +42,8 @@ cv.getc = function(x, time, status, mscale, cand.lambda, type, kparam, algo, sho
 
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2 + 1
-      measure[k] <- as.vector( num / den / n )
-      # measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new)
+      # measure[k] <- as.vector( num / den / n )
+      measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new)
 
       # W = outer(fit$gradient, fit$gradient)
       # UHU = Rtheta %*% W %*% t(Rtheta)
@@ -199,9 +200,9 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       XX = model$zw.new - Gw %*% theta.adj
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
-      measure[k] <- as.vector(num / den / n)
+      # measure[k] <- as.vector(num / den / n)
 
-      # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
+      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
     }
 
     if(algo == "QP"){

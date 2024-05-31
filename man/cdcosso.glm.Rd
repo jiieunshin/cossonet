@@ -4,7 +4,19 @@
 \alias{cdcosso.glm}
 \title{Load a matrix from a file}
 \usage{
-cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, algo)
+cdcosso.glm(
+  x,
+  y,
+  wt,
+  lambda0,
+  lambda_theta,
+  gamma,
+  obj,
+  type,
+  kparam,
+  scale,
+  algo
+)
 }
 \arguments{
 \item{x}{Input matrix with $n$ observations and $p$ dimension.}
@@ -24,6 +36,8 @@ cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, algo)
 \item{type}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
 \item{kparam}{Kernel parameter values that is used in gaussian kernel and polynomial kernel.}
+
+\item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
 
 \item{algo}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
 }

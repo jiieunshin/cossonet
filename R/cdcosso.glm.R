@@ -14,19 +14,20 @@
 #' @param obj The type of family.
 #' @param type Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
+#' @param scale Boolean for whether to scale the input data to range between 0 and 1.
 #' @param algo Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, algo)
+cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo)
 {
   n = length(y)
   p = length(wt)
 
   cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
-  K = make_anovaKernel(x, x, type = type, kparam)
+  K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
   cat("kernel:", type, "and d =", d, "\n")
 

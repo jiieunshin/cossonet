@@ -82,7 +82,7 @@ kernelMatrix = function(x, y, type, kparam = 1.0) {
   return(K)
 }
 
-make_anovaKernel = function(x, y, type, kparam)
+make_anovaKernel = function(x, y, type, kparam, scale)
 {
   cat.id = c()
   k = 0
@@ -91,6 +91,8 @@ make_anovaKernel = function(x, y, type, kparam)
       cat.id[k] = j
       x[,j] = as.numeric(x[,j])
       k = k + 1
+    } else{
+      x[,j] = rescale(x[,j])
     }
   }
 

@@ -77,10 +77,6 @@ cdcosso = function (x,
   # if(missing(lambda_theta))
   #   lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
 
-  if (scale){   # min-max scale
-    x = apply(x, 2, rescale)
-  }
-
   if (family == "Cox" & !all(match(c("time", "status"), dimnames(y)[[2]], 0))) {
     stop("Cox model requires a matrix with columns 'time' and 'status' as a response")
   }
@@ -91,8 +87,8 @@ cdcosso = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, algo),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, type, kparam, algo)
+               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo),
+               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
                # Negbin, svm 추???
   )
 
