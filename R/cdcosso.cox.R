@@ -28,6 +28,7 @@
 # family = 'Cox'
 # gamma = 0.95
 # kparam=1
+# lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
 # lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
 # wt = rep(1, ncol(x))
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
@@ -47,7 +48,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
 
   # solve (theta) - 2nd
   theta.new = rescale_theta(theta_cvfit$theta.new)
-  print(theta.new)
+  # print(theta.new)
   getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, algo, show = TRUE)
 
   par(mfrow = c(1,1))
