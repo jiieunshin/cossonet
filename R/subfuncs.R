@@ -87,18 +87,23 @@ make_anovaKernel = function(x, y, type, kparam, scale)
   cat.id = c()
   k = 0
   for(j in 1:ncol(x)){
-    if(is.factor(x[,j])){
+    if(is.factor(x[,j]) & is.factor(y[,j])){
       cat.id[k] = j
       x[,j] = as.numeric(x[,j])
+      y[,j] = as.numeric(y[,j])
       k = k + 1
     } else{
+      x[,j] = as.numeric(x[,j])
+      y[,j] = as.numeric(y[,j])
+
       x[,j] = rescale(x[,j])
+      y[,j] = rescale(y[,j])
     }
   }
 
-  x = as.matrix(x)
-  y = as.matrix(y)
-  dimx = ncol(x)
+  xx = as.matrix(x)
+  yy = as.matrix(y)
+  dimx = ncol(xx)
 
   # calculate anova kernels for two-way interactions
   if (type == "spline") {
@@ -108,8 +113,8 @@ make_anovaKernel = function(x, y, type, kparam, scale)
     index = 0
     for (d in 1:dimx) {
       index = index + 1
-      A = x[, d, drop = FALSE]
-      B = y[, d, drop = FALSE]
+      A = xx[, d, drop = FALSE]
+      B = yy[, d, drop = FALSE]
       if(d %in% cat.id){
         K_temp = cat_kernel(A, B)
         anova_kernel[[index]] = K_temp
