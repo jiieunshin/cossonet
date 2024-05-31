@@ -18,7 +18,7 @@ data_generation = function(n, p, rho,
   f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
   f5 = function(t) sin(pi * t^4) + t^4 - 0.4
-  f6 = function(t) 3 * (3 * t - 2)^2 - 3
+  f6 = function(t) exp(t^2) - 1.5
   # f7 = function(t) 4 * cos((3 * t - 1.5) * pi / 5)
   # f1 = function(t) 3*t - 1.5
   # f2 = function(t) pi * sin(pi * t) - 2
@@ -55,7 +55,7 @@ data_generation = function(n, p, rho,
   # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
   # par(mfrow = c(1,1))
 
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
   # f = f1(x[,1]) + 2 * f2(x[,2]) + f3(x[,3]) + 2 * f4(x[,4]) +  f6(x[,5])
 
   if(response == "regression"){
@@ -79,7 +79,7 @@ data_generation = function(n, p, rho,
 
   if(response == 'survival'){
     # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 1 * f3(x[,3]) + 2 * f4(x[,4]) + 1 * f5(x[,5])
-    f = 1 * f1(x[,1]) + 3 * f2(x[,2]) + 5 * f3(x[,3]) + 2 * f4(x[,4]) + 3 * f5(x[,5]) # 잘 된 세팅. 근데 FP구분을 못함
+    f = 3 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 2 * f4(x[,4]) + 4 * f6(x[,5]) # 잘 된 세팅. 근데 FP구분을 못함
     # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 5 * f3(x[,3]) + 4 * f4(x[,4]) + 1 * f5(x[,5]) #두 번째 세팅
     surTime = rexp(n, (exp(f)))
     cenTime = rexp(n, (exp(-f) * runif(1, 8, 10)))
