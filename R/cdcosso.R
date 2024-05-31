@@ -24,7 +24,7 @@
 # y = tr_y
 # family = 'Cox'
 # gamma = 0.8
-# kernel = "spline"
+# type = "spline"
 # one.std = TRUE
 # scale = T
 # wt = rep(1, ncol(x))

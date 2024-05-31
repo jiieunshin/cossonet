@@ -19,12 +19,12 @@
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
-
+#
 # x = tr_x
 # time = unlist(tr_y[, "time"])
 # status = unlist(tr_y[, "status"])
 # type = "spline"
-# algo = "QP"
+# algo = "CD"
 # family = 'Cox'
 # gamma = 0.95
 # kparam=1
@@ -47,7 +47,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
 
   # solve (theta) - 2nd
   theta.new = rescale_theta(theta_cvfit$theta.new)
-  getc_cvfit = cv.getc(x, time, status, theta.new/wt^2, lambda0, type, kparam, algo, show = TRUE)
+  getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, algo, show = TRUE)
 
   par(mfrow = c(1,1))
 
