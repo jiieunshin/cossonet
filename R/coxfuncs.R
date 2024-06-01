@@ -220,7 +220,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # measure[k] = cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(fit$theta.new != 0) / n)^2 / n
     }
   }
-  print(save_theta)
+  # print(save_theta)
   id = which.min(measure)[1]
   optlambda = lambda_theta[id]
 
