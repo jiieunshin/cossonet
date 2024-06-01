@@ -77,13 +77,22 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-    f = 3 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 5 * f4(x[,4]) + 4 * f6(x[,5])
+    # f = 3 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 5 * f4(x[,4]) + 4 * f6(x[,5])
     # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 2 * f3(x[,3]) + 5 * f4(x[,4]) + 4 * f6(x[,5]) # 잘 된 세팅. 근데 FP구분을 못함
     # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 5 * f3(x[,3]) + 4 * f4(x[,4]) + 1 * f5(x[,5]) #두 번째 세팅
-    surTime = rexp(n, (exp(f)))
-    cenTime = rexp(n, (exp(-f) * runif(1, 8, 10)))
+
+    Sigma = matrix(rho, 3, 3)
+    diag(Sigma) = 1
+
+    x_sig = pnorm(rmvnorm(n, sigma = Sigma))
+    x_nois = matrix(pnorm(rnorm(n * (p-3))), n, p-3)
+    x = cbind(x_sig, x_nois)
+
+    f = 2 * x[, 1] + sin(2 * pi * x[, 2]) + 5 * (x[, 3] - 0.4)^2
+    surTime = rexp(n, exp(f))
+    cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
-    # mean(y[,"status"])
+    # mean(te_y[,"status"])
 
     out = list(x = data.frame(x), f = f, y = y)
   }

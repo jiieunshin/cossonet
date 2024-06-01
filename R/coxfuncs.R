@@ -17,7 +17,6 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   n <- length(time)
   len = length(cand.lambda)
 
-
   R = array(NA, c(n, n, d))
   for(j in 1:d){
     R[, , j] = K$K[[j]]
@@ -34,7 +33,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     if(algo == "CD"){
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
-      fit = getc.cd(Rtheta, c.init, time, status, cand.lambda[k], RS)
+      fit = getc.cd(Rtheta, f.init, c.init, time, status, cand.lambda[k], RS)
 
       Rw = Rtheta * fit$w.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
@@ -79,8 +78,8 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   if(algo == "CD"){
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
-    fit = getc.cd(Rtheta, c.init, time, status, optlambda, RS)
-    out = list(measure = measure, R = R, f.new = Rtheta %*% fit$c.new, zw.new = fit$zw.new, w.new = fit$w.new,
+    fit = getc.cd(Rtheta, f.init, c.init, time, status, optlambda, RS)
+    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), zw.new = fit$zw.new, w.new = fit$w.new,
                b.new = fit$b.new, cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
     }
 
@@ -105,13 +104,19 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   return(out)
 }
 
-getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
+
+getc.cd = function(Rtheta, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
-  wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
-  w = wz$weight
-  z = wz$z
+  # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
+  # w = wz$weight
+  # z = wz$z
   b = 0
+
+  y = cbind(time = time, status = status)
+  coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
+  w = -attributes(coxgrad_results)$diag_hessian
+  z = (f - b) - ifelse(w != 0, -coxgrad_results/w, 0)
 
   zw = z * sqrt(w)
   Rw = Rtheta * w
@@ -124,7 +129,7 @@ getc.cd = function(Rtheta, c.init, time, status, lambda0, Risk)
   c.new = fit$c.new
   cw.new = fit$cw.new
 
-  return(list(Rw = Rw, gradient = wz$gradient, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
+  return(list(Rw = Rw, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
 getc.QP = function (R, Rtheta, c.init, time, status, mscale, lambda0, RS)
@@ -215,6 +220,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # measure[k] = cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(fit$theta.new != 0) / n)^2 / n
     }
   }
+  print(save_theta)
   id = which.min(measure)[1]
   optlambda = lambda_theta[id]
 
@@ -241,16 +247,22 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
   d = ncol(G)
   r = lambda_theta * gamma * n
 
-  wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
-  w = wz$weight
-  z = wz$z
+  # wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
+  # w = wz$weight
+  # z = wz$z
+
+  f = c(G %*% init.theta)
+  y = cbind(time = time, status = status)
+  coxgrad_results = coxgrad(f, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
+  w = -attributes(coxgrad_results)$diag_hessian
+  z = f - ifelse(w != 0, -coxgrad_results/w, 0)
 
   uw = (z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
 
   theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
-  return(list(z.new = z, gradient = wz$gradient, w.new = w, theta.new = theta.new))
+  return(list(z.new = z, w.new = w, theta.new = theta.new))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){
