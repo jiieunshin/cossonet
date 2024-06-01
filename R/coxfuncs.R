@@ -56,17 +56,17 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0, standardize = FALSE)$beta)
       fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
-      # measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
 
-      HH =  fit$H - 2 * cand.lambda[k] * Rtheta
-      HHH = ginv(HH/cand.lambda[k] + Rtheta)
-      GG = fit$G - 2 * cand.lambda[k] * Rtheta %*% fit$c.new
-
-      z = (HHH %*% fit$c.new - GG) / cand.lambda[k]
-      num = t(z - Rtheta %*% fit$c.new) %*% ginv(HH) %*% (z - Rtheta %*% fit$c.new)
-      S = Rtheta %*% ginv(Rtheta + HH/cand.lambda[k])
-      den = (1 - sum(diag(S)) / n)^2 + 1
-      measure[k] <- as.vector( num / den / n )
+      # HH =  fit$H - 2 * cand.lambda[k] * Rtheta
+      # HHH = ginv(HH/cand.lambda[k] + Rtheta)
+      # GG = fit$G - 2 * cand.lambda[k] * Rtheta %*% fit$c.new
+      #
+      # z = (HHH %*% fit$c.new - GG) / cand.lambda[k]
+      # num = t(z - Rtheta %*% fit$c.new) %*% ginv(HH) %*% (z - Rtheta %*% fit$c.new)
+      # S = Rtheta %*% ginv(Rtheta + HH/cand.lambda[k])
+      # den = (1 - sum(diag(S)) / n)^2 + 1
+      # measure[k] <- as.vector( num / den / n )
     }
   }
 
@@ -211,8 +211,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       save_theta[[k]] <- fit$theta.new
       theta.adj <- rescale_theta(fit$theta.new)
 
-      # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
-      measure[k] = cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(fit$theta.new != 0) / n)^2 / n
+      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      # measure[k] = cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(fit$theta.new != 0) / n)^2 / n
     }
   }
   id = which.min(measure)[1]
