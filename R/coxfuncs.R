@@ -201,7 +201,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
       measure[k] <- as.vector(num / den / n)
-      measure[k] = cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(fit$theta.new != 0) / n)^2 / n
+      # measure[k] = cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(theta.new != 0) / n)^2 / n
       # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
     }
 
