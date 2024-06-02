@@ -202,8 +202,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
       theta.adj <- rescale_theta(fit$theta.new)
 
-      Gw = G * sqrt(model$w.new)
-      XX = model$zw.new - Gw %*% theta.adj
+      Gw = G * sqrt(fit$w.new)
+      XX = fit$z.new * sqrt(fit$w.new) - Gw %*% theta.adj
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
       measure[k] <- as.vector(num / den / n)
