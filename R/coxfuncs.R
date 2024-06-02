@@ -192,14 +192,15 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     if(algo == "CD"){
       init.theta = rep(1, d)
 
-      Gw = G * sqrt(model$w.new)
-      uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
-      theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
-      save_theta[[k]] <- theta.new
-      # fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
-      # save_theta[[k]] <- fit$theta.new
+      # Gw = G * sqrt(model$w.new)
+      # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
+      # theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      # save_theta[[k]] <- theta.new
 
-      theta.adj <- rescale_theta(theta.new)
+      fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
+      save_theta[[k]] <- fit$theta.new
+
+      theta.adj <- rescale_theta(fit$theta.new)
 
       Gw = G * sqrt(model$w.new)
       XX = model$zw.new - Gw %*% theta.adj
