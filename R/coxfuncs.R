@@ -79,7 +79,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
     fit = getc.cd(Rtheta, f.init, c.init, time, status, optlambda, RS)
-    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), zw.new = fit$zw.new, w.new = fit$w.new,
+    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new) + fit$b.new, zw.new = fit$zw.new, w.new = fit$w.new,
                b.new = fit$b.new, cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
     }
 
@@ -197,7 +197,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
       # save_theta[[k]] <- theta.new
 
-      fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
+      fit = gettheta.cd(init.theta, model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
       save_theta[[k]] <- fit$theta.new
 
       theta.adj <- rescale_theta(fit$theta.new)
@@ -243,7 +243,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   return(out)
 }
 
-gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, gamma, Risk){
+gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_theta, gamma, Risk){
   n = nrow(G)
   d = ncol(G)
   r = lambda_theta * gamma * n
@@ -252,11 +252,10 @@ gettheta.cd = function(init.theta, G, time, status, bhat, const, lambda_theta, g
   # w = wz$weight
   # z = wz$z
 
-  f = c(G %*% init.theta)
   y = cbind(time = time, status = status)
-  coxgrad_results = coxgrad(f, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
+  coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
   w = -attributes(coxgrad_results)$diag_hessian
-  z = f - ifelse(w != 0, -coxgrad_results/w, 0)
+  z = f.init - ifelse(w != 0, -coxgrad_results/w, 0)
 
   uw = (z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
