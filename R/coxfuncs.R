@@ -260,7 +260,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
 
   theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
-  return(list(Gw = Gw, z2.new = z * sqrt(w), w.new = w, theta.new = theta.new))
+  return(list(Gw = Gw, zw.new = z * sqrt(w), w.new = w, theta.new = theta.new))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){
