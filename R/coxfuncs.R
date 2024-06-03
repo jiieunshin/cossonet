@@ -249,7 +249,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   # wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
   # w = wz$weight
   # z = wz$z
-  f.init = rep(0.5, n)
+  # f.init = rep(0.5, n)
   y = cbind(time = time, status = status)
   coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
   w = - attributes(coxgrad_results)$diag_hessian
