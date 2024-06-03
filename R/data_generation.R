@@ -77,10 +77,10 @@ data_generation = function(n, p, rho,
 
   if(response == 'survival'){
     # f = 1 * ((3 * x[, 1] - 2)^2 - 1.5) + 2 * f2(x[,2]) + 3 * sin(2 * pi * x[, 3]) + 4 * ((x[, 4] - 0.4)^2 - 0.15) + 5 * f5(x[,5])
-    f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 4 * f4(x[,4]) + 3 * f5(x[,5])
-    # f = 1 * f2(x[, 1]) + 2 * f4(x[,2]) + 2 * sin(2 * pi * x[, 3]) + 4 * ((x[, 4] - 0.4)^2 - 0.15) + 3 * f5(x[,5])
+    f = 1 * f2(x[, 1]) + 2 * f4(x[,2]) + 2 * sin(2 * pi * x[, 3]) + 4 * ((x[, 4] - 0.4)^2 - 0.15) + 3 * f5(x[,5])
     # (3 * x[, 1] - 2)^2
     # (x[, 4] - 0.4)^2
+
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))

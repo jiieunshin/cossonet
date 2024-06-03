@@ -201,10 +201,9 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
       theta.adj <- rescale_theta(fit$theta.new)
 
-      Gw = G * sqrt(fit$w.new)
-      XX = fit$zw.new - Gw %*% theta.adj
+      XX = fit$zw.new - fit$Gw %*% theta.adj
       num = t(XX) %*% XX + 1
-      den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+      den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
       measure[k] <- as.vector(num / den / n)
 
       # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
@@ -261,7 +260,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
 
   theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
-  return(list(z.new = z, w.new = w, theta.new = theta.new))
+  return(list(Gw = Gw, z2.new = z * sqrt(w), w.new = w, theta.new = theta.new))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){
