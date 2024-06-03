@@ -19,12 +19,11 @@ data_generation = function(n, p, rho,
   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
   f5 = function(t) sin(pi * t^4) + t^4 - 0.4
   f6 = function(t) exp(t^2) - 1.5
-  # f7 = function(t) 4 * cos((3 * t - 1.5) * pi / 5)
-  # f1 = function(t) 3*t - 1.5
-  # f2 = function(t) pi * sin(pi * t) - 2
-  # f3 = function(t) (cos(2 * t) + sin(7 * t)) - 0.5
+  f9 = function(t) 4 * cos((3 * t - 1.5) * pi / 5)
+  f10 = function(t) pi * sin(pi * t) - 2
+  f8 = function(t) (cos(2 * t) + sin(7 * t)) - 0.5
   # f4 = function(t) 2 * t^5 - 0.2
-  # f5 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{9})
+  f7 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{9})
 
   if(missing(response))
     type = "classification"
@@ -77,14 +76,11 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-    f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 5 * f3(x[,3]) + 4 * f4(x[,4]) + 3 * f6(x[,5])
-
-    # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 1 * f4(x[,4]) + 2 * f6(x[,5])
-    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 2 * f3(x[,3]) + 5 * f4(x[,4]) + 4 * f6(x[,5]) # 잘 된 세팅. 근데 FP구분을 못함
-    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 5 * f3(x[,3]) + 4 * f4(x[,4]) + 1 * f5(x[,5]) #두 번째 세팅
-
-    # f = 1 * x[, 1] + 2 * x[, 2] + sin(2 * pi * x[, 3]) + 2 * (x[, 4] - 0.4)^2 + 1 * f5(x[,5])
-
+    # f = 1 * ((3 * x[, 1] - 2)^2 - 1.5) + 2 * f2(x[,2]) + 3 * sin(2 * pi * x[, 3]) + 4 * ((x[, 4] - 0.4)^2 - 0.15) + 5 * f5(x[,5])
+    f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 4 * f4(x[,4]) + 3 * f5(x[,5])
+    # f = 1 * f2(x[, 1]) + 2 * f4(x[,2]) + 2 * sin(2 * pi * x[, 3]) + 4 * ((x[, 4] - 0.4)^2 - 0.15) + 3 * f5(x[,5])
+    # (3 * x[, 1] - 2)^2
+    # (x[, 4] - 0.4)^2
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
@@ -95,3 +91,5 @@ data_generation = function(n, p, rho,
   return(out)
 }
 
+# ff = function(t) ((t - 0.4)^2 - 0.1)
+# plot(te_x[,5], ff(te_x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
