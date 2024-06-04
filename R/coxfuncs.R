@@ -86,15 +86,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
     fit = getc.QP(R, Rtheta, c.init, time, status, mscale, optlambda, RS)
-    z.new = (fit$H %*% fit$c.new - fit$G)/optlambda
-    W.new = ginv(fit$H)
-    w.new = 1/diag(fit$H)
-
-    zw.new = z.new * sqrt(w.new)
-    cw.new = fit$c.new / sqrt(w.new)
-    b.new = sum((zw.new - Rtheta %*% cw.new) * sqrt(w.new)) / sum(w.new)
-    out = list(measure = measure, R = R, f.new = Rtheta %*% fit$c.new + fit$b.new, W.new = W.new, w.new = w.new, zw.new = zw.new, cw.new = cw.new, c.new = fit$c.new, b.new = b.new,
-               optlambda = optlambda, conv = TRUE)
+    out = list(measure = measure, R = R, f.new = Rtheta %*% fit$c.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
   }
 
   rm(K)
@@ -195,27 +187,32 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
       # theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
       # save_theta[[k]] <- theta.new
+      #
+      # theta.adj <- rescale_theta(theta.new)
+      #
+      # XX = model$zw.new - Gw %*% theta.adj
+      # num = t(XX) %*% XX + 1
+      # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+
+      # measure[k] <- cosso::PartialLik(time, status, RS, f.new) / (1 - sum(theta.new != 0) / n)^2 / n
 
       fit = gettheta.cd(init.theta, model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
       save_theta[[k]] <- fit$theta.new
 
-      theta.adj <- rescale_theta(fit$theta.new)
-
-      XX = fit$zw.new - fit$Gw %*% theta.adj
+      XX = fit$zw.new - fit$Gw %*% fit$theta.new
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
       measure[k] <- as.vector(num / den / n)
 
-      # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj)
+      # measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(fit$theta.new != 0) / n)^2 / n
     }
 
     if(algo == "QP"){
       init.theta = rep(1, d)
       fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
       save_theta[[k]] <- fit$theta.new
-      theta.adj <- rescale_theta(fit$theta.new)
 
-      measure[k] <- cosso::PartialLik(time, status, RS, G %*% theta.adj) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
+      measure[k] <- cosso::PartialLik(time, status, RS, fit$theta.new) + sum(status == 1)/n^2 * (sum(diag(fit$UHU))/(n - 1) - sum(fit$UHU)/(n^2 - n))
       # measure[k] = cosso::PartialLik(time, status, RS, G %*% theta.adj) / (1 - sum(fit$theta.new != 0) / n)^2 / n
     }
   }
