@@ -45,8 +45,8 @@ cdcosso = function (x,
   n = nrow(x)
   colnames(x) = NULL
   rownames(x) = NULL
-  if(class(x)[1] != "data.frame")
-    stop("A input x must be dataframe.")
+  # if(class(x)[1] != "data.frame")
+    # stop("A input x must be matrix")
 
   # family
   family = match.arg(family)

@@ -58,7 +58,7 @@ data_generation = function(n, p, rho,
 
   if(response == "regression"){
     f = f + rnorm(n, 0, 1)
-    out = list(x = data.frame(x), y = f)
+    out = list(x = x, y = f)
   }
 
   if(response == "classification"){
@@ -66,54 +66,46 @@ data_generation = function(n, p, rho,
     y = rbinom(n, 1, prob)
     # plot(prob)
     # print(table(y))
-    out = list(x = data.frame(x), f = f, y = y)
+    out = list(x = x, f = f, y = y)
   }
 
   if(response == "count"){
     mu = exp(f/sqrt(2)/p)
     y = rpois(n, mu)
-    out = list(x = data.frame(x), f = f, y = y)
+    out = list(x = x, f = f, y = y)
   }
 
   if(response == 'survival'){
-    # f = 1 * ((3 * x[, 1] - 2)^2 - 1.5) + 2 * f2(x[,2]) + 3 * sin(2 * pi * x[, 3]) + 4 * ((x[, 4] - 0.4)^2 - 0.15) + 3 * f5(x[,5]) # 가장 잘 된 세팅?
-    # f = 2 * f2(x[, 1]) + 1 * f4(x[,2]) + 3 * sin(2 * pi * x[, 3]) + 4 * ((x[, 4] - 0.4)^2 - 0.15) + 3 * f5(x[,5]) # 가장 괜찮은 세팅
-    # f = 5 * f2(x[, 1]) + 4 * f4(x[,2]) + 3 * sin(2 * pi * x[, 3]) + 5 * ((x[, 4] - 0.4)^2 - 0.15) + 4 * f5(x[,5]) # 가장 괜찮은 세팅에서 변형
-    # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
-    # x[, 1] = rbinom(n, 1, .5)
-
-    # f = 4 * f7(x[, 1]) + 2 * f1(x[, 2]) + 3 * ((3 * x[, 3] - 0.5)^2 - 0.5) + 7 * f4(x[,4]) + 6 * f5(x[,5])
-
-    # f = 3*(3 * x[,1] - 2)^2 + 4 * cos(pi * (3 * x[,2] - 1.5) / 5) + x[,3]
-
-    Sigma = matrix(rho, 8, 8)
-    for(j in 1:8){
-      for(k in 1:8){
-        Sigma[j, k] = rho^{abs(j-k)}
-      }
-    }
+    Sigma = matrix(rho, 3, 3)
     diag(Sigma) = 1
 
-    x = rmvnorm(n, sigma = Sigma)
+    # rtmvnorm(n, mean = rep(0, 5), sigma = Sigma, upper = rep(2, 5), lower = rep(-2, 5))
+    # tmvtnorm
+    # x_sig = pnorm(rtmvnorm(n, mean = rep(0, 3), sigma = Sigma, upper = rep(2, 3), lower = rep(-2, 3)))
+    # x_nois = matrix(pnorm(rnorm(n * (p-3))), n, p-3)
 
-    f = 3*(3 * x[,1] - 2)^2 + 4 * cos(pi * (3 * x[,4] - 1.5) / 5) + ifelse(x[, 7] < 0.5, 0, 1)
+    # x = cbind(x_sig, x_nois)
+    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 7 * f4(x[,4]) + 6 * f5(x[,5])
+    # f = 3 * (3 * x[,1] - 2)^2 + 6 * cos(pi * (3 * x[,2] - 1.5) / 5) + ifelse(x[, 3] < 0.5, 0, 1) + 3 * x[,4] + 2 * x[,5] # 제일 괜찮은 세팅
+    # f = 4 * (3 * x[,1] - 2)^2 + 2 * cos(pi * (3 * x[,2] - 1.5) / 5) + ifelse(x[, 3] < 0.6, 0, 1) + 3 * x[,4] + 3 * x[,5] # 변형1 - 앞에 두개가 잘 select 안됨
+    # f = 6 * ((3 * x[,1] - 1.5)^2 - 0.6) + 8 * (cos(pi * (3 * x[,2] - 1.4) / 5) - 1) + ifelse(x[, 3] < 0.5, 0, 1)
+    # + 3 * x[,4] + 2 * x[,5] # 변형1 - 앞에 두개가 잘 select 안됨
+    # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
     # mean(te_y[,"status"])
 
-    x = as.data.frame(x)
-    # x[,1] = as.factor(x[, 1])
-
     out = list(x = x, f = f, y = y)
   }
   return(out)
 }
 
-# ff = function(t) ((3 *t - 2)^2 - 1) * 3
-# plot(te_x[,5], f8(te_x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
-# fff = f8(te_x[,5])
+# ff = function(t) cos(pi * (3 * t - 1.5) / 5)
+# plot(te_x[,5], ff(te_x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
+# fff = ff(te_x[,5])
 # prob = exp(fff)/(exp(fff) + 1)
 # y = rbinom(n, 1, prob)
 # plot(prob)
