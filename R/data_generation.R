@@ -42,6 +42,11 @@ data_generation = function(n, p, rho,
   x_nois = matrix(pnorm(rnorm(n * (p-5))), n, p-5)
   x = cbind(x_sig, x_nois)
 
+  x_sig = pnorm(rmvnorm(n, sigma = Sigma))
+  x_nois = matrix(rnorm(n * (p-5)), n, p-5)
+  x = cbind(x_sig, x_nois)
+  x = apply(x, 2, rescale)
+
   # Set the outer margins
   # par(oma = c(0, 0, 0, 0))
   # Set the inner margin
@@ -76,21 +81,14 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-    Sigma = matrix(rho, 3, 3)
-    diag(Sigma) = 1
 
-    # rtmvnorm(n, mean = rep(0, 5), sigma = Sigma, upper = rep(2, 5), lower = rep(-2, 5))
-    # tmvtnorm
-    # x_sig = pnorm(rtmvnorm(n, mean = rep(0, 3), sigma = Sigma, upper = rep(2, 3), lower = rep(-2, 3)))
-    # x_nois = matrix(pnorm(rnorm(n * (p-3))), n, p-3)
 
-    # x = cbind(x_sig, x_nois)
-    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 7 * f4(x[,4]) + 6 * f5(x[,5])
-    # f = 3 * (3 * x[,1] - 2)^2 + 6 * cos(pi * (3 * x[,2] - 1.5) / 5) + ifelse(x[, 3] < 0.5, 0, 1) + 3 * x[,4] + 2 * x[,5] # 제일 괜찮은 세팅
-    # f = 4 * (3 * x[,1] - 2)^2 + 2 * cos(pi * (3 * x[,2] - 1.5) / 5) + ifelse(x[, 3] < 0.6, 0, 1) + 3 * x[,4] + 3 * x[,5] # 변형1 - 앞에 두개가 잘 select 안됨
-    # f = 6 * ((3 * x[,1] - 1.5)^2 - 0.6) + 8 * (cos(pi * (3 * x[,2] - 1.4) / 5) - 1) + ifelse(x[, 3] < 0.5, 0, 1)
-    # + 3 * x[,4] + 2 * x[,5] # 변형1 - 앞에 두개가 잘 select 안됨
-    # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+    # f = 2 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 3 * f6(x[,3])
+    # f = 3 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 4 * f6(x[,3]) + 1 * f2(x[,4])
+    # f = 4 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 4 * f6(x[,3]) + 1 * f2(x[,4]) + 2 * f3(x[,5])
+    # f = 3 * x[, 1] + 1 * (3 * x[, 2] - 2)^2 + 1 * cos(pi * (3 * x[, 3] - 1.5) / 5)
+    # + 3 * cos(pi *  (3 * x[, 5] - 1.5) / 5)
+    f = 6 * x[,1] + 5 * (3 * x[, 2] - 2)^2 - 1 + 7 * f6(x[,3]) + 2 * f2(x[,4]) + 1 * f3(x[,5])
 
 
     surTime = rexp(n, exp(f))
@@ -103,7 +101,19 @@ data_generation = function(n, p, rho,
   return(out)
 }
 
-# ff = function(t) cos(pi * (3 * t - 1.5) / 5)
+
+# tr = data_generation(200, 50, response = "survival")
+# tr_x = tr$x
+# tr_y = tr$y
+#
+# fit10 = try(cdcosso(tr_x, tr_y, family = 'Cox', gamma = 0.95, kernel = "spline", scale = T, algo = "CD"), silent = TRUE)
+# print(fit10$theta_step$theta.new)
+# par(mfrow = c(1, 5))
+# for(i in 1:5)
+#   plot(c(tr_x[, i]), fit10$c_step$f.new, main = i)
+
+
+# ff = function(t) (3 * t - 2)^2 - 1
 # plot(te_x[,5], ff(te_x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
 # fff = ff(te_x[,5])
 # prob = exp(fff)/(exp(fff) + 1)
