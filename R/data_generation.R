@@ -38,14 +38,16 @@ data_generation = function(n, p, rho,
   Sigma = matrix(rho, 5, 5)
   diag(Sigma) = 1
 
-  x_sig = pnorm(rmvnorm(n, sigma = Sigma))
-  x_nois = matrix(pnorm(rnorm(n * (p-5))), n, p-5)
-  x = cbind(x_sig, x_nois)
+  # x_sig = pnorm(rmvnorm(n, sigma = Sigma))
+  # x_nois = matrix(pnorm(rnorm(n * (p-5))), n, p-5)
+  # x = cbind(x_sig, x_nois)
 
-  x_sig = pnorm(rmvnorm(n, sigma = Sigma))
+
+  x_sig = rmvnorm(n, sigma = Sigma)
   x_nois = matrix(rnorm(n * (p-5)), n, p-5)
   x = cbind(x_sig, x_nois)
-  x = apply(x, 2, rescale)
+
+  x = apply(x, 2, pnorm)
 
   # Set the outer margins
   # par(oma = c(0, 0, 0, 0))
@@ -88,8 +90,7 @@ data_generation = function(n, p, rho,
     # f = 4 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 4 * f6(x[,3]) + 1 * f2(x[,4]) + 2 * f3(x[,5])
     # f = 3 * x[, 1] + 1 * (3 * x[, 2] - 2)^2 + 1 * cos(pi * (3 * x[, 3] - 1.5) / 5)
     # + 3 * cos(pi *  (3 * x[, 5] - 1.5) / 5)
-    f = 6 * x[,1] + 5 * (3 * x[, 2] - 2)^2 - 1 + 7 * f6(x[,3]) + 2 * f2(x[,4]) + 1 * f3(x[,5])
-
+    f = 5 * f1(x[,1]) + 3 * ((3 * x[, 3] - 2)^2 - 1) + 6 * f5(x[,4]) + 1 * f4(x[,4]) + 2 * f3(x[,5])
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
@@ -113,7 +114,7 @@ data_generation = function(n, p, rho,
 #   plot(c(tr_x[, i]), fit10$c_step$f.new, main = i)
 
 
-# ff = function(t) (3 * t - 2)^2 - 1
+# ff = function(t) 3*((3 * t - 2)^2 - 1)
 # plot(te_x[,5], ff(te_x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
 # fff = ff(te_x[,5])
 # prob = exp(fff)/(exp(fff) + 1)

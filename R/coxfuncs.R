@@ -194,12 +194,12 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
 
 
-#       fit = gettheta.cd(init.theta, model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
-#       save_theta[[k]] <- fit$theta.new
-#
-#       XX = fit$zw.new - fit$Gw %*% fit$theta.new
-#       num = t(XX) %*% XX + 1
-#       den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
+      # fit = gettheta.cd(init.theta, model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
+      # save_theta[[k]] <- fit$theta.new
+      #
+      # XX = fit$zw.new - fit$Gw %*% fit$theta.new
+      # num = t(XX) %*% XX + 1
+      # den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
 
       measure[k] <- as.vector(num / den / n)
 
