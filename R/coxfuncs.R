@@ -39,12 +39,12 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       ssCox.en = glmnet(pseudoX, cbind(time = time, status = status), family = "cox", lambda = cand.lambda[k], alpha = 0)
       c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
       c.init = rescale_theta(c.init)
-      f.old = c(Rtheta %*% c.init)
+      # f.init = c(Rtheta %*% c.init)
 
       # c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
       #                           lambda = cand.lambda[k], alpha = 0)$beta)
-      # f.old = c(Rtheta %*% c.init)
-      fit = getc.cd(Rtheta, f.old, c.init, time, status, cand.lambda[k], RS)
+      # f.init = c(Rtheta %*% c.init)
+      fit = getc.cd(Rtheta, f.init, c.init, time, status, cand.lambda[k], RS)
 
       Rw = Rtheta * fit$c.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
@@ -90,12 +90,12 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
                       family = "cox", lambda = cand.lambda[k], alpha = 0)
     c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
     c.init = rescale_theta(c.init)
-    f.old = c(Rtheta %*% c.init)
+    # f.init = c(Rtheta %*% c.init)
 
     # c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
     #                           lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
-    # f.old = c(Rtheta %*% c.init)
-    fit = getc.cd(Rtheta, f.old, c.init, time, status, optlambda, RS)
+    # f.init = c(Rtheta %*% c.init)
+    fit = getc.cd(Rtheta, f.init, c.init, time, status, optlambda, RS)
     out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new) + fit$b.new,
                cw.new = fit$cw.new, z.new = fit$z.new, w.new = fit$w.new,
                c.new = fit$c.new, b.new = fit$b.new, optlambda = optlambda, conv = TRUE)
