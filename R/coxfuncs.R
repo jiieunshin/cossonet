@@ -30,20 +30,20 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   measure <- rep(0, length(cand.lambda))
   for (k in 1:length(cand.lambda)){
     if(algo == "CD"){
-      EigRtheta = eigen(Rtheta)
-      if (min(EigRtheta$value) < 0) {
-        Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
-        EigRtheta = eigen(Rtheta)
-      }
-      pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
-      ssCox.en = glmnet(pseudoX, cbind(time = time, status = status), family = "cox", lambda = cand.lambda[k], alpha = 0)
-      init.C = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
-      init.C = rescale_theta(init.C)
-      f.old = c(Rtheta %*% init.C) + fit$b.new
+      # EigRtheta = eigen(Rtheta)
+      # if (min(EigRtheta$value) < 0) {
+      #   Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
+      #   EigRtheta = eigen(Rtheta)
+      # }
+      # pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
+      # ssCox.en = glmnet(pseudoX, cbind(time = time, status = status), family = "cox", lambda = cand.lambda[k], alpha = 0)
+      # init.C = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
+      # init.C = rescale_theta(init.C)
+      # f.old = c(Rtheta %*% init.C) + fit$b.new
 
-      # c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
-      #                           lambda = cand.lambda[k], alpha = 0)$beta)
-
+      c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
+                                lambda = cand.lambda[k], alpha = 0)$beta)
+      f.old = c(Rtheta %*% c.init)
       fit = getc.cd(Rtheta, f.old, init.C, time, status, cand.lambda[k], RS)
 
       Rw = Rtheta * fit$c.new
@@ -130,7 +130,7 @@ getc.cd = function(Rtheta, f, c.init, time, status, lambda0, Risk)
   cw = c.init
   cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
-  fit = .Call("c_step", zw, Rw, cw, sw, n, 1, lambda0, PACKAGE = "cdcosso")
+  fit = .Call("c_step", zw, Rw, cw, sw, n, as.numeric(n), lambda0, PACKAGE = "cdcosso")
 
   b.new = fit$b.new
   c.new = fit$c.new
@@ -200,8 +200,8 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # init.theta = rep(1, d)
 
       # Gw = G * sqrt(model$w.new)
-      # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
-      # theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (1/2) * lambda0 * model$cw.new
+      # theta.new = .Call("theta_step", Gw, uw, n, as.numeric(n), d, rep(1, d), lambda_theta[k], gamma)
       # save_theta[[k]] <- theta.new
       #
       # XX = model$zw.new - Gw %*% theta.new
@@ -270,7 +270,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   uw = (z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
 
-  theta.new = .Call("theta_step", Gw, uw, n, 1, d, init.theta, lambda_theta, gamma)
+  theta.new = .Call("theta_step", Gw, uw, n, as.numeric(n), d, init.theta, lambda_theta, gamma)
   # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
   return(list(Gw = Gw, zw.new = z * sqrt(w), w.new = w, theta.new = theta.new))
 }
