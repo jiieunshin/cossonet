@@ -13,7 +13,7 @@ void R_init_markovchain(DllInfo *dll) {
 
 // Define the sspline_cd fulention
 SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
-  int nc = REAL(n)[0];
+  int nc = INTEGER(n)[0];
 
   SEXP result = PROTECT(allocVector(VECSXP, 5)); // Extra space for b_new
 
