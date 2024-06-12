@@ -30,23 +30,28 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   measure <- rep(0, length(cand.lambda))
   for (k in 1:length(cand.lambda)){
     if(algo == "CD"){
-      c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
-                                lambda = cand.lambda[k], alpha = 0)$beta)
-      fit = getc.cd(Rtheta, f.init, c.init, time, status, cand.lambda[k], RS)
+      EigRtheta = eigen(Rtheta)
+      if (min(EigRtheta$value) < 0) {
+        Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
+        EigRtheta = eigen(Rtheta)
+      }
+      pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
+      ssCox.en = glmnet(pseudoX, cbind(time = time, status = status), family = "cox", lambda = cand.lambda[k], alpha = 0)
+      init.C = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
+      init.C = rescale_theta(init.C)
+      f.old = c(Rtheta %*% init.C) + fit$b.new
 
-      Rw = Rtheta * fit$w.new
+      # c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
+      #                           lambda = cand.lambda[k], alpha = 0)$beta)
+
+      fit = getc.cd(Rtheta, f.old, init.C, time, status, cand.lambda[k], RS)
+
+      Rw = Rtheta * fit$c.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
       num = t(XX) %*% XX + 1
-      # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2 + 1
-      measure[k] <- as.vector( num / den / n)
-
-      # W = outer(fit$gradient, fit$gradient)
-      # UHU = Rtheta %*% W %*% t(Rtheta)
-
-      # measure[k] <- cosso::PartialLik(time, status, RS, Rtheta %*% fit$c.new)
-      # + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+      measure[k] = as.vector( num / den / n )
     }
 
     if(algo == "QP"){
@@ -75,10 +80,23 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   if(show) plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
-    c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
-                              lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
-    fit = getc.cd(Rtheta, f.init, c.init, time, status, optlambda, RS)
-    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), cw.new = fit$cw.new, z.new = fit$z.new, w.new = fit$w.new,
+    EigRtheta = eigen(Rtheta)
+    if (min(EigRtheta$value) < 0) {
+      Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
+      EigRtheta = eigen(Rtheta)
+    }
+    pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
+    ssCox.en = glmnet(pseudoX, cbind(time = time, status = status),
+                      family = "cox", lambda = cand.lambda[k], alpha = 0)
+    init.C = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
+    init.C = rescale_theta(init.C)
+    f.old = c(Rtheta %*% init.C)
+
+    # c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
+    #                           lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
+    fit = getc.cd(Rtheta, f.old, init.C, time, status, optlambda, RS)
+    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new) + fit$b.new,
+               cw.new = fit$cw.new, z.new = fit$z.new, w.new = fit$w.new,
                c.new = fit$c.new, b.new = fit$b.new, optlambda = optlambda, conv = TRUE)
     }
 
