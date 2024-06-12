@@ -31,7 +31,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       cw = c.init / sqrt(w)
       sw = sqrt(w)
 
-      fit = .Call("c_step", zw, Rw, cw, sw, n, cand.lambda[k], PACKAGE = "cdcosso")
+      fit = .Call("c_step", zw, Rw, cw, sw, n, n, cand.lambda[k], PACKAGE = "cdcosso")
       b.new = fit$b.new
       c.new = fit$c.new
       cw.new = fit$cw.new
@@ -229,7 +229,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   save_theta <- list()
   for (k in 1:len) {
     if(algo == "CD") {
-      theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      theta.new = .Call("theta_step", Gw, uw, n, n, d, init.theta, lambda_theta[k], gamma)
       save_theta[[k]] <- theta.new
     }
 

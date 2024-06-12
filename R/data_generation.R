@@ -61,7 +61,8 @@ data_generation = function(n, p, rho,
   # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
   # par(mfrow = c(1,1))
 
-  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 4 * ((3 * x[, 2] - 2)^2 - 1) + 6 * f5(x[, 3]) + 2 * f4(x[, 4]) + 2 * f3(x[, 5])
 
   if(response == "regression"){
     f = f + rnorm(n, 0, 1)
@@ -92,7 +93,7 @@ data_generation = function(n, p, rho,
     # f = 5 * f1(x[,1]) + 2 * ((3 * x[, 3] - 2)^2 - 1) + 6 * f5(x[,4]) + 1 * f4(x[,4]) + 3 * f3(x[,5])
 
     # x[, 5] <- rbinom(n, 1, .5)
-    f = 5 * f1(x[,1]) + 4 * ((3 * x[, 2] - 2)^2 - 1) + 6 * f5(x[, 3]) + 2 * f4(x[, 4]) + 1 * f3(x[, 5])
+    # f = 4 * f1(x[,1]) + 5 * ((3 * x[, 2] - 2)^2 - 1) + 6 * f5(x[, 3]) + 2 * f4(x[, 4]) + 2 * f3(x[, 5])
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
@@ -113,7 +114,7 @@ data_generation = function(n, p, rho,
 # print(fit10$theta_step$theta.new)
 # par(mfrow = c(1, 5))
 # for(i in 1:5)
-#   plot(c(tr_x[, i]), fit10$c_step$f.new, main = i)
+#   plot(c(te_x[, i]), en1_pred$f.new, main = i)
 
 
 # ff = function(t) 3*((3 * t - 2)^2 - 1)

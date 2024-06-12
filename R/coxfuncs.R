@@ -28,7 +28,6 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   RS = RiskSet(time, status)
 
   measure <- rep(0, length(cand.lambda))
-
   for (k in 1:length(cand.lambda)){
     if(algo == "CD"){
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
@@ -38,10 +37,10 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       Rw = Rtheta * fit$w.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
       num = t(XX) %*% XX + 1
-
+      # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2 + 1
-      measure[k] <- as.vector( num / den / n )
+      measure[k] <- as.vector( num / den / n)
 
       # W = outer(fit$gradient, fit$gradient)
       # UHU = Rtheta %*% W %*% t(Rtheta)
@@ -79,15 +78,15 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
     fit = getc.cd(Rtheta, f.init, c.init, time, status, optlambda, RS)
-    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new) + fit$b.new, zw.new = fit$zw.new, w.new = fit$w.new,
-               b.new = fit$b.new, cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), cw.new = fit$cw.new, z.new = fit$z.new, w.new = fit$w.new,
+               c.new = fit$c.new, b.new = fit$b.new, optlambda = optlambda, conv = TRUE)
     }
 
   if(algo == "QP"){
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
     fit = getc.QP(R, Rtheta, c.init, time, status, mscale, optlambda, RS)
-    out = list(measure = measure, R = R, f.new = Rtheta %*% fit$c.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
   }
 
   rm(K)
@@ -96,26 +95,24 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   return(out)
 }
 
-
 getc.cd = function(Rtheta, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
   # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
   # w = wz$weight
   # z = wz$z
-  b = 0
 
   y = cbind(time = time, status = status)
   coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
-  w = -attributes(coxgrad_results)$diag_hessian
-  z = (f - b) - ifelse(w != 0, -coxgrad_results/w, 0)
+  w = - attributes(coxgrad_results)$diag_hessian
+  z = f - ifelse(w != 0, - coxgrad_results/w, 0)
 
   zw = z * sqrt(w)
   Rw = Rtheta * w
   cw = c.init
   cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
-  fit = .Call("c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
+  fit = .Call("c_step", zw, Rw, cw, sw, n, 1, lambda0, PACKAGE = "cdcosso")
 
   b.new = fit$b.new
   c.new = fit$c.new
@@ -182,24 +179,24 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   save_theta <- list()
   for (k in 1:len) {
     if(algo == "CD"){
-      init.theta = rep(1, d)
+      # init.theta = rep(1, d)
 
-      Gw = G * sqrt(model$w.new)
-      uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
-      theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
-      save_theta[[k]] <- theta.new
-
-      XX = model$zw.new - Gw %*% theta.new
-      num = t(XX) %*% XX + 1
-      den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
-
-
-      # fit = gettheta.cd(init.theta, model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
-      # save_theta[[k]] <- fit$theta.new
+      # Gw = G * sqrt(model$w.new)
+      # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
+      # theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      # save_theta[[k]] <- theta.new
       #
-      # XX = fit$zw.new - fit$Gw %*% fit$theta.new
+      # XX = model$zw.new - Gw %*% theta.new
       # num = t(XX) %*% XX + 1
-      # den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
+      # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+
+
+      fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
+      save_theta[[k]] <- fit$theta.new
+
+      XX = fit$zw.new - fit$Gw %*% fit$theta.new
+      num = t(XX) %*% XX + 1
+      den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
 
       measure[k] <- as.vector(num / den / n)
 
@@ -207,8 +204,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     }
 
     if(algo == "QP"){
-      init.theta = rep(1, d)
-      fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
+      fit = gettheta.QP(rep(1, d), model$c.new, G, time, status, lambda0, lambda_theta[k], RS)
       save_theta[[k]] <- fit$theta.new
 
       measure[k] <- as.vector(cosso::PartialLik(time, status, RS,  G %*% fit$theta.new) / (1 - sum(fit$theta.new != 0))^2 /n)
@@ -250,13 +246,13 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   # f.init = rep(0.5, n)
   y = cbind(time = time, status = status)
   coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
-  w = - attributes(coxgrad_results)$diag_hessian
-  z = f.init - ifelse(w != 0, - coxgrad_results/w, 0)
+  w = - attributes(coxgrad_results)$diag_hessian * n
+  z = f.init - ifelse(w != 0, - coxgrad_results/w, 0) * n
 
   uw = (z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
 
-  theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
+  theta.new = .Call("theta_step", Gw, uw, n, 1, d, init.theta, lambda_theta, gamma)
   # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
   return(list(Gw = Gw, zw.new = z * sqrt(w), w.new = w, theta.new = theta.new))
 }
