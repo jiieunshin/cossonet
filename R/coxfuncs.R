@@ -244,8 +244,8 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
   w = - attributes(coxgrad_results)$diag_hessian
   z = f.init - ifelse(w != 0, - coxgrad_results/w, 0)
-
-  uw = (z * sqrt(w)) - bhat * sqrt(w) - const
+  # - bhat * sqrt(w) - const
+  uw = (z * sqrt(w))
   Gw = G * sqrt(w)
 
   theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
