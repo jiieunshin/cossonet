@@ -108,7 +108,7 @@ getc.cd = function(Rtheta, f, c.init, time, status, lambda0, Risk)
   cw = c.init
   cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
-  fit = .Call("c_step", zw, Rw, cw, sw, n, as.numeric(n), lambda0, PACKAGE = "cdcosso")
+  fit = .Call("c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
 
   b.new = fit$b.new
   c.new = fit$c.new
@@ -248,7 +248,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   uw = (z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
 
-  theta.new = .Call("theta_step", Gw, uw, n, as.numeric(n), d, init.theta, lambda_theta, gamma)
+  theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
   return(list(Gw = Gw, zw.new = z * sqrt(w), w.new = w, theta.new = theta.new))
 }

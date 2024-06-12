@@ -12,9 +12,8 @@ void R_init_markovchain(DllInfo *dll) {
 
 
 // Define the sspline_cd fulention
-SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP len, SEXP n, SEXP lambda0) {
-  int len_c = INTEGER(len)[0];
-  double n_c = REAL(n)[0];
+SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
+  int nc = REAL(n)[0];
 
   SEXP result = PROTECT(allocVector(VECSXP, 5)); // Extra space for b_new
 
@@ -27,21 +26,21 @@ SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP len, SEXP n, SEXP lambda0) 
 
   // Define variables
   double b_c = 0;
-  double *cw_new = (double *)malloc(len_c * sizeof(double));
-  double *c_new = (double *)malloc(len_c * sizeof(double));
-  double *pow_Rc = (double *)malloc(len_c * sizeof(double));
+  double *cw_new = (double *)malloc(nc * sizeof(double));
+  double *c_new = (double *)malloc(nc * sizeof(double));
+  double *pow_Rc = (double *)malloc(nc * sizeof(double));
 
-  for(int k = 0; k < len_c; k++) {
+  for(int k = 0; k < nc; k++) {
     cw_new[k] = 0;
     c_new[k] = 0;
     pow_Rc[k] = 0;
   }
 
   // calculate square term
-  for(int j = 0; j < len_c; j++) { // iterate by column
+  for(int j = 0; j < nc; j++) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < len_c; k++) { // iterate by row
-      add += Rw_c[j * len_c + k] * Rw_c[j * len_c + k];
+    for(int k = 0; k < nc; k++) { // iterate by row
+      add += Rw_c[j * nc + k] * Rw_c[j * nc + k];
     }
     pow_Rc[j] = 2 * add;
   }
@@ -52,36 +51,36 @@ SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP len, SEXP n, SEXP lambda0) 
   for (iter = 0; iter < 10; ++iter) {
 
     // update cw
-    for (int j = 0; j < len_c; ++j) { // iterate by column
+    for (int j = 0; j < nc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for (int k = 0; k < len_c; ++k) { // iterate by row
+      for (int k = 0; k < nc; ++k) { // iterate by row
         double Rc1 = 0.0;
-        for (int l = 0; l < len_c; ++l) {
+        for (int l = 0; l < nc; ++l) {
           if (l != j) {
-            Rc1 += Rw_c[l * len_c + k] * cw_c[l];
+            Rc1 += Rw_c[l * nc + k] * cw_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * len_c + k];
+        V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * nc + k];
       }
       V1 = 2 * V1;
 
       double V2 = 0.0;
-      for (int l = 0; l < len_c; ++l) {
+      for (int l = 0; l < nc; ++l) {
         if (l != j) {
-          V2 += Rw_c[l * len_c + j] * cw_c[l];
+          V2 += Rw_c[l * nc + j] * cw_c[l];
         }
       }
-      V2 = n_c * lambda0_c * V2;
+      V2 = nc * lambda0_c * V2;
 
-      double V4 = n_c * lambda0_c * Rw_c[j * len_c + j];
+      double V4 = nc * lambda0_c * Rw_c[j * nc + j];
 
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
       double abs_diff = 0;
       max_diff = fabs(cw_c[0] - cw_new[0]);
-      for (int k = 1; k < len_c; ++k){
+      for (int k = 1; k < nc; ++k){
         abs_diff = fabs(cw_c[k] - cw_new[k]);
 
         if (abs_diff > max_diff){
@@ -104,20 +103,20 @@ SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP len, SEXP n, SEXP lambda0) 
   } // end outer iteration
 
   if (max_diff > 1e-6 && iter == 0){
-    memcpy(cw_new, cw_c, len_c * sizeof(double));
+    memcpy(cw_new, cw_c, nc * sizeof(double));
   }
 
   // Calculate c_new
-  for (int i = 0; i < len_c; ++i) {
+  for (int i = 0; i < nc; ++i) {
     c_new[i] = cw_new[i] * sqrt(sw_c[i]);
   }
 
   // result
   double sum3 = 0.0, sum4 = 0.0;
-  for (int k = 0; k < len_c; ++k) { // iterate by row
+  for (int k = 0; k < nc; ++k) { // iterate by row
     double Rc = 0.0;
-    for (int l = 0; l < len_c; ++l) { // iterate by col
-      Rc += Rw_c[l * len_c + k] * cw_new[l];
+    for (int l = 0; l < nc; ++l) { // iterate by col
+      Rc += Rw_c[l * nc + k] * cw_new[l];
     }
     sum3 += (zw_c[k] - Rc) * sw_c[k];
     sum4 += sw_c[k];
@@ -126,14 +125,14 @@ SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP len, SEXP n, SEXP lambda0) 
   double b_new = sum3 / sum4;
 
   // Set values in result SEXP
-  SET_VECTOR_ELT(result, 0, allocVector(REALSXP, len_c));
+  SET_VECTOR_ELT(result, 0, allocVector(REALSXP, nc));
   SET_VECTOR_ELT(result, 1, ScalarReal(b_new));
-  SET_VECTOR_ELT(result, 2, allocVector(REALSXP, len_c));
+  SET_VECTOR_ELT(result, 2, allocVector(REALSXP, nc));
   SET_VECTOR_ELT(result, 3, zw);
   SET_VECTOR_ELT(result, 4, sw);
 
   // Copy values to result SEXP
-  for (int i = 0; i < len_c; ++i) {
+  for (int i = 0; i < nc; ++i) {
     REAL(VECTOR_ELT(result, 0))[i] = cw_new[i];
     REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
   }
@@ -156,10 +155,9 @@ SEXP c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP len, SEXP n, SEXP lambda0) 
 }
 
 
-SEXP theta_step(SEXP Gw, SEXP uw, SEXP len, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
+SEXP theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   // Convert R vectors to C arrays
-  int len_c = INTEGER(len)[0]; // Extract the value of n
-  double nc = REAL(n)[0]; // Extract the value of n
+  int nc = INTEGER(n)[0]; // Extract the value of n
   int dc = INTEGER(d)[0]; // Extract the value of d
   double *uw_c = REAL(uw);
   double *Gw_c = REAL(Gw);
@@ -180,8 +178,8 @@ SEXP theta_step(SEXP Gw, SEXP uw, SEXP len, SEXP n, SEXP d, SEXP theta, SEXP lam
 
   for(int j = 0; j < dc; j++) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < len_c; k++) { // iterate by row
-      add += Gw_c[j * len_c + k] * Gw_c[j * len_c + k];
+    for(int k = 0; k < nc; k++) { // iterate by row
+      add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
     }
     pow_theta[j] = add;
   }
@@ -193,14 +191,14 @@ SEXP theta_step(SEXP Gw, SEXP uw, SEXP len, SEXP n, SEXP d, SEXP theta, SEXP lam
   for(iter = 0; iter < 10; iter++) {
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
-      for(int k = 0; k < len_c; k++) { // iterate by row
+      for(int k = 0; k < nc; k++) { // iterate by row
         double GT = 0.0;
         for(int l = 0; l < dc; l++) { // iterate by column except j
           if(l != j) {
-            GT += Gw_c[l * len_c + k] * theta_c[l];
+            GT += Gw_c[l * nc + k] * theta_c[l];
           }
         }
-        V1 += (uw_c[k] - GT) * Gw_c[j * len_c + k];
+        V1 += (uw_c[k] - GT) * Gw_c[j * nc + k];
       }
       V1 *= 2;
 
