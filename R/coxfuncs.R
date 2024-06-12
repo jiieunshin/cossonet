@@ -32,7 +32,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     if(algo == "CD"){
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0)$beta)
-      f.init = c(Rtheta %*% c.init)
+      # f.init = c(Rtheta %*% c.init)
       fit = getc.cd(Rtheta, f.init, c.init, time, status, cand.lambda[k], RS)
 
       Rw = Rtheta * fit$c.new
@@ -71,7 +71,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   if(algo == "CD"){
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
-    f.init = c(Rtheta %*% c.init)
+    # f.init = c(Rtheta %*% c.init)
     fit = getc.cd(Rtheta, f.init, c.init, time, status, optlambda, RS)
     out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new) + fit$b.new,
                cw.new = fit$cw.new, z.new = fit$z.new, w.new = fit$w.new,
@@ -239,7 +239,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   # wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
   # w = wz$weight
   # z = wz$z
-  # f.init = rep(0.5, n)
+  f.init = rep(0.5, n)
   y = cbind(time = time, status = status)
   coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
   w = - attributes(coxgrad_results)$diag_hessian
