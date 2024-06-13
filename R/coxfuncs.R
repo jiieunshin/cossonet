@@ -33,7 +33,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0)$beta)
       f.init = c(Rtheta %*% c.init)
-      fit = getc.cd(Rtheta, f.init, c.init, time, status, cand.lambda[k], RS)
+      fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, cand.lambda[k], RS)
 
       Rw = Rtheta * fit$c.new
       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
@@ -41,6 +41,8 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
       den = (1 - sum(diag(S)) / n)^2 + 1
       measure[k] = as.vector( num / den / n )
+
+      measure[k] = fit$GCV
     }
 
     if(algo == "QP"){
@@ -71,8 +73,8 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   if(algo == "CD"){
     c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                               lambda = optlambda, alpha = 0, standardize = FALSE)$beta)
-    f.init = c(Rtheta %*% c.init)
-    fit = getc.cd(Rtheta, f.init, c.init, time, status, optlambda, RS)
+    # f.init = c(Rtheta %*% c.init)
+    fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, optlambda, RS)
     out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new) + fit$b.new,
                cw.new = fit$cw.new, z.new = fit$z.new, w.new = fit$w.new,
                c.new = fit$c.new, b.new = fit$b.new, optlambda = optlambda, conv = TRUE)
@@ -91,30 +93,38 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   return(out)
 }
 
-getc.cd = function(Rtheta, f, c.init, time, status, lambda0, Risk)
+getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
-  wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
-  w = wz$weight
-  z = wz$z
+  # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
+  # w = wz$weight
+  # z = wz$z
 
   # y = cbind(time = time, status = status)
   # coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
   # w = - attributes(coxgrad_results)$diag_hessian
   # z = f - ifelse(w != 0, - coxgrad_results/w, 0)
 
+  GH = cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, lambda0, Risk)
+
+  w = 1/diag(GH$Hessian)
+  z = (GH$Hessian %*% c.init - GH$Gradient) / lambda0
+
   zw = z * sqrt(w)
   Rw = Rtheta * w
   cw = c.init
   cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
-  fit = .Call("c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
+  fit = .Call("c_step", zw, Rw, cw, sw, n, 1/lambda0, PACKAGE = "cdcosso")
 
   b.new = fit$b.new
   c.new = fit$c.new
   cw.new = fit$cw.new
 
-  return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
+  loglik = t(z - Rtheta %*% c.new) %*% diag(w) %*% (z - Rtheta %*% c.new)
+  den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + GH$Hessian/lambda0))) / n)^2
+  GCV = as.numeric(loglik / den / n)
+  return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new, GCV = GCV))
 }
 
 getc.QP = function (R, Rtheta, c.init, time, status, mscale, lambda0, RS)
@@ -146,7 +156,7 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
 
     Grad.Term[k] = status[k] - Sum.exp.eta.Grad
     weight[k] = Sum.exp.eta.Hess
-    z[k] = eta + (Grad.Term[k] + 0.1) / (weight[k] + 0.1)
+    z[k] = eta - ifelse(weight[k] != 0, - Grad.Term[k]/weight[k], 0)
   }
 
   return(list(z = z, gradient = Grad.Term, weight = weight))
@@ -179,7 +189,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 
       # Gw = G * sqrt(model$w.new)
       # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (1/2) * lambda0 * model$cw.new
-      # theta.new = .Call("theta_step", Gw, uw, n, as.numeric(n), d, rep(1, d), lambda_theta[k], gamma)
+      # theta.new = .Call("theta_step", Gw, uw, n, d, rep(1, d), lambda_theta[k], gamma)
       # save_theta[[k]] <- theta.new
       #
       # XX = model$zw.new - Gw %*% theta.new
@@ -270,7 +280,7 @@ calculate_wz_for_theta = function(init.theta, G, time, status, RS){
 
     Grad.Term[k] = status[k] - Sum.exp.eta.Grad
     weight[k] = Sum.exp.eta.Hess
-    z[k] = eta + (Grad.Term[k] + 0.1) / (weight[k] + 0.1)
+    z[k] = eta - ifelse(weight[k] != 0, - Grad.Term[k]/weight[k], 0)
   }
 
   return(list(z = z, gradient = Grad.Term, weight = weight))
