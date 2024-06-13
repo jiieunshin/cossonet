@@ -42,7 +42,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       den = (1 - sum(diag(S)) / n)^2 + 1
       measure[k] = as.vector( num / den / n )
 
-      measure[k] = fit$GCV
+      # measure[k] = fit$GCV
     }
 
     if(algo == "QP"){
@@ -100,31 +100,31 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   # w = wz$weight
   # z = wz$z
 
-  # y = cbind(time = time, status = status)
-  # coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
-  # w = - attributes(coxgrad_results)$diag_hessian
-  # z = f - ifelse(w != 0, - coxgrad_results/w, 0)
+  y = cbind(time = time, status = status)
+  coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
+  w = - attributes(coxgrad_results)$diag_hessian
+  z = f - ifelse(w != 0, - coxgrad_results/w, 0)
 
-  GH = cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, lambda0, Risk)
-
-  w = 1/diag(GH$Hessian)
-  z = (GH$Hessian %*% c.init - GH$Gradient) / lambda0
+  # GH = cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, lambda0, Risk)
+  #
+  # w = 1/diag(GH$Hessian)
+  # z = (GH$Hessian %*% c.init - GH$Gradient) / lambda0
 
   zw = z * sqrt(w)
   Rw = Rtheta * w
   cw = c.init
   cw.new = temp = c.init / sqrt(w)
   sw = sqrt(w)
-  fit = .Call("c_step", zw, Rw, cw, sw, n, 1/lambda0, PACKAGE = "cdcosso")
+  fit = .Call("c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
 
   b.new = fit$b.new
   c.new = fit$c.new
   cw.new = fit$cw.new
 
-  loglik = t(z - Rtheta %*% c.new) %*% diag(w) %*% (z - Rtheta %*% c.new)
-  den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + GH$Hessian/lambda0))) / n)^2
-  GCV = as.numeric(loglik / den / n)
-  return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new, GCV = GCV))
+  # loglik = t(z - Rtheta %*% c.new) %*% diag(w) %*% (z - Rtheta %*% c.new)
+  # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + GH$Hessian/lambda0))) / n)^2
+  # GCV = as.numeric(loglik / den / n)
+  return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
 getc.QP = function (R, Rtheta, c.init, time, status, mscale, lambda0, RS)
@@ -200,7 +200,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
       save_theta[[k]] <- fit$theta.new
 
-      XX = fit$zw.new - fit$Gw %*% fit$theta.new
+      XX = fit$uw.new - fit$Gw %*% fit$theta.new
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
 
@@ -250,7 +250,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   w = wz$weight
   z = wz$z
   # f.init = rep(0.5, n)
-  y = cbind(time = time, status = status)
+  # y = cbind(time = time, status = status)
   # coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
   # w = - attributes(coxgrad_results)$diag_hessian
   # z = f.init - ifelse(w != 0, - coxgrad_results/w, 0)
@@ -260,7 +260,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
 
   theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
-  return(list(Gw = Gw, zw.new = z * sqrt(w), w.new = w, theta.new = theta.new))
+  return(list(Gw = Gw, uw.new = uw, w.new = w, theta.new = theta.new))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){
