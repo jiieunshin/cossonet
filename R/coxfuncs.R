@@ -76,7 +76,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     # f.init = c(Rtheta %*% c.init)
     fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, optlambda, RS)
     out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new) + fit$b.new,
-               cw.new = fit$cw.new, z.new = fit$z.new, w.new = fit$w.new,
+               cw.new = fit$cw.new, w.new = fit$w.new,
                c.new = fit$c.new, b.new = fit$b.new, optlambda = optlambda, conv = TRUE)
     }
 
@@ -187,22 +187,22 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     if(algo == "CD"){
       # init.theta = rep(1, d)
 
-      Gw = G * sqrt(model$w.new)
-      uw = model$zw.new - model$b.new * sqrt(model$w.new) - (1/2) * lambda0 * model$cw.new
-      theta.new = .Call("theta_step", Gw, uw, n, d, rep(1, d), lambda_theta[k], gamma)
-      save_theta[[k]] <- theta.new
-
-      XX = model$zw.new - Gw %*% theta.new
-      num = t(XX) %*% XX + 1
-      den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
-
-
-      # fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
-      # save_theta[[k]] <- fit$theta.new
+      # Gw = G * sqrt(model$w.new)
+      # uw = model$zw.new - model$b.new * sqrt(model$w.new) - (1/2) * lambda0 * model$cw.new
+      # theta.new = .Call("theta_step", Gw, uw, n, d, rep(1, d), lambda_theta[k], gamma)
+      # save_theta[[k]] <- theta.new
       #
-      # XX = fit$uw.new - fit$Gw %*% fit$theta.new
+      # XX = model$zw.new - Gw %*% theta.new
       # num = t(XX) %*% XX + 1
-      # den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
+      # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+
+
+      fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
+      save_theta[[k]] <- fit$theta.new
+
+      XX = fit$uw.new - fit$Gw %*% fit$theta.new
+      num = t(XX) %*% XX + 1
+      den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
 
       measure[k] <- as.vector(num / den / n)
 
