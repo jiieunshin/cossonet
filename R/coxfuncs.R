@@ -94,14 +94,14 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
 getc.cd = function(Rtheta, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
-  # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
-  # w = wz$weight
-  # z = wz$z
+  wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
+  w = wz$weight
+  z = wz$z
 
-  y = cbind(time = time, status = status)
-  coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
-  w = - attributes(coxgrad_results)$diag_hessian
-  z = f - ifelse(w != 0, - coxgrad_results/w, 0)
+  # y = cbind(time = time, status = status)
+  # coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
+  # w = - attributes(coxgrad_results)$diag_hessian
+  # z = f - ifelse(w != 0, - coxgrad_results/w, 0)
 
   zw = z * sqrt(w)
   Rw = Rtheta * w
@@ -236,16 +236,16 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, const, lambda_
   d = ncol(G)
   r = lambda_theta * gamma * n
 
-  # wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
-  # w = wz$weight
-  # z = wz$z
+  wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
+  w = wz$weight
+  z = wz$z
   # f.init = rep(0.5, n)
   y = cbind(time = time, status = status)
-  coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
-  w = - attributes(coxgrad_results)$diag_hessian
-  z = f.init - ifelse(w != 0, - coxgrad_results/w, 0)
+  # coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
+  # w = - attributes(coxgrad_results)$diag_hessian
+  # z = f.init - ifelse(w != 0, - coxgrad_results/w, 0)
   # - bhat * sqrt(w) - const
-  uw = (z * sqrt(w))
+  uw = c(z * sqrt(w)) - bhat * sqrt(w) - const
   Gw = G * sqrt(w)
 
   theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
