@@ -200,7 +200,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
       save_theta[[k]] <- fit$theta.new
 
-      XX = model$zw.new - fit$Gw %*% fit$theta.new
+      XX = fit$uw.new - fit$Gw %*% fit$theta.new
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
 
