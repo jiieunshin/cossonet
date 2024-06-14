@@ -32,7 +32,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     if(algo == "CD"){
       c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
                                 lambda = cand.lambda[k], alpha = 0)$beta)
-      f.init = c(Rtheta %*% c.init)
+      # f.init = c(Rtheta %*% c.init)
       fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, cand.lambda[k], RS)
 
       Rw = Rtheta * fit$c.new
@@ -96,14 +96,14 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
 getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
-  # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
-  # w = wz$weight
-  # z = wz$z
+  wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
+  w = wz$weight
+  z = wz$z
 
-  y = cbind(time = time, status = status)
-  coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
-  w = - attributes(coxgrad_results)$diag_hessian
-  z = f - ifelse(w != 0, - coxgrad_results/w, 0)
+  # y = cbind(time = time, status = status)
+  # coxgrad_results = coxgrad(f, y, rep(1, length(f)), std.weights = FALSE, diag.hessian = TRUE)
+  # w = - attributes(coxgrad_results)$diag_hessian
+  # z = f - ifelse(w != 0, - coxgrad_results/w, 0)
 
   # GH = cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, lambda0, Risk)
   #
@@ -192,10 +192,9 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       theta.new = .Call("theta_step", Gw, uw, n, d, rep(1, d), lambda_theta[k], gamma)
       save_theta[[k]] <- theta.new
 
-      XX = uw - Gw %*% theta.new
+      XX = model$zw.new - Gw %*% theta.new
       num = t(XX) %*% XX + 1
       den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
-
 
       # fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, lambda_theta[k], gamma, RS)
       # save_theta[[k]] <- fit$theta.new
