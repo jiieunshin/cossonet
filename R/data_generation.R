@@ -95,16 +95,17 @@ data_generation = function(n, p, rho,
     # x[, 5] <- rbinom(n, 1, .5)
     # f = 2 * f1(x[,1]) + 1 * ((3 * x[, 2] - 2)^2 - 1) + 2 * f5(x[, 3]) + 3 * f4(x[, 4]) + 1 * f3(x[, 5])
 
-    x_sig = rmvnorm(n, sigma = Sigma)
-    x_nois = matrix(rnorm(n * (p-5)), n, p-5)
-    x = cbind(x_sig, x_nois)
-    x = apply(x, 2, rescale)
-    # f = 5 * x[,1] + 3 *sin(2*pi*x[,2]) + 6 * (x[,3]-0.4)^2 + 2 * sin(pi * x[,4]^4) - 3
-    f = 5 * x[,1] + 6 *sin(2*pi*x[,2]) + 2 * (x[,3]-0.4)^2 + 3 * sin(pi * x[,4]^4) + 4 * x[,5]^2 - 2
+    # x_sig = rmvnorm(n, sigma = Sigma)
+    # x_nois = matrix(rnorm(n * (p-5)), n, p-5)
+    # x = cbind(x_sig, x_nois)
+    # x = apply(x, 2, pnorm)
+    # # f = 5 * x[,1] + 3 *sin(2*pi*x[,2]) + 6 * (x[,3]-0.4)^2 + 2 * sin(pi * x[,4]^4) - 3
+    # f = 5 * x[,1] + 6 *sin(2*pi*x[,2]) + 2 * (x[,3]-0.4)^2 + 3 * sin(pi * x[,4]^4) + 4 * x[,5]^2 - 4
+
+    x = matrix(runif(n * p), n, p)
     # p = 50
     # x = matrix(runif(n * p, 0, 1), nc = p)
-    # hazard = 5 * x[,1] + 3 *sin(2*pi*x[,2]) + 6 * (x[,3]-0.4)^2 + 2 * sin(pi * x[,4]^4) - 3
-
+    hazard = 3 * x[,1] + 4 *sin(2*pi*x[,2]) + 5 * (x[,3]-0.4)^2 + 2 * sin(pi * x[,4]^4) + 1 * x[,5]^2 - 4
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
