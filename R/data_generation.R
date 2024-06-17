@@ -102,7 +102,7 @@ data_generation = function(n, p, rho,
     # f = 5 * x[,1] + 3 *sin(2*pi*x[,2]) + 6 * (x[,3]-0.4)^2 + 2 * sin(pi * x[,4]^4) - 3
     # f = 5 * x[,1] + 6 *sin(2*pi*x[,2]) + 2 * (x[,3]-0.4)^2 + 3 * sin(pi * x[,4]^4) + 4 * x[,5]^2 - 4
 
-    f = 5 * x[,1] + 3 *sin(2*pi*x[,2]) + 6 * (x[,3]-0.4)^2 + 1 * sin(pi * x[,4]^4) + 2 * x[,5]^2 - 4
+    # f = 5 * x[,1] + 3 *sin(2*pi*x[,2]) + 6 * (x[,3]-0.4)^2 + 1 * sin(pi * x[,4]^4) + 2 * x[,5]^2 - 4
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))

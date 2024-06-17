@@ -99,17 +99,6 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
   # w = wz$weight
   # z = wz$z
-  #
-  # zw = z * sqrt(w)
-  # Rw = Rtheta * w
-  # cw = c.init
-  # cw.new = temp = c.init / sqrt(w)
-  # sw = sqrt(w)
-  # fit = .Call("c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
-  #
-  # b.new = fit$b.new
-  # c.new = fit$c.new
-  # cw.new = fit$cw.new
 
   # return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 
@@ -128,14 +117,25 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   Hess = GH$Hessian
   Grad = GH$Gradient
   # 2 * n * lambda0 * Rtheta2
-  w = ginv(Hess)
-  z = (Hess %*% c.init - Grad) / lambda0
-  c.new = as.numeric(ginv(t(Rtheta) %*% Rtheta + t(Rtheta) / lambda0) %*% t(Rtheta) %*% w %*% z)
+  w = 1/diag(Hess)
+  z = (Hess %*% c.init - Grad) / lambda0[1]
+  # c.new = as.numeric(ginv(t(Rtheta) %*% Rtheta + t(Rtheta) / lambda0) %*% t(Rtheta) %*% w %*% z)
+
+  zw = z * sqrt(w)
+  Rw = Rtheta * w
+  cw = c.init
+  cw.new = temp = c.init / sqrt(w)
+  sw = sqrt(w)
+  fit = .Call("cox_c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
+
+  b.new = fit$b.new
+  c.new = fit$c.new
+  cw.new = fit$cw.new
 
   loglik = t(z - Rtheta %*% c.new) %*% w %*% (z - Rtheta %*% c.new)
   den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
   GCV = as.numeric(loglik / den / n)
-  return(list(z.new = z, w.new = w, c.new = c.new, GCV = GCV))
+  return(list(z.new = z, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 }
 
 gradient.Hessian.C = function (initC, Gramat1, Gramat2, time, status, mscale, lambda0, riskset, Hess.FullNumer.unScale)
@@ -151,7 +151,7 @@ gradient.Hessian.C = function (initC, Gramat1, Gramat2, time, status, mscale, la
     Hess.FullNumer.unScale = array(NA, dim = c(length(initC), length(initC), n))
     for (i in 1:n) Hess.FullNumer.unScale[, , i] = Rtheta1[i, ] %*% t(Rtheta1[i, ])
   }
-  Grad.Term1 = -t(Rtheta1) %*% status
+  Grad.Term1 = -t(Rtheta1) %*% status / n
   Grad.Term2 = matrix(NA, ncol = ncol(riskset), nrow = length(initC))
   # Grad.Term3 = 2 * n * lambda0 * Rtheta2 %*% initC
   Grad.FullNumer = t(Rtheta1) %*% diag(as.numeric(exp(eta)))
@@ -183,9 +183,9 @@ gradient.Hessian.C = function (initC, Gramat1, Gramat2, time, status, mscale, la
     Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
     Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
   }
-  Grad.Term2 = apply(Grad.Term2, 1, sum)
+  Grad.Term2 = apply(Grad.Term2, 1, sum) / n
   Gradient = Grad.Term1 + Grad.Term2
-  Hessian = apply(Hess.Term1, c(1, 2), sum) - apply(Hess.Term2, c(1, 2), sum)
+  Hessian = apply(Hess.Term1, c(1, 2), sum) / n - apply(Hess.Term2, c(1, 2), sum) / n
   return(list(Gradient = Gradient, Hessian = Hessian))
 }
 
@@ -320,7 +320,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, chat, lambda0, lambd
   uw = c(z * sqrt(w)) - (n/2) * lambda0 * (chat / sqrt(w + 1e-10))
   Gw = G * sqrt(w)
 
-  theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
+  theta.new = .Call("cox_theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
 
 
