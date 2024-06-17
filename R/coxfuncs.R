@@ -35,14 +35,13 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       # f.init = c(Rtheta %*% c.init)
       fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, cand.lambda[k], RS)
 
-      # Rw = Rtheta * fit$c.new
-      # XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
-      # num = t(XX) %*% XX + 1
-      # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
-      # den = (1 - sum(diag(S)) / n)^2 + 1
-      # measure[k] = as.vector( num / den / n )
+      Rw = Rtheta * fit$c.new
+      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
+      num = t(XX) %*% XX + 1
+      S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
+      den = (1 - sum(diag(S)) / n)^2 + 1
+      measure[k] = as.vector( num / den / n )
 
-      measure[k] = fit$GCV
     }
 
     if(algo == "QP"){
@@ -118,7 +117,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   Grad = GH$Gradient
   # 2 * n * lambda0 * Rtheta2
   w = 1/diag(Hess)
-  z = (Hess %*% c.init - Grad) / lambda0[1]
+  z = (Hess %*% c.init - Grad) / lambda0
   # c.new = as.numeric(ginv(t(Rtheta) %*% Rtheta + t(Rtheta) / lambda0) %*% t(Rtheta) %*% w %*% z)
 
   zw = z * sqrt(w)
@@ -132,10 +131,10 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.new = fit$c.new
   cw.new = fit$cw.new
 
-  loglik = t(z - Rtheta %*% c.new) %*% w %*% (z - Rtheta %*% c.new)
-  den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
-  GCV = as.numeric(loglik / den / n)
-  return(list(z.new = z, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
+  # loglik = t(z - Rtheta %*% c.new) %*% diag(w) %*% (z - Rtheta %*% c.new)
+  # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
+  # GCV = as.numeric(loglik / den / n)
+  return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new))
 }
 
 gradient.Hessian.C = function (initC, Gramat1, Gramat2, time, status, mscale, lambda0, riskset, Hess.FullNumer.unScale)
@@ -151,7 +150,7 @@ gradient.Hessian.C = function (initC, Gramat1, Gramat2, time, status, mscale, la
     Hess.FullNumer.unScale = array(NA, dim = c(length(initC), length(initC), n))
     for (i in 1:n) Hess.FullNumer.unScale[, , i] = Rtheta1[i, ] %*% t(Rtheta1[i, ])
   }
-  Grad.Term1 = -t(Rtheta1) %*% status / n
+  Grad.Term1 = -t(Rtheta1) %*% status
   Grad.Term2 = matrix(NA, ncol = ncol(riskset), nrow = length(initC))
   # Grad.Term3 = 2 * n * lambda0 * Rtheta2 %*% initC
   Grad.FullNumer = t(Rtheta1) %*% diag(as.numeric(exp(eta)))
@@ -183,8 +182,8 @@ gradient.Hessian.C = function (initC, Gramat1, Gramat2, time, status, mscale, la
     Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
     Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
   }
-  Grad.Term2 = apply(Grad.Term2, 1, sum) / n
-  Gradient = Grad.Term1 + Grad.Term2
+  Grad.Term2 = apply(Grad.Term2, 1, sum)
+  Gradient = Grad.Term1 / n + Grad.Term2 / n
   Hessian = apply(Hess.Term1, c(1, 2), sum) / n - apply(Hess.Term2, c(1, 2), sum) / n
   return(list(Gradient = Gradient, Hessian = Hessian))
 }
@@ -306,18 +305,29 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
 gettheta.cd = function(init.theta, f.init, G, time, status, chat, lambda0, lambda_theta, gamma, Risk){
   n = nrow(G)
   d = ncol(G)
-  r = lambda_theta * gamma * n
+  r = lambda_theta * gamma
 
   wz = calculate_wz_for_theta(init.theta, G, time, status, Risk)
   w = wz$weight
   z = wz$z
-  # f.init = rep(0.5, n)
-  # y = cbind(time = time, status = status)
-  # coxgrad_results = coxgrad(f.init, y, rep(1, nrow(G)), std.weights = FALSE, diag.hessian = TRUE)
-  # w = - attributes(coxgrad_results)$diag_hessian
-  # z = f.init - ifelse(w != 0, - coxgrad_results/w, 0)
-  # - bhat * sqrt(w) - const
-  uw = c(z * sqrt(w)) - (n/2) * lambda0 * (chat / sqrt(w + 1e-10))
+
+  uw = c(z * sqrt(w)) - 2 * lambda0 * (chat / sqrt(w + 1e-10))
+  Gw = G * sqrt(w)
+
+  theta.new = .Call("cox_theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
+
+  #
+  Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta), length(init.theta), n))
+  for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
+
+  GH = gradient.Hessian.Theta(init.theta, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
+  Hess = GH$Hessian
+  Grad = GH$Gradient
+  # 2 * n * lambda0 * Rtheta2
+  w = 1/diag(Hess)
+  z = rep(0.5, d) - ifelse(w != 0, - Grad/w, 0)
+
+  uw = c(z * sqrt(w)) - 2 * lambda0 * (chat / sqrt(w + 1e-10))
   Gw = G * sqrt(w)
 
   theta.new = .Call("cox_theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
@@ -325,6 +335,47 @@ gettheta.cd = function(init.theta, f.init, G, time, status, chat, lambda0, lambd
 
 
   return(list(Gw = Gw, zw.new = z * sqrt(w), uw.new = uw, w.new = w, theta.new = theta.new))
+}
+
+gradient.Hessian.Theta = function (initTheta, initC, G1, G2, lambda0, time, status, riskset, Hess.FullNumer.unScale)
+{
+  n = length(time)
+  p = length(initTheta)
+  tie.size = as.numeric(table(time[status == 1]))
+  eta = G1 %*% initTheta
+  Grad.Term1 = -t(G1) %*% status/n
+  Grad.Term2 = matrix(NA, ncol = ncol(riskset), nrow = p)
+  Grad.Term3 = lambda0 * t(G2) %*% initC / 2
+  Grad.FullNumer = t(G1) %*% diag(as.numeric(exp(eta)))
+  Grad.FullDenom = Hess.FullDenom = exp(eta)
+  Hess.FullNumer = Hess.FullNumer.unScale * array(rep(exp(eta), each = p^2), dim = c(p, p, n))
+  Hess.Term1 = Hess.Term2 = array(NA, dim = c(p, p, ncol(riskset)))
+  k = 1
+  tempSum.exp.eta = sum(exp(eta[riskset[, k]]), na.rm = TRUE)
+  tempGradient.numer = apply(Grad.FullNumer[, riskset[, k]], 1, sum, na.rm = TRUE)
+  tempHessian.numer = apply(Hess.FullNumer[, , riskset[, k]], c(1, 2), sum, na.rm = TRUE)
+  Grad.Term2[, k] = tie.size[k] * tempGradient.numer/tempSum.exp.eta
+  Hess.Term1[, , k] = tempHessian.numer/tempSum.exp.eta
+  Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
+  for (k in 2:ncol(riskset)) {
+    excludeID = riskset[, k - 1][!riskset[, k - 1] %in% riskset[, k]]
+    tempSum.exp.eta = tempSum.exp.eta - sum(exp(eta[excludeID]))
+    if (length(excludeID) > 1) {
+      tempGradient.numer = tempGradient.numer - apply(Grad.FullNumer[, excludeID], 1, sum)
+      tempHessian.numer = tempHessian.numer - apply(Hess.FullNumer[, , excludeID], c(1, 2), sum)
+    }
+    else {
+      tempGradient.numer = tempGradient.numer - Grad.FullNumer[, excludeID]
+      tempHessian.numer = tempHessian.numer - Hess.FullNumer[, , excludeID]
+    }
+    Grad.Term2[, k] = tie.size[k] * tempGradient.numer/tempSum.exp.eta
+    Hess.Term1[, , k] = tempHessian.numer/tempSum.exp.eta
+    Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[, k])
+  }
+  Grad.Term2 = apply(Grad.Term2, 1, sum)/n
+  Gradient = Grad.Term1 + Grad.Term2 + Grad.Term3
+  Hessian = apply(Hess.Term1, c(1, 2), sum)/n - apply(Hess.Term2, c(1, 2), sum)/n
+  return(list(Gradient = Gradient, Hessian = Hessian))
 }
 
 calculate_wz_for_theta = function(init.theta, G, time, status, RS){
