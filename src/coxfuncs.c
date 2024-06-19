@@ -177,9 +177,9 @@ SEXP cox_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
   // outer iteration
   double max_diff = 1e-10;
-  int iter = 0;
+  // int iter = 0;
 
-  for(iter = 0; iter < 10; iter++) {
+  // for(iter = 0; iter < 10; iter++) {
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
       for(int k = 0; k < nc; k++) { // iterate by row
@@ -218,16 +218,16 @@ SEXP cox_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       theta_c[j] = theta_new[j];
     }
 
-    if (max_diff <= 1e-20) {
-      break;
-    }
-  } // end outer iteration
+    // if (max_diff <= 1e-20) {
+    //   break;
+    // }
+  // } // end outer iteration
 
-  if (max_diff > 1e-20 && iter == 0){
-    for (int k = 0; k < dc; ++k){
-      theta_c[k] = 0;
-    }
-  }
+  // if (max_diff > 1e-20 && iter == 0){
+  //   for (int k = 0; k < dc; ++k){
+  //     theta_c[k] = 0;
+  //   }
+  // }
 
   // result
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, dc));
