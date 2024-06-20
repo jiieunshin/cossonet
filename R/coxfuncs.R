@@ -281,15 +281,15 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
                         lambda0, lambda_theta[k], gamma, RS)
       save_theta[[k]] <- fit$theta.new
 
-      XX = fit$uw.new - fit$Gw %*% fit$theta.new
-      num = t(XX) %*% XX + 1
-      den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
+      # XX = fit$uw.new - fit$Gw %*% fit$theta.new
+      # num = t(XX) %*% XX + 1
+      # den = (1 - sum(diag( fit$Gw %*% ginv( t(fit$Gw) %*% fit$Gw) %*% t(fit$Gw) )) / n)^2 + 1
+      #
+      # measure[k] <- as.vector(num / den / n)
 
-      measure[k] <- as.vector(num / den / n)
-
-      # num = as.vector(cosso::PartialLik(time, status, RS,  G %*% fit$theta.new)) + 1
-      # den = (1 - sum(fit$theta.new != 0))^2 + 1
-      # measure[k] <- num / den /n
+      num = as.vector(cosso::PartialLik(time, status, RS,  G %*% fit$theta.new)) + 1
+      den = (1 - sum(fit$theta.new != 0))^2 + 1
+      measure[k] <- num / den /n
     }
 
     if(algo == "QP"){
@@ -327,19 +327,46 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
   d = ncol(G)
   r = lambda_theta * gamma
 
+  # wz = calculate_wz_for_theta(theta.old, G, time, status, Risk)
+  # w = wz$weight
+  # z = wz$z
+
+
+  Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta), length(init.theta), n))
+  for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
+
   loop = 0
   iter.diff = Inf
   theta.old = init.theta
 
-  while (loop < 15 & iter.diff > 1e-04) {
+  while (loop < 15 & iter.diff > 1e-10) {
     loop = loop + 1
-    wz = calculate_wz_for_theta(theta.old, G, time, status, Risk)
-    w = wz$weight
-    z = wz$z
+    GH = cosso::gradient.Hessian.Theta(init.theta, chat, G, G, lambda0, 0, time, status, Risk, Hess.FullNumer.unScale)
+    Hess = GH$Hessian
+    Grad = GH$Gradient
 
-    uw = c(z * sqrt(w)) - bhat - const
-    Gw = G * sqrt(w)
-    theta.new = .Call("cox_theta_step", Gw, uw, n, d, theta.old, lambda_theta, gamma)
+      for(j in 1:d){
+        if(j == 1){
+          L = 0
+          U = Hess[1, 2:d] %*% theta.old[2:d]
+        } else if(j == d){
+          L = Hess[d, 1:(d-1)] %*% theta.old[1:(d-1)]
+          U = 0
+        } else{
+          L = Hess[j, 1:(j-1)] %*% theta.old[1:(j-1)]
+          U = Hess[j, (j+1):d] %*% theta.old[(j+1):d]
+        }
+        theta.new[j] = 2 * Grad[j] - L + U
+
+        theta.new[j] = soft_threshold(theta.new[j], r)
+        theta.new[j] = theta.new[j] / (Hess[j, j] + lambda_theta * (1-gamma))
+
+        loss = abs(theta.old - theta.new)
+        conv = max(loss) < 1e-10
+
+        if(conv) break
+        theta[j] = theta.new[j]
+      }
 
     iter.diff = mean(abs(theta.new - theta.old))
     theta.old = theta.new
@@ -360,8 +387,13 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
   #
   # theta.new = .Call("cox_theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
+  return(list(theta.new = theta.new))
 
-  return(list(Gw = Gw, zw.new = z * sqrt(w), uw.new = uw, w.new = w, theta.new = theta.new))
+  # return(list(Gw = Gw, zw.new = z * sqrt(w), uw.new = uw, w.new = w, theta.new = theta.new))
+}
+
+soft_threshold = function(a, b){
+ return(sign(a) * ifelse(abs(a) - b > 0, abs(a) - b, 0))
 }
 
 gradient.Hessian.Theta = function (initTheta, initC, G1, G2, lambda0, time, status, riskset, Hess.FullNumer.unScale)
