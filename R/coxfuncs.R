@@ -42,7 +42,6 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
                         standardize = FALSE)
       c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
 
-
       # f.init = c(Rtheta %*% c.init)
       fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, cand.lambda[k], RS)
 
@@ -53,7 +52,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       # den = (1 - sum(diag(S)) / n)^2 + 1
       # measure[k] = as.vector( num / den / n )
 
-      measure[k] = fit$GCV
+      measure[k] = fit$ACV
 
       # gcv_list[k] = fit$GCV
     }
@@ -143,19 +142,16 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.old = c.init
   c.new = rep(0, n)
   # while (loop < 15 & iter.diff > 1e-4) {
-    loop = loop + 1
 
-    for(i in 1:1){ # outer iteration
+    for(i in 1:15){ # outer iteration
       GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
       err = class(GH) == "try-error"
-      if(err){
-        break
-      } else{
+      if(err) break
       Hess = GH$Hessian
       Grad = GH$Gradient
       # 2 * n * lambda0 * Rtheta2
       W = ginv(Hess)
-      z = (Hess %*% c.init - Grad) / lambda0
+      z = (Hess %*% c.old - Grad) / lambda0
       for(j in 1:n){
         V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% W %*% Rtheta[, j]
         V2 = (c.old %*% Rtheta[, j]) / (2 * lambda0)
@@ -163,17 +159,17 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
         V4 = Rtheta[j, j] / (2 * lambda0)
 
         c.new[j] = (V1 + V2) / (V3 + V4)
-        loss = abs(c.old - c.new)
-        conv1 = max(loss) < 1e-4
-        conv2 = min(loss[loss > 0]) > 4
-
-        if(conv1 | conv2) break
+        loss = abs(c.old - c.new) / abs(c.old)
+        conv1 = min(loss[loss > 0]) < 1e-4
+        # conv2 = max(loss) > 4
+        # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
+        if(conv1) break
         c.old[j] = c.new[j]  # if not convergence
       }
-      }
-      if(conv1 | conv2 | err) break
+      if(conv1 | err) break
     }
-    if(i == 1 & !conv1) c.new = c.init
+
+    if(i == 1 & (conv1 | err)) c.new = c.init
 
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
@@ -186,11 +182,15 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   # c.new = fit$c.new
   # cw.new = fit$cw.new
 
-  z = (Hess %*% c.new - Grad) / lambda0
-  loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
-  den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
-  GCV = as.numeric(loglik / den / n)
-  return(list(z.new = z, w.new = W, c.new = c.new, GCV = GCV))
+  # z = (Hess %*% c.new - Grad) / lambda0
+  # loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
+  # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
+  # GCV = as.numeric(loglik / den / n)
+
+
+  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
+  ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV))
   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 }
 
@@ -383,7 +383,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
   iter.diff = Inf
   theta.old = init.theta
   theta.new = rep(0, d)
-  for(i in 1:10){
+  for(i in 1:15){
     GH = cosso::gradient.Hessian.Theta(theta.old, chat, G, G, lambda0, 0, time, status, Risk, Hess.FullNumer.unScale)
     Hess = GH$Hessian
     dvec = - (GH$Gradient - Hess %*% theta.old)
@@ -403,7 +403,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
       theta.new[j] = soft_threshold(theta.new[j], r)
       theta.new[j] = theta.new[j] / (Hess[j, j] + 2 * lambda_theta * (1-gamma))
 
-      loss = abs(theta.old - theta.new)
+      loss = abs(theta.old - theta.new) / abs(theta.old)
       conv = max(loss) < 1e-4
 
       if(conv) break
