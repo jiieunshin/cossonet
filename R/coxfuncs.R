@@ -52,7 +52,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       # den = (1 - sum(diag(S)) / n)^2 + 1
       # measure[k] = as.vector( num / den / n )
 
-      measure[k] = fit$ACV
+      measure[k] = fit$GCV
 
       # gcv_list[k] = fit$GCV
     }
@@ -137,14 +137,12 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
   # return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 
-  loop = 0
-  iter.diff = Inf
   c.old = c.init
   c.new = rep(0, n)
   # while (loop < 15 & iter.diff > 1e-4) {
 
-    for(i in 1:15){ # outer iteration
-      GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+    for(i in 1:10){ # outer iteration
+      GH = try(calculate_GH_for_C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
       err = class(GH) == "try-error"
       if(err) break
       Hess = GH$Hessian
@@ -153,23 +151,23 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
       W = ginv(Hess)
       z = (Hess %*% c.old - Grad) / lambda0
       for(j in 1:n){
-        V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% W %*% Rtheta[, j]
-        V2 = (c.old %*% Rtheta[, j]) / (2 * lambda0)
-        V3 = t(Rtheta[, j]) %*% W %*% Rtheta[, j]
-        V4 = Rtheta[j, j] / (2 * lambda0)
+        V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% (t(W) %*% Rtheta[, j])
+        V2 = (c.old[-j] %*% Rtheta[-j, j]) / lambda0
+        V3 = t(Rtheta[, j]) %*% (t(W) %*% Rtheta[, j])
+        V4 = Rtheta[j, j] / lambda0
 
-        c.new[j] = (V1 + V2) / (V3 + V4)
+        c.new[j] = (V1 - V2) / (V3 + V4)
         loss = abs(c.old - c.new) / abs(c.old)
         conv1 = min(loss[loss > 0]) < 1e-4
-        # conv2 = max(loss) > 4
+        conv2 = abs(c.old[j] - c.new[j]) > 5
         # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
-        if(conv1) break
+        if(conv1 | conv2) break
         c.old[j] = c.new[j]  # if not convergence
       }
-      if(conv1 | err) break
+      if(conv1 | conv2 | err) break
     }
 
-    if(i == 1 & (conv1 | err)) c.new = c.init
+    if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
 
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
@@ -182,19 +180,19 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   # c.new = fit$c.new
   # cw.new = fit$cw.new
 
-  # z = (Hess %*% c.new - Grad) / lambda0
-  # loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
-  # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
-  # GCV = as.numeric(loglik / den / n)
+  z = (Hess %*% c.new - Grad) / lambda0
+  loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
+  den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
+  GCV = as.numeric(loglik / den / n)
+# print(i)
 
-
-  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
-  ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-  return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV))
+  # UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
+  # ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  return(list(z.new = z, w.new = W, c.new = c.new, GCV = GCV))
   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 }
 
-gradient.Hessian.C = function (initC, Gramat1, Gramat2, time, status, mscale, lambda0, riskset, Hess.FullNumer.unScale)
+calculate_GH_for_C = function (initC, Gramat1, Gramat2, time, status, mscale, lambda0, riskset, Hess.FullNumer.unScale)
 {
   n = length(time)
   tie.size = as.numeric(table(time[status == 1]))
@@ -375,18 +373,15 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
   # w = wz$weight
   # z = wz$z
 
-
   Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta), length(init.theta), n))
   for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
 
-  loop = 0
-  iter.diff = Inf
   theta.old = init.theta
   theta.new = rep(0, d)
-  for(i in 1:15){
+  for(i in 1:20){
     GH = cosso::gradient.Hessian.Theta(theta.old, chat, G, G, lambda0, 0, time, status, Risk, Hess.FullNumer.unScale)
-    Hess = GH$Hessian
-    dvec = - (GH$Gradient - Hess %*% theta.old)
+    Dmat = GH$Hessian / 2
+    dvec = Dmat %*% theta.old - GH$Gradient
     for(j in 1:d){
       # if(j == 1){
       #   L = 0
@@ -398,13 +393,14 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
       #   L = Hess[j, 1:(j-1)] %*% theta.old[1:(j-1)]
       #   U = Hess[j, (j+1):d] %*% theta.old[(j+1):d]
       # }
-      theta.new[j] = 2 * dvec[j] - Hess[j, -j] %*% theta.old[-j]
-
+      theta.new[j] = dvec[j] - Dmat[j, -j] %*% theta.old[-j]
+        # Hess[j, -j] %*% theta.old[-j]
       theta.new[j] = soft_threshold(theta.new[j], r)
-      theta.new[j] = theta.new[j] / (Hess[j, j] + 2 * lambda_theta * (1-gamma))
+      theta.new[j] = theta.new[j] / (Dmat[j, j] + lambda_theta * (1-gamma))
 
-      loss = abs(theta.old - theta.new) / abs(theta.old)
-      conv = max(loss) < 1e-4
+      loss = abs(theta.old - theta.new) / abs(theta.old + 1)
+      # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
+      conv = max(loss) < 1e-6
 
       if(conv) break
       theta.old[j] = theta.new[j]
