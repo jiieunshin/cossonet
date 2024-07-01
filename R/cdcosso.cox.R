@@ -43,13 +43,13 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
 
   par(mfrow = c(1,3))
   # solve theta
-  getc_cvfit  = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo, show = TRUE)
+  getc_cvfit  = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo = "QP", show = TRUE)
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)
 
   # solve (theta) - 2nd
   theta.new = rescale_theta(theta_cvfit$theta.new)
   # print(theta.new)
-  getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, algo, show = TRUE)
+  getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, algo = "QP", show = TRUE)
 
   par(mfrow = c(1,1))
 
