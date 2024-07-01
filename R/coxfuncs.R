@@ -52,7 +52,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       # den = (1 - sum(diag(S)) / n)^2 + 1
       # measure[k] = as.vector( num / den / n )
 
-      measure[k] = fit$GCV
+      measure[k] = fit$ACV
 
       # gcv_list[k] = fit$GCV
     }
@@ -99,7 +99,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
 
     # f.init = c(Rtheta %*% c.init)
     fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, optlambda, RS)
-    out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new),
+    out = list(measure = measure, R = R, ACV_pen = fit$ACV_pen, f.new = c(Rtheta %*% fit$c.new),
                w.new = fit$w.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
     }
 
@@ -141,7 +141,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.new = rep(0, n)
   # while (loop < 15 & iter.diff > 1e-4) {
 
-    for(i in 1:10){ # outer iteration
+    for(i in 1:15){ # outer iteration
       GH = try(calculate_GH_for_C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
       err = class(GH) == "try-error"
       if(err) break
@@ -152,7 +152,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
       z = (Hess %*% c.old - Grad) / lambda0
       for(j in 1:n){
         V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% (t(W) %*% Rtheta[, j])
-        V2 = (c.old[-j] %*% Rtheta[-j, j]) / lambda0
+        V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
         V3 = t(Rtheta[, j]) %*% (t(W) %*% Rtheta[, j])
         V4 = Rtheta[j, j] / lambda0
 
@@ -180,15 +180,15 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   # c.new = fit$c.new
   # cw.new = fit$cw.new
 
-  z = (Hess %*% c.new - Grad) / lambda0
-  loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
-  den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
-  GCV = as.numeric(loglik / den / n)
+  # z = (Hess %*% c.new - Grad) / lambda0
+  # loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
+  # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
+  # GCV = as.numeric(loglik / den / n)
 # print(i)
-
-  # UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
-  # ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-  return(list(z.new = z, w.new = W, c.new = c.new, GCV = GCV))
+  UHU = Rtheta %*% My_solve(GH$H + lambda0 * Rtheta, t(Rtheta))
+  ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 }
 
@@ -322,7 +322,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
       # fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, model$b.new * sqrt(model$w.new), model$c.new,
       #                   (1/2) * lambda0 * model$cw.new,
       #                   lambda0, lambda_theta[k], gamma, RS)
-      fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new,
+      fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new, model$ACV_pen,
                         0, lambda0, lambda_theta[k], gamma, RS)
 
       save_theta[[k]] <- fit$theta.new
@@ -364,7 +364,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   return(out)
 }
 
-gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, lambda0, lambda_theta, gamma, Risk){
+gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen, const, lambda0, lambda_theta, gamma, Risk){
   n = nrow(G)
   d = ncol(G)
   r = lambda_theta * gamma
@@ -381,26 +381,31 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
   for(i in 1:20){
     GH = cosso::gradient.Hessian.Theta(theta.old, chat, G, G, lambda0, 0, time, status, Risk, Hess.FullNumer.unScale)
     Dmat = GH$Hessian / 2
-    dvec = Dmat %*% theta.old - GH$Gradient
+    dvec = (GH$Hessian %*% theta.old - GH$Gradient) / 2
     for(j in 1:d){
-      # if(j == 1){
-      #   L = 0
-      #   U = Hess[1, 2:d] %*% theta.old[2:d]
-      # } else if(j == d){
-      #   L = Hess[d, 1:(d-1)] %*% theta.old[1:(d-1)]
-      #   U = 0
-      # } else{
-      #   L = Hess[j, 1:(j-1)] %*% theta.old[1:(j-1)]
-      #   U = Hess[j, (j+1):d] %*% theta.old[(j+1):d]
-      # }
-      theta.new[j] = dvec[j] - Dmat[j, -j] %*% theta.old[-j]
-        # Hess[j, -j] %*% theta.old[-j]
+      if(j == 1){
+        L = 0
+        U = Dmat[1, 2:d] %*% theta.old[2:d]
+      } else if(j == d){
+        L = Dmat[d, 1:(d-1)] %*% theta.old[1:(d-1)]
+        U = 0
+      } else{
+        L = Dmat[j, 1:(j-1)] %*% theta.old[1:(j-1)]
+        U = Dmat[j, (j+1):d] %*% theta.old[(j+1):d]
+      }
+      theta.new[j] = 2 * dvec[j] - L + U
+      # Dmat[j, -j] %*% theta.old[-j]
       theta.new[j] = soft_threshold(theta.new[j], r)
-      theta.new[j] = theta.new[j] / (Dmat[j, j] + lambda_theta * (1-gamma))
+      theta.new[j] = theta.new[j] / (Dmat[j, j] + 2 * lambda_theta * (1-gamma))
 
       loss = abs(theta.old - theta.new) / abs(theta.old + 1)
+      conv2 = sum(loss == 0) == d
       # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
-      conv = max(loss) < 1e-6
+      if(conv2){
+        break
+      } else{
+        conv = max(loss[loss > 0]) < 1e-6
+      }
 
       if(conv) break
       theta.old[j] = theta.new[j]
@@ -426,8 +431,8 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, const, l
   # theta.new = .Call("cox_theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
   # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-  UHU = G %*% My_solve(GH$H, t(G))
-  ACV = cosso::PartialLik(time, status, Risk,  G %*% theta.new) + sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  # UHU = G %*% My_solve(GH$H, t(G))
+  ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
 
   return(list(theta.new = theta.new, ACV = ACV))
 

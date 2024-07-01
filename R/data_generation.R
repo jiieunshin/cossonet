@@ -99,6 +99,10 @@ data_generation = function(n, p, rho,
     # f = 5 * x[,1] + 6 *sin(2*pi*x[,2]) + 2 * (x[,3]-0.4)^2 + 3 * sin(pi * x[,4]^4) + 4 * x[,5]^2 - 4
 
     # f = 4 * x[,1] + 3 *sin(2*pi*x[,2]) + 5 * (x[,3]-0.4)^2 + 2 * sin(pi * x[,4]^4) + 1 * x[,5]^2 - 4
+
+    # f = x[, 1] + sin(2 * pi * x[, 2]) + 5 * (x[, 4] - 0.4)^2
+
+
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))

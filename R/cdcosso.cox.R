@@ -19,7 +19,7 @@
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
-#
+
 # x = tr_x
 # time = unlist(tr_y[, "time"])
 # status = unlist(tr_y[, "status"])
