@@ -86,11 +86,6 @@ data_generation = function(n, p, rho,
     # f = 3 * x[, 1] + 1 * (3 * x[, 2] - 2)^2 + 1 * cos(pi * (3 * x[, 3] - 1.5) / 5)
     # + 3 * cos(pi *  (3 * x[, 5] - 1.5) / 5)
 
-    # f = 5 * f1(x[,1]) + 2 * ((3 * x[, 3] - 2)^2 - 1) + 6 * f5(x[,4]) + 1 * f4(x[,4]) + 3 * f3(x[,5])
-
-    # x[, 5] <- rbinom(n, 1, .5)
-    # f = 2 * f1(x[,1]) + 1 * ((3 * x[, 2] - 2)^2 - 1) + 2 * f5(x[, 3]) + 3 * f4(x[, 4]) + 1 * f3(x[, 5])
-
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
