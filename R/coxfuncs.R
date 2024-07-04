@@ -156,7 +156,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
         c.new[j] = (V1 - V2) / (V3 + V4)
         loss = abs(c.old - c.new)
-        conv1 = min(loss[loss > 0]) < 1e-20
+        conv1 = min(loss[loss > 0]) < 1e-8
         conv2 = abs(c.old[j] - c.new[j]) > 5
         # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
         if(conv1 | conv2) break
@@ -422,6 +422,11 @@ soft_threshold = function(a, b){
   return(sign(a) * ifelse(a > 0 & b < abs(a), a - b, 0))
 }
 
+# initTheta = init.theta
+# initC = chat
+# G1 = G
+# G2 = G
+# riskset = RS
 gradient.Hessian.Theta = function (initTheta, initC, G1, G2, lambda0, time, status, riskset, Hess.FullNumer.unScale)
 {
   n = length(time)
@@ -448,8 +453,7 @@ gradient.Hessian.Theta = function (initTheta, initC, G1, G2, lambda0, time, stat
     if (length(excludeID) > 1) {
       tempGradient.numer = tempGradient.numer - apply(Grad.FullNumer[, excludeID], 1, sum)
       tempHessian.numer = tempHessian.numer - apply(Hess.FullNumer[, , excludeID], c(1, 2), sum)
-    }
-    else {
+    } else {
       tempGradient.numer = tempGradient.numer - Grad.FullNumer[, excludeID]
       tempHessian.numer = tempHessian.numer - Hess.FullNumer[, , excludeID]
     }
