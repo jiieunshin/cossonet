@@ -156,7 +156,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
         c.new[j] = (V1 - V2) / (V3 + V4)
         loss = abs(c.old - c.new)
-        conv1 = min(loss[loss > 0]) < 1e-8
+        conv1 = min(loss[loss > 0]) < 1e-20
         conv2 = abs(c.old[j] - c.new[j]) > 5
         # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
         if(conv1 | conv2) break
@@ -383,10 +383,10 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
         U = Dmat[j, (j+1):d] %*% theta.old[(j+1):d]
       }
 
-      theta.new[j] = dvec[j] - L + U - r
+      theta.new[j] = dvec[j] - L + U
       # L + U
       # Dmat[j, -j] %*% theta.old[-j]
-      theta.new[j] = ifelse(theta.new[j] <= 0, 0, theta.new[j])
+      theta.new[j] = ifelse(theta.new[j] <= r, 0, theta.new[j] - r)
       theta.new[j] = theta.new[j] / (Dmat[j, j] + 2 * lambda_theta * (1-gamma))
 
       # loss = abs(theta.old - theta.new)
@@ -407,7 +407,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
     }
     if(conv) break
   }
-# print(i)
+print(i)
 # print(theta.new)
   if(i == 1 & !conv) theta.new = rep(0, d)
 
