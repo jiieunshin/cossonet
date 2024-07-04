@@ -80,11 +80,17 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-    # f = 3 * x[, 1] + 4 * sin(2 * pi * x[,2]) + 5 * (x[, 3] - 0.4)^2
+    # f = 3 * x[, 1] + 4 * sin(2 * pi * x[,2]) + 5 * (x[, 3] - 0.4)^2 + f1(x[, 4]) + 2 * f1(x[, 5])
     # f = 3 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 4 * f6(x[,3]) + 1 * f2(x[,4])
     # f = 4 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 4 * f6(x[,3]) + 1 * f2(x[,4]) + 2 * f3(x[,5])
     # f = 3 * x[, 1] + 1 * (3 * x[, 2] - 2)^2 + 1 * cos(pi * (3 * x[, 3] - 1.5) / 5)
     # + 3 * cos(pi *  (3 * x[, 5] - 1.5) / 5)
+
+    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
+    # f = 2 * x[,1] + 2 * x[,2] +  2 * x[,3] + 2 * x[,4] + 2 * x[,5]
+
+    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 1 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
+    f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
@@ -97,10 +103,13 @@ data_generation = function(n, p, rho,
 }
 
 
-# tr = data_generation(200, 50, response = "survival")
-# tr_x = tr$x
-# tr_y = tr$y
-#
+tr = data_generation(100, 50, response = "survival")
+tr_x = tr$x
+tr_y = tr$y
+try(cdcosso(tr_x, tr_y, family = 'Cox', gamma = 0.95, kernel = "spline", scale = T, algo = "CD",
+            lambda_theta = exp(seq(log(2^{-35}), log(2^{2}), length.out = 20))
+), silent = TRUE)
+
 # fit10 = try(cdcosso(tr_x, tr_y, family = 'Cox', gamma = 0.95, kernel = "spline", scale = T, algo = "CD"), silent = TRUE)
 # print(fit10$theta_step$theta.new)
 # par(mfrow = c(1, 5))

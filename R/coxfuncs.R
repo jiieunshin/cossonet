@@ -38,7 +38,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       }
       pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
       ssCox.en = glmnet(pseudoX, cbind(time = time, status = status),
-                        family = "cox", lambda = cand.lambda, alpha = 0,
+                        family = "cox", lambda = cand.lambda[k], alpha = 0,
                         standardize = FALSE)
       c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
 
@@ -166,7 +166,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
     }
 
     if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
-
+# print(c.new)
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
   # cw = c.init
@@ -345,6 +345,12 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   return(out)
 }
 
+# init.theta = rep(1, d)
+# f.init = model$f.new
+# chat = model$c.new
+# ACV_pen = model$ACV_pen
+# lambda_theta = lambda_theta[k]
+# Risk = RS
 gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen, const, lambda0, lambda_theta, gamma, Risk){
   n = nrow(G)
   d = ncol(G)
@@ -363,13 +369,8 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
     loss = rep(1, d)
     GH = gradient.Hessian.Theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
 
-    if(min(eigen(GH$H)$value) < 0)
-      GH$H = GH$H + max(1e-07, 1.5 * abs(min(eigen(GH$H)$value))) * diag(length(theta.old))
-
-
     Dmat = GH$H / 2
-    dvec = GH$H %*% theta.old - GH$Gradient
-    dvec = - dvec / 2
+    dvec = - (GH$H %*% theta.old - GH$Gradient)
     for(j in 1:d){
       if(j == 1){
         L = 0
@@ -381,7 +382,8 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
         L = Dmat[j, 1:(j-1)] %*% theta.old[1:(j-1)]
         U = Dmat[j, (j+1):d] %*% theta.old[(j+1):d]
       }
-      theta.new[j] = 2 * dvec[j] - L + U - r
+
+      theta.new[j] = dvec[j] - L + U - r
       # L + U
       # Dmat[j, -j] %*% theta.old[-j]
       theta.new[j] = ifelse(theta.new[j] <= 0, 0, theta.new[j])
@@ -391,6 +393,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # conv = max(loss) < 1e-12
       loss[j] = abs(theta.old[j] - theta.new[j])
       conv2 = sum(loss == 0) == d
+      # conv3 = max(loss) > 10
 
       # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
       if(conv2){
@@ -402,29 +405,12 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       if(conv) break
       theta.old[j] = theta.new[j]
     }
-
     if(conv) break
   }
-
+# print(i)
+# print(theta.new)
   if(i == 1 & !conv) theta.new = rep(0, d)
-print(i)
-  # Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta), length(init.theta), n))
-  # for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
-  #
-  # GH = gradient.Hessian.Theta(init.theta, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
-  # Hess = GH$Hessian
-  # Grad = GH$Gradient
-  # # 2 * n * lambda0 * Rtheta2
-  # w = 1/diag(Hess)
-  # z = f.init - ifelse(w != 0, - Grad/w, 0)
-  #
-  # uw = c(z * sqrt(w)) - bhat - const
-  # Gw = G * sqrt(w)
-  #
-  # theta.new = .Call("cox_theta_step", Gw, uw, n, d, init.theta, lambda_theta, gamma)
-  # theta.new = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-  # UHU = G %*% My_solve(GH$H, t(G))
   ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
 
   return(list(theta.new = theta.new, ACV = ACV))
