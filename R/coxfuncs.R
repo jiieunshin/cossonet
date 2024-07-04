@@ -166,7 +166,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
     }
 
     if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
-# print(c.new)
+
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
   # cw = c.init
@@ -182,7 +182,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   # loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
   # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
   # GCV = as.numeric(loglik / den / n)
-# print(i)
+  # print(i)
   UHU = Rtheta %*% My_solve(GH$H + lambda0 * Rtheta, t(Rtheta))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
   ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
@@ -368,7 +368,8 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
   for(i in 1:20){
     loss = rep(1, d)
     GH = gradient.Hessian.Theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
-
+    err = sum(is.nan(GH$Gradient)) > 0
+    if (err) break
     Dmat = GH$H / 2
     dvec = - (GH$H %*% theta.old - GH$Gradient)
     for(j in 1:d){
@@ -383,20 +384,20 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
         U = Dmat[j, (j+1):d] %*% theta.old[(j+1):d]
       }
 
-      theta.new[j] = dvec[j] - L + U
+      theta.new[j] = soft_threshold(dvec[j] - L + U, r)
       # L + U
       # Dmat[j, -j] %*% theta.old[-j]
-      theta.new[j] = ifelse(theta.new[j] <= r, 0, theta.new[j] - r)
-      theta.new[j] = theta.new[j] / (Dmat[j, j] + 2 * lambda_theta * (1-gamma))
+      D_diag = ifelse(Dmat[j, j] <= 0, 0, Dmat[j, j])
+      theta.new[j] = theta.new[j] / (D_diag + 2 * lambda_theta * (1-gamma))
 
       # loss = abs(theta.old - theta.new)
       # conv = max(loss) < 1e-12
       loss[j] = abs(theta.old[j] - theta.new[j])
       conv2 = sum(loss == 0) == d
-      # conv3 = max(loss) > 10
+      conv3 = max(loss) > 5
 
       # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
-      if(conv2){
+      if(conv2 | conv3){
         conv = TRUE
       } else{
         conv = max(loss[loss > 0]) < 1e-6
@@ -407,7 +408,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
     }
     if(conv) break
   }
-print(i)
+# print(i)
 # print(theta.new)
   if(i == 1 & !conv) theta.new = rep(0, d)
 
