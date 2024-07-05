@@ -145,7 +145,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
     GH = try(calculate_GH_for_C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
     err = class(GH) == "try-error"
-    for(i in 1:15){ # outer iteration
+    for(i in 1:5){ # outer iteration
       if(err) break
       Hess = GH$Hessian
       Grad = GH$Gradient
@@ -441,7 +441,7 @@ gradient.Hessian.Theta = function (initTheta, initC, G1, G2, lambda0, time, stat
   eta = G1 %*% initTheta
   Grad.Term1 = -t(G1) %*% status/n
   Grad.Term2 = matrix(NA, ncol = ncol(riskset), nrow = p)
-  Grad.Term3 = lambda0 * t(G2) %*% initC
+  Grad.Term3 = lambda0 * t(G2) %*% initC / 2
   Grad.FullNumer = t(G1) %*% diag(as.numeric(exp(eta)))
   Grad.FullDenom = Hess.FullDenom = exp(eta)
   Hess.FullNumer = Hess.FullNumer.unScale * array(rep(exp(eta), each = p^2), dim = c(p, p, n))
