@@ -145,7 +145,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
     GH = try(calculate_GH_for_C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
     err = class(GH) == "try-error"
-    for(i in 1:5){ # outer iteration
+    for(i in 1:10){ # outer iteration
       if(err) break
       Hess = GH$Hessian
       Grad = GH$Gradient
@@ -372,7 +372,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
   theta.new = rep(0, d)
   for(i in 1:20){
     loss = rep(1, d)
-    GH = gradient.Hessian.Theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
+    GH = GH.theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
     err = sum(is.nan(GH$Gradient)) > 0
     if (err) break
     Dmat = GH$H / 2
@@ -433,7 +433,7 @@ soft_threshold = function(a, b){
 # G1 = G
 # G2 = G
 # riskset = RS
-gradient.Hessian.Theta = function (initTheta, initC, G1, G2, lambda0, time, status, riskset, Hess.FullNumer.unScale)
+GH.theta = function (initTheta, initC, G1, G2, lambda0, time, status, riskset, Hess.FullNumer.unScale)
 {
   n = length(time)
   p = length(initTheta)
