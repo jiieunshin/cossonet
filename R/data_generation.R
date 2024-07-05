@@ -90,7 +90,7 @@ data_generation = function(n, p, rho,
     # f = 2 * x[,1] + 2 * x[,2] +  2 * x[,3] + 2 * x[,4] + 2 * x[,5]
 
     # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 1 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
-    f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
+    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
@@ -103,12 +103,12 @@ data_generation = function(n, p, rho,
 }
 
 
-tr = data_generation(100, 50, response = "survival")
-tr_x = tr$x
-tr_y = tr$y
-try(cdcosso(tr_x, tr_y, family = 'Cox', gamma = 0.95, kernel = "spline", scale = T, algo = "CD",
-            lambda_theta = exp(seq(log(2^{-35}), log(2^{2}), length.out = 20))
-), silent = TRUE)
+# tr = data_generation(100, 50, response = "survival")
+# tr_x = tr$x
+# tr_y = tr$y
+# try(cdcosso(tr_x, tr_y, family = 'Cox', gamma = 0.95, kernel = "spline", scale = T, algo = "CD",
+#             lambda_theta = exp(seq(log(2^{-35}), log(2^{2}), length.out = 20))
+# ), silent = TRUE)
 
 # fit10 = try(cdcosso(tr_x, tr_y, family = 'Cox', gamma = 0.95, kernel = "spline", scale = T, algo = "CD"), silent = TRUE)
 # print(fit10$theta_step$theta.new)
