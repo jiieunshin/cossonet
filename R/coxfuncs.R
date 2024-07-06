@@ -143,7 +143,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.new = rep(0, n)
   # while (loop < 15 & iter.diff > 1e-4) {
 
-    GH = try(calculate_GH_for_C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+    GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
     err = class(GH) == "try-error"
     for(i in 1:10){ # outer iteration
       if(err) break
@@ -152,7 +152,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
       # 2 * n * lambda0 * Rtheta2
 
         W = ginv(Hess)
-        z = (Hess %*% c.old - Grad) / lambda0
+        z = (Hess %*% c.old - Grad)
         for(j in 1:n){
         V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% t(W) %*% Rtheta[, j]
         V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
