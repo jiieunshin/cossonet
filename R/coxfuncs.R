@@ -210,7 +210,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
     }
 
     if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
-print(i)
+# print(i)
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
   # cw = c.init
@@ -452,8 +452,8 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
     }
     if(conv) break
   }
-print(i)
-print(theta.new)
+# print(i)
+# print(theta.new)
   if(i == 1 & !conv) theta.new = rep(0, d)
 
   ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
