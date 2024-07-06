@@ -78,7 +78,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     }
   }
 
-  sel = measure != Inf
+  sel = measure != Inf & measure != -Inf
   id = which.min(measure[sel])[1]
   optlambda = cand.lambda[sel][id]
 
@@ -128,6 +128,45 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   return(out)
 }
 
+# getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
+# {
+#   n = ncol(Rtheta)
+#   c.old = c.init
+#   c.new = rep(0, n)
+#   # while (loop < 15 & iter.diff > 1e-4) {
+#
+#   for(i in 1:20){ # outer iteration
+#     GH = try(calculate_GH_for_C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+#     err = class(GH) == "try-error"
+#     if(err) break
+#     Hess = GH$Hessian
+#     Grad = GH$Gradient
+#     # 2 * n * lambda0 * Rtheta2
+#
+#     W = ginv(Hess + 2 * lambda0 * Rtheta)
+#     z = Hess %*% c.old - Grad
+#     for(j in 1:n){
+#       c.new[j] = W[j,] %*% z
+#       loss = abs(c.old - c.new)
+#       conv1 = min(loss[loss > 0]) < 1e-12
+#       conv2 = abs(c.old[j] - c.new[j]) > 5
+#       # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
+#       if(conv1 | conv2) break
+#       c.old[j] = c.new[j]  # if not convergence
+#     }
+#     if(conv1 | conv2 | err) break
+#   }
+#
+#   if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
+#   print(i)
+#   UHU = Rtheta %*% My_solve(GH$H + 2 * lambda0 * Rtheta, t(Rtheta))
+#   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+#   ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
+#   return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
+#   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
+# }
+
+
 # Risk = RS
 # lambda0 = cand.lambda[1]
 getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
@@ -143,16 +182,16 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.new = rep(0, n)
   # while (loop < 15 & iter.diff > 1e-4) {
 
-    GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-    err = class(GH) == "try-error"
-    for(i in 1:10){ # outer iteration
+    for(i in 1:20){ # outer iteration
+      GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+      err = class(GH) == "try-error"
       if(err) break
-      Hess = GH$Hessian
-      Grad = GH$Gradient
+      Hess = GH$Hessian - 2 * lambda0 * Rtheta
+      Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
       # 2 * n * lambda0 * Rtheta2
 
         W = ginv(Hess)
-        z = (Hess %*% c.old - Grad)
+        z = (Hess %*% c.old - Grad) / lambda0
         for(j in 1:n){
         V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% t(W) %*% Rtheta[, j]
         V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
@@ -188,7 +227,7 @@ print(i)
   # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
   # GCV = as.numeric(loglik / den / n)
   # print(i)
-  UHU = Rtheta %*% My_solve(GH$H + lambda0 * Rtheta, t(Rtheta))
+  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
   ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
   return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
@@ -405,7 +444,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       if(conv2 | conv3){
         conv = TRUE
       } else{
-        conv = max(loss[loss > 0]) < 1e-6
+        conv = max(loss[loss > 0]) < 1e-18
       }
 
       if(conv) break
