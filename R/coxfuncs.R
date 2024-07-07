@@ -432,7 +432,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # L + U
       # Dmat[j, -j] %*% theta.old[-j]
       D_diag = ifelse(Dmat[j, j] <= 0, 0, Dmat[j, j])
-      theta.new[j] = theta.new[j] / (D_diag + lambda_theta * (1-gamma))
+      theta.new[j] = theta.new[j] / (Dmat[j, j] + lambda_theta * (1-gamma))
 
       # loss = abs(theta.old - theta.new)
       # conv = max(loss) < 1e-12
