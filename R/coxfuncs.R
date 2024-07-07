@@ -409,7 +409,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
 
   theta.old = init.theta
   theta.new = rep(0, d)
-  for(i in 1:40){
+  for(i in 1:20){
     loss = rep(1, d)
     GH = GH.theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
     err = sum(is.nan(GH$Gradient)) > 0
@@ -432,7 +432,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # L + U
       # Dmat[j, -j] %*% theta.old[-j]
       D_diag = ifelse(Dmat[j, j] <= 0, 0, Dmat[j, j])
-      theta.new[j] = theta.new[j] / (Dmat[j, j] + lambda_theta * (1-gamma))
+      theta.new[j] = theta.new[j] / (Dmat[j, j] + 2 * lambda_theta * (1-gamma))
 
       # loss = abs(theta.old - theta.new)
       # conv = max(loss) < 1e-12
