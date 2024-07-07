@@ -181,10 +181,10 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.old = c.init
   c.new = rep(0, n)
   # while (loop < 15 & iter.diff > 1e-4) {
+  GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+  err = class(GH) == "try-error"
 
     for(i in 1:15){ # outer iteration
-      GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-      err = class(GH) == "try-error"
       if(err) break
       Hess = GH$Hessian - 2 * lambda0 * Rtheta
       Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
@@ -428,7 +428,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
         U = Dmat[j, (j+1):d] %*% theta.old[(j+1):d]
       }
 
-      theta.new[j] = soft_threshold(-dvec[j] - Dmat[j, -j] %*% theta.old[-j], r)
+      theta.new[j] = soft_threshold(-dvec[j] - L + U, r)
       # L + U
       # Dmat[j, -j] %*% theta.old[-j]
       D_diag = ifelse(Dmat[j, j] <= 0, 0, Dmat[j, j])
