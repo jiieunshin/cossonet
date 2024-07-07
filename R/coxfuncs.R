@@ -128,45 +128,6 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   return(out)
 }
 
-# getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
-# {
-#   n = ncol(Rtheta)
-#   c.old = c.init
-#   c.new = rep(0, n)
-#   # while (loop < 15 & iter.diff > 1e-4) {
-#
-#   for(i in 1:20){ # outer iteration
-#     GH = try(calculate_GH_for_C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-#     err = class(GH) == "try-error"
-#     if(err) break
-#     Hess = GH$Hessian
-#     Grad = GH$Gradient
-#     # 2 * n * lambda0 * Rtheta2
-#
-#     W = ginv(Hess + 2 * lambda0 * Rtheta)
-#     z = Hess %*% c.old - Grad
-#     for(j in 1:n){
-#       c.new[j] = W[j,] %*% z
-#       loss = abs(c.old - c.new)
-#       conv1 = min(loss[loss > 0]) < 1e-12
-#       conv2 = abs(c.old[j] - c.new[j]) > 5
-#       # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
-#       if(conv1 | conv2) break
-#       c.old[j] = c.new[j]  # if not convergence
-#     }
-#     if(conv1 | conv2 | err) break
-#   }
-#
-#   if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
-#   print(i)
-#   UHU = Rtheta %*% My_solve(GH$H + 2 * lambda0 * Rtheta, t(Rtheta))
-#   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-#   ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
-#   return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
-#   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
-# }
-
-
 # Risk = RS
 # lambda0 = cand.lambda[14]
 getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
@@ -367,13 +328,15 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     }
   }
   # print(save_theta)
-  # print(measure)
-  id = which.min(measure)[1]
-  optlambda = lambda_theta[id]
+  # print
+  sel = measure != Inf & measure != -Inf & !is.nan(measure)
+  id = which.min(measure[sel])[1]
+  optlambda = lambda_theta[sel][id]
 
   # plotting error bar
-  xrange = log(lambda_theta)
-  plot(xrange, measure, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
+  xrange = log(lambda_theta[sel])
+  plot(xrange, measure[sel], main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood",
+       ylim = range(measure[sel]), pch = 15, col = 'red')
 
   if(algo == "CD"){
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
@@ -409,7 +372,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
 
   theta.old = init.theta
   theta.new = rep(0, d)
-  for(i in 1:20){
+  for(i in 1:40){
     loss = rep(1, d)
     GH = GH.theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
     err = sum(is.nan(GH$Gradient)) > 0
