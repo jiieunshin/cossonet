@@ -78,7 +78,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     }
   }
 
-  sel = measure != Inf & measure != -Inf
+  sel = measure != Inf & measure != -Inf & !is.nan(measure)
   id = which.min(measure[sel])[1]
   optlambda = cand.lambda[sel][id]
 
@@ -168,7 +168,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
 
 
 # Risk = RS
-# lambda0 = cand.lambda[1]
+# lambda0 = cand.lambda[14]
 getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
@@ -180,12 +180,12 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
   c.old = c.init
   c.new = rep(0, n)
-  # while (loop < 15 & iter.diff > 1e-4) {
   GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-  err = class(GH) == "try-error"
+  err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
-    for(i in 1:15){ # outer iteration
-      if(err) break
+  # while (loop < 15 & iter.diff > 1e-4) {
+  for(i in 1:40){ # outer iteration
+    if(err) break
       Hess = GH$Hessian - 2 * lambda0 * Rtheta
       Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
       # 2 * n * lambda0 * Rtheta2
@@ -210,7 +210,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
     }
 
     if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
-# print(i)
+print(i)
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
   # cw = c.init
