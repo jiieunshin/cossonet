@@ -352,6 +352,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   return(out)
 }
 
+
 # init.theta = rep(1, d)
 # f.init = model$f.new
 # chat = model$c.new
@@ -395,16 +396,16 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # L + U
       # Dmat[j, -j] %*% theta.old[-j]
       D_diag = ifelse(Dmat[j, j] <= 0, 0, Dmat[j, j])
-      theta.new[j] = theta.new[j] / (Dmat[j, j] + 2 * lambda_theta * (1-gamma))
+      theta.new[j] = theta.new[j] / (D_diag + lambda_theta * (1-gamma))
 
       # loss = abs(theta.old - theta.new)
       # conv = max(loss) < 1e-12
       loss[j] = abs(theta.old[j] - theta.new[j])
       conv2 = sum(loss == 0) == d
-      conv3 = max(loss) > 5
+      # conv3 = max(loss) > 5
 
       # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
-      if(conv2 | conv3){
+      if(conv2){
         conv = TRUE
       } else{
         conv = max(loss[loss > 0]) < 1e-18
