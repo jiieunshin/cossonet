@@ -129,7 +129,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
 }
 
 # Risk = RS
-# lambda0 = cand.lambda[14]
+# lambda0 = cand.lambda[1]
 getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
@@ -142,13 +142,13 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.old = c.init
   c.new = rep(0, n)
   GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-  err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
-
+  err1 = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
   # while (loop < 15 & iter.diff > 1e-4) {
-  for(i in 1:40){ # outer iteration
-    if(err) break
-      Hess = GH$Hessian - 2 * lambda0 * Rtheta
-      Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
+  for(i in 1:20){ # outer iteration
+    if(err1) break
+
+      Hess = GH$Hessian - lambda0 * Rtheta
+      Grad = GH$Gradient - lambda0 * Rtheta %*% c.old
       # 2 * n * lambda0 * Rtheta2
 
         W = ginv(Hess)
@@ -161,16 +161,18 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
         c.new[j] = (V1 - V2) / (V3 + V4)
         loss = abs(c.old - c.new)
-        conv1 = min(loss[loss > 0]) < 1e-12
+        conv1 = min(loss[loss > 0]) < 1e-20
         conv2 = abs(c.old[j] - c.new[j]) > 5
+        err2 = (sum(exp(Rtheta %*% c.new) == Inf) > 0) | (sum(exp(Rtheta %*% c.new) == -Inf) > 0)
         # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
         if(conv1 | conv2) break
         c.old[j] = c.new[j]  # if not convergence
-      }
-      if(conv1 | conv2 | err) break
-    }
+        }
+      if(conv1 | conv2 | err1 | err2) break
+  }
 
-    if(i == 1 & (conv1 | conv2 | err)) c.new = c.init
+    if(i == 1 & (conv1 | conv2 | err1 | err2)){
+    }
 print(i)
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
@@ -403,10 +405,10 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # conv = max(loss) < 1e-12
       loss[j] = abs(theta.old[j] - theta.new[j])
       conv2 = sum(loss == 0) == d
-      conv3 = max(loss) > 5
+      # conv3 = max(loss) > 5
 
       # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
-      if(conv2 | conv3){
+      if(conv2){
         conv = TRUE
       } else{
         conv = max(loss[loss > 0]) < 1e-18
@@ -419,7 +421,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
   }
 print(i)
 # print(theta.new)
-  if(i == 1 & (conv2 | conv3)) theta.new = rep(0, d)
+  if(i == 1 & (conv2)) theta.new = rep(0, d)
 
   ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
 
