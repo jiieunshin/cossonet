@@ -402,10 +402,10 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # conv = max(loss) < 1e-12
       loss[j] = abs(theta.old[j] - theta.new[j])
       conv2 = sum(loss == 0) == d
-      # conv3 = max(loss) > 5
+      conv3 = max(loss) > 5
 
       # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
-      if(conv2){
+      if(conv2 | conv3){
         conv = TRUE
       } else{
         conv = max(loss[loss > 0]) < 1e-18
@@ -418,7 +418,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
   }
 print(i)
 # print(theta.new)
-  if(i == 1 & !conv) theta.new = rep(0, d)
+  if(i == 1 & (conv2 | conv3)) theta.new = rep(0, d)
 
   ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
 
