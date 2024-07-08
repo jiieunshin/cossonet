@@ -373,6 +373,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
 
   theta.old = init.theta
   theta.new = rep(0, d)
+  conv2 = conv3 = TRUE
   for(i in 1:40){
     loss = rep(1, d)
     GH = GH.theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
