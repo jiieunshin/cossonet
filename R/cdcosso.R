@@ -84,8 +84,7 @@ cdcosso = function (x,
 
   objnm = ifelse(family == 'gaussian' | family == 'binomial' | family == 'poisson', 'glm', family)
 
-  d = ifelse(effect == "main", ncol(x), ncol(x) * (ncol(x) - 1) / 2)
-  wt = rep(1/d, ncol(x))
+  wt = rep(1, ncol(x))
 
   # fitting
   out = switch(objnm,
