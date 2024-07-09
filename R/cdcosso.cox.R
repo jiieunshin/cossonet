@@ -23,13 +23,13 @@
 # x = X
 # time = unlist(y[, "time"])
 # status = unlist(y[, "status"])
-# type = "spline"
+# type = "linear"
 # algo = "CD"
 # family = 'Cox'
 # gamma = 0.95
 # kparam=1
-# lambda0 = exp(seq(log(2^{-12}), log(2^{6}), length.out = 20))
-# lambda_theta = exp(seq(log(2^{-12}), log(2^{6}), length.out = 20))
+# lambda0 = exp(seq(log(2^{-22}), log(2^{-11}), length.out = 20))
+# lambda_theta = exp(seq(log(2^{-22}), log(2^{4}), length.out = 20))
 # wt = rep(1, ncol(x))
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
 {
@@ -43,7 +43,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
 
   par(mfrow = c(1,3))
   # solve c (1st)
-  getc_cvfit = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo, show = TRUE)
+  getc_cvfit = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo , show = TRUE)
 
   # solve theta (1st)
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)

@@ -67,7 +67,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
         EigRtheta = eigen(Rtheta)
       }
       pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
-      ssCox.en = glmnet(pseudoX, cbind(time = time, status = status),
+      ssCox.en = glmnet(Rtheta, cbind(time = time, status = status),
                         family = "cox", lambda = cand.lambda, alpha = 0,
                         standardize = FALSE)
       c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
@@ -142,13 +142,13 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   c.old = c.init
   c.new = rep(0, n)
   GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-  err1 = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+  err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+
+  Hess = GH$Hessian - lambda0 * Rtheta
+  Grad = GH$Gradient - lambda0 * Rtheta %*% c.old
   # while (loop < 15 & iter.diff > 1e-4) {
   for(i in 1:20){ # outer iteration
-    if(err1) break
-
-      Hess = GH$Hessian - lambda0 * Rtheta
-      Grad = GH$Gradient - lambda0 * Rtheta %*% c.old
+    if(err) break
       # 2 * n * lambda0 * Rtheta2
 
         W = ginv(Hess)
@@ -163,16 +163,15 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
         loss = abs(c.old - c.new)
         conv1 = min(loss[loss > 0]) < 1e-20
         conv2 = abs(c.old[j] - c.new[j]) > 5
-        err2 = (sum(exp(Rtheta %*% c.new) == Inf) > 0) | (sum(exp(Rtheta %*% c.new) == -Inf) > 0)
+        conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
         # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
-        if(conv1 | conv2) break
+        if(conv1 | conv2 | conv3) break
         c.old[j] = c.new[j]  # if not convergence
         }
-      if(conv1 | conv2 | err1 | err2) break
+      if(conv1 | conv2 | conv3) break
   }
 
-    if(i == 1 & (conv1 | conv2 | err1 | err2)){
-    }
+    if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
 print(i)
   # zw = z * sqrt(w)
   # Rw = Rtheta * w

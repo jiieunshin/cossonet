@@ -151,7 +151,12 @@ make_anovaKernel = function(x, y, type, kparam, scale)
       index = index + 1
       A = x[, d, drop = FALSE]
       B = y[, d, drop = FALSE]
-      anova_kernel[[index]] = kernelMatrix(A, B, type, kparam)
+      if (length(unique(c(A, B))) <= 6){
+        K_temp <- cat_kernel(A, B)
+        anova_kernel[[index]] = K_temp
+      } else{
+        anova_kernel[[index]] = kernelMatrix(A, B, type, kparam)
+      }
       kernelCoord[[index]] = paste("x", d, sep = "")
     }
 
@@ -171,7 +176,12 @@ make_anovaKernel = function(x, y, type, kparam, scale)
     for (d in 1:dimx) {
       A = x[, d, drop = FALSE]
       B = y[, d, drop = FALSE]
-      anova_kernel[[d]] = kernelMatrix(A, B, type, kparam)
+      if (length(unique(c(A, B))) <= 6){
+        K_temp <- cat_kernel(A, B)
+        anova_kernel[[d]] = K_temp
+      } else{
+        anova_kernel[[d]] = kernelMatrix(A, B, type, kparam)
+      }
       kernelCoord[[d]] = paste("x", d, sep = "")
     }
   }
