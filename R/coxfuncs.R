@@ -133,6 +133,46 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
 getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
+
+  c.old = c.init
+  c.new = rep(0, n)
+
+  # while (loop < 15 & iter.diff > 1e-4) {
+  for(i in 1:20){ # outer iteration
+    GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+    err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+    if(err) break
+    # 2 * n * lambda0 * Rtheta2
+    Hess = GH$Hessian  - 2 * lambda0 * Rtheta
+    Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
+
+    W = ginv(Hess)
+    z = Hess %*% c.old - Grad
+    for(j in 1:n){
+      c.new[j] = W[j, ] %*% z
+      loss = abs(c.old - c.new)
+      conv1 = min(loss[loss > 0]) < 1e-20
+      conv2 = abs(c.old[j] - c.new[j]) > 5
+      conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
+      # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
+      if(conv1 | conv2 | conv3) break
+      c.old[j] = c.new[j]  # if not convergence
+    }
+    if(conv1 | conv2 | conv3) break
+  }
+
+  if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
+  print(i)
+  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
+  ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
+  return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
+  # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
+}
+
+getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
+{
+  n = ncol(Rtheta)
   # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
   # w = wz$weight
   # z = wz$z
@@ -144,12 +184,12 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
-  Hess = GH$Hessian - lambda0 * Rtheta
-  Grad = GH$Gradient - lambda0 * Rtheta %*% c.old
   # while (loop < 15 & iter.diff > 1e-4) {
   for(i in 1:20){ # outer iteration
     if(err) break
       # 2 * n * lambda0 * Rtheta2
+    Hess = GH$Hessian - 2 * lambda0 * Rtheta
+    Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
 
         W = ginv(Hess)
         z = (Hess %*% c.old - Grad) / lambda0

@@ -23,14 +23,15 @@
 # x = X
 # time = unlist(y[, "time"])
 # status = unlist(y[, "status"])
-# type = "linear"
+# type = "spline"
 # algo = "CD"
 # family = 'Cox'
 # gamma = 0.95
 # kparam=1
-# lambda0 = exp(seq(log(2^{-22}), log(2^{-11}), length.out = 20))
-# lambda_theta = exp(seq(log(2^{-22}), log(2^{4}), length.out = 20))
-# wt = rep(1, ncol(x))
+# lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
+# lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
+# d = ncol(x)
+# wt = rep(1/d, ncol(x))
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
 {
   n = length(time)
