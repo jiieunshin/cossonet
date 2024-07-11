@@ -18,12 +18,6 @@ data_generation = function(n, p, rho,
   f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
   f5 = function(t) sin(pi * t^4) + t^4 - 0.4
-  f6 = function(t) exp(t^2) - 1.5
-  f9 = function(t) 4 * cos((3 * t - 1.5) * pi / 5)
-  f10 = function(t) pi * sin(pi * t) - 2
-  f8 = function(t) (cos(2 * t) + sin(7 * t)) - 0.5
-  # f4 = function(t) 2 * t^5 - 0.2
-  f7 = function(t) (sin(6 * t)^{3} + cos(6 * t)^{9})
 
   if(missing(response))
     type = "classification"
@@ -80,18 +74,19 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-    # f = 3 * x[, 1] + 4 * sin(2 * pi * x[,2]) + 5 * (x[, 3] - 0.4)^2 + f1(x[, 4]) + 2 * f1(x[, 5])
-    # f = 3 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 4 * f6(x[,3]) + 1 * f2(x[,4])
-    # f = 4 * x[,1] + 2 * (3 * x[, 2] - 2)^2 - 1 + 4 * f6(x[,3]) + 1 * f2(x[,4]) + 2 * f3(x[,5])
-    # f = 3 * x[, 1] + 1 * (3 * x[, 2] - 2)^2 + 1 * cos(pi * (3 * x[, 3] - 1.5) / 5)
-    # + 3 * cos(pi *  (3 * x[, 5] - 1.5) / 5)
+    Sigma = matrix(1, 8, 8)
+    for(j in 1:8){
+      for(k in 1:8){
+        Sigma[j, k] = rho^abs(j-k)
+      }
+    }
 
-    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
-    # f = 2 * x[,1] + 2 * x[,2] +  2 * x[,3] + 2 * x[,4] + 2 * x[,5]
+    x = rtmvnorm(n, mean = rep(0, 8), sigma = Sigma, lower = rep(-2, 8), upper = rep(2, 8))
+    x = apply(x, 2, rescale)
+    f = 3 * (3 * x[,1] - 2)^2 +  4 * cos((3 * x[,4] - 1.5) * pi / 5) + ifelse(x[,7] < 0.5, 0, 1)
+    # x = cbind(x, matrix(rtruncnorm(n * (p-5), -2, 2, 0, 1), n, (p-5)))
 
-    # f = 2 * f1(x[,1]) + 1 * f2(x[,2]) + 1 * f3(x[,3]) + 3 * f4(x[,4]) + 2 * f5(x[,5])
-    # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 1 * f3(x[,3]) + 2 * f4(x[,4]) + 2 * f5(x[,5])
-    # f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4]) + 4 * f5(x[,5])
+    # hazard = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))

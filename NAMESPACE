@@ -8,6 +8,7 @@ import(glmnet)
 import(mvtnorm)
 import(quadprog)
 import(graphics)
+import(tmvtnorm)
 
 export(data_generation)
 export(metric)

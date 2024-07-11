@@ -7,11 +7,12 @@ License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
-Depends:
+Imports:
     cosso,
     stats,
     MASS,
     glmnet,
     mvtnorm,
     quadprog,
-    graphics
+    graphics,
+    tmvtnorm
