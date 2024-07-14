@@ -82,6 +82,9 @@ data_generation = function(n, p, rho,
     }
 
     x = rtmvnorm(n, mean = rep(0, 8), sigma = Sigma, lower = rep(-2, 8), upper = rep(2, 8))
+    x_nois = rtmvnorm(n, mean = rep(0, p-8), sigma = diag(1, p-8, p-8), lower = rep(-2, p-8), upper = rep(2, p-8))
+    x = cbind(x_sig, x_nois)
+
     x = apply(x, 2, rescale)
     f = 3 * (3 * x[,1] - 2)^2 +  4 * cos((3 * x[,4] - 1.5) * pi / 5) + ifelse(x[,7] < 0.5, 0, 1)
     # x = cbind(x, matrix(rtruncnorm(n * (p-5), -2, 2, 0, 1), n, (p-5)))
