@@ -74,22 +74,33 @@ data_generation = function(n, p, rho,
   }
 
   if(response == 'survival'){
-    Sigma = matrix(1, 8, 8)
-    for(j in 1:8){
-      for(k in 1:8){
+    # Sigma = matrix(1, 8, 8)
+    # for(j in 1:8){
+    #   for(k in 1:8){
+    #     Sigma[j, k] = rho^abs(j-k)
+    #   }
+    # }
+    #
+    # x_sig = rtmvnorm(n, mean = rep(0, 8), sigma = Sigma, lower = rep(-2, 8), upper = rep(2, 8))
+    # x_nois = rtmvnorm(n, mean = rep(0, p-8), sigma = diag(1, p-8, p-8), lower = rep(-2, p-8), upper = rep(2, p-8))
+    # x = cbind(x_sig, x_nois)
+
+    Sigma = matrix(1, 5, 5)
+    for(j in 1:5){
+      for(k in 1:5){
         Sigma[j, k] = rho^abs(j-k)
       }
     }
 
-    x = rtmvnorm(n, mean = rep(0, 8), sigma = Sigma, lower = rep(-2, 8), upper = rep(2, 8))
-    x_nois = rtmvnorm(n, mean = rep(0, p-8), sigma = diag(1, p-8, p-8), lower = rep(-2, p-8), upper = rep(2, p-8))
+    x_sig = rtmvnorm(n, mean = rep(0, 5), sigma = Sigma, lower = rep(-2, 5), upper = rep(2, 5))
+    x_nois = rtmvnorm(n, mean = rep(0, p-5), sigma = diag(1, p-5, p-5), lower = rep(-2, p-5), upper = rep(2, p-5))
     x = cbind(x_sig, x_nois)
-
     x = apply(x, 2, rescale)
-    f = 3 * (3 * x[,1] - 2)^2 +  4 * cos((3 * x[,4] - 1.5) * pi / 5) + ifelse(x[,7] < 0.5, 0, 1)
-    # x = cbind(x, matrix(rtruncnorm(n * (p-5), -2, 2, 0, 1), n, (p-5)))
+    # f = 3 * (3 * x[,1] - 2)^2 +  4 * cos((3 * x[,3] - 1.5) * pi / 5) + ifelse(x[,5] < 0.5, 0, 1)
+      # ifelse(x[,5] < 0.5, 0, 1)
+    f = 6 * (3 * x[,1] - 2)^2 +  7 * cos((3 * x[,3] - 1.5) * pi / 5) + ifelse(x[,5] < 0.5, 0, 1)
 
-    # hazard = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+    # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
