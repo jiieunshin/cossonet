@@ -98,7 +98,10 @@ data_generation = function(n, p, rho,
     x = apply(x, 2, rescale)
     # f = 3 * (3 * x[,1] - 2)^2 +  4 * cos((3 * x[,3] - 1.5) * pi / 5) + ifelse(x[,5] < 0.5, 0, 1)
       # ifelse(x[,5] < 0.5, 0, 1)
-    f = 6 * (3 * x[,1] - 2)^2 +  7 * cos((3 * x[,3] - 1.5) * pi / 5) + ifelse(x[,5] < 0.5, 0, 1)
+
+    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3
+
+    f = 3 * (3 * x[, 1] - 2)^2 + 4 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f3(x[, 2]) + 1 * f4(x[, 4])
 
     # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
 
