@@ -41,7 +41,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
   d = K$numK
   # cat("kernel:", type, "and d =", d, "\n")
 
-  par(mfrow = c(1,4))
+  par(mfrow = c(1,3))
   # solve c (1st)
   getc_cvfit = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo , show = TRUE)
 
@@ -54,7 +54,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
   getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, algo, show = TRUE)
 
   # solve theta (2nd)
-  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)
+  # theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)
 
   par(mfrow = c(1,1))
 
