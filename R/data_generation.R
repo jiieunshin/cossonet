@@ -85,13 +85,13 @@ data_generation = function(n, p, rho,
     # x_nois = rtmvnorm(n, mean = rep(0, p-8), sigma = diag(1, p-8, p-8), lower = rep(-2, p-8), upper = rep(2, p-8))
     # x = cbind(x_sig, x_nois)
 
-    Sigma = matrix(1, 5, 5)
-    for(j in 1:5){
-      for(k in 1:5){
-        Sigma[j, k] = rho^abs(j-k)
-      }
-    }
-
+    # Sigma = matrix(1, 5, 5)
+    # for(j in 1:5){
+    #   for(k in 1:5){
+    #     Sigma[j, k] = rho^abs(j-k)
+    #   }
+    # }
+    #
     x_sig = rtmvnorm(n, mean = rep(0, 5), sigma = Sigma, lower = rep(-2, 5), upper = rep(2, 5))
     x_nois = rtmvnorm(n, mean = rep(0, p-5), sigma = diag(1, p-5, p-5), lower = rep(-2, p-5), upper = rep(2, p-5))
     x = cbind(x_sig, x_nois)
@@ -99,8 +99,10 @@ data_generation = function(n, p, rho,
 
     f6 = function(t) cos(2 * pi * t) + sin(pi * t)
 
-    f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 4] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 13 * exp(x[, 3])
-
+    f = 3 * (3 * x[, 1] - 2)^2 + 7 * cos((3 * x[, 4] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 9 * exp(x[, 3])
+    SNR = sqrt(var(f) / 3)
+    f = f + rnorm(n, 0, SNR)
+    # 14.003
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
