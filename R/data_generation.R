@@ -100,11 +100,11 @@ data_generation = function(n, p, rho,
 
     f6 = function(t) cos(2 * pi * t) + sin(pi * t)
 
-    f = 3 * (3 * x[, 1] - 2)^2 +  7 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 1 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 3)
+    # f = 3 * (3 * x[, 1] - 2)^2 +  7 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 1 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 3)
 
-    # f = 3 * (3 * x[, 1] - 2)^2 + 4 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f4(x[, 2]) + 3 * (exp(x[, 4]) - 2)
-    # f = 3 * (3 * x[, 1] - 2)^2 +  4 * cos((3 * x[, 4] - 1.5) * pi / 5) + ifelse(x[, 7] < 0.5, 0, 1)
-    SNR = sqrt(var(f) / 4)
+    f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 2)
+
+    SNR = sqrt(var(f) * 8)
     f = f + rnorm(n, 0, SNR)
 
     surTime = rexp(n, exp(f))
