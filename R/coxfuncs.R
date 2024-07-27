@@ -136,11 +136,11 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
   c.old = c.init
   c.new = rep(0, n)
-
-  # while (loop < 15 & iter.diff > 1e-4) {
   for(i in 1:20){ # outer iteration
     GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
     err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+
+    # while (loop < 15 & iter.diff > 1e-4) {
     if(err) break
     # 2 * n * lambda0 * Rtheta2
     Hess = GH$Hessian  - 2 * lambda0 * Rtheta
@@ -342,31 +342,28 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
-  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
+  lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
+  # if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(0, len)
   save_theta <- list()
   for (k in 1:len) {
-    if(algo == "CD"){
-      fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new, model$ACV_pen,
-                        0, lambda0, lambda_theta[k], gamma, RS)
+    # if(algo == "CD"){
+      # fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new, model$ACV_pen,
+      #                   0, lambda0, lambda_theta[k], gamma, RS)
+      #
+      # save_theta[[k]] <- fit$theta.new
+      #
+      # measure[k] <- fit$ACV
+    # }
 
-      save_theta[[k]] <- fit$theta.new
-
-      # num = as.vector(cosso::PartialLik(time, status, RS,  G %*% fit$theta.new)) + 1
-      # den = (1 - sum(fit$theta.new != 0))^2 + 1
-      # measure[k] <- num / den /n
-
-      measure[k] <- fit$ACV
-    }
-
-    if(algo == "QP"){
+    # if(algo == "QP"){
       fit = gettheta.QP(rep(1, d), model$c.new, G, time, status, lambda0, lambda_theta[k], RS, model$ACV_pen)
       save_theta[[k]] <- fit$theta.new
 
       measure[k] <- fit$ACV
-    }
+    # }
   }
   # print(save_theta)
   # print
@@ -379,16 +376,12 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   plot(xrange, measure[sel], main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood",
        ylim = range(measure[sel]), pch = 15, col = 'red')
 
-  if(algo == "CD"){
+  # if(algo == "CD"){
+  #   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
+  # }
+  # if(algo == "QP"){
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
-    # fit = gettheta.cd(init.theta, G, time, status, model$b.new, (n/2) * lambda0 * model$cw.new, optlambda, gamma, RS)
-    # out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit$theta.new)
-  }
-  if(algo == "QP"){
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
-    # fit = gettheta.QP(init.theta, model$c.new, G, time, status, lambda0, optlambda, RS)
-    # out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = fit$theta.new)
-  }
+  # }
 
   return(out)
 }
