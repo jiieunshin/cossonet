@@ -136,11 +136,11 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
   c.old = c.init
   c.new = rep(0, n)
-  GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-  err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
   # while (loop < 15 & iter.diff > 1e-4) {
   for(i in 1:20){ # outer iteration
+    GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+    err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
     if(err) break
     # 2 * n * lambda0 * Rtheta2
     Hess = GH$Hessian  - 2 * lambda0 * Rtheta
