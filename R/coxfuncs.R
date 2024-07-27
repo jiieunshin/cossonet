@@ -170,71 +170,71 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 }
 
-# getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
-# {
-#   n = ncol(Rtheta)
-#   # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
-#   # w = wz$weight
-#   # z = wz$z
-#
-#   # return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
-#
-#   c.old = c.init
-#   c.new = rep(0, n)
-#   GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-#   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
-#
-#   # while (loop < 15 & iter.diff > 1e-4) {
-#   for(i in 1:1){ # outer iteration
-#     if(err) break
-#       # 2 * n * lambda0 * Rtheta2
-#     Hess = GH$Hessian - 2 * lambda0 * Rtheta
-#     Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
-#
-#         W = ginv(Hess)
-#         z = (Hess %*% c.old - Grad) / lambda0
-#         for(j in 1:n){
-#         V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% t(W) %*% Rtheta[, j]
-#         V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
-#         V3 = t(Rtheta[, j]) %*% (t(W) %*% Rtheta[, j])
-#         V4 = Rtheta[j, j] / lambda0
-#
-#         c.new[j] = (V1 - V2) / (V3 + V4)
-#         loss = abs(c.old - c.new)
-#         conv1 = min(loss[loss > 0]) < 1e-20
-#         conv2 = abs(c.old[j] - c.new[j]) > 5
-#         conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
-#         # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
-#         if(conv1 | conv2 | conv3) break
-#         c.old[j] = c.new[j]  # if not convergence
-#         }
-#       if(conv1 | conv2 | conv3) break
-#   }
-#
-#     if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
-# print(i)
-#   # zw = z * sqrt(w)
-#   # Rw = Rtheta * w
-#   # cw = c.init
-#   # cw.new = temp = c.init / sqrt(w)
-#   # sw = sqrt(w)
-#   # fit = .Call("cox_c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
-#
-#   # b.new = fit$b.new
-#   # c.new = fit$c.new
-#   # cw.new = fit$cw.new
-#
-#   # z = (Hess %*% c.new - Grad) / lambda0
-#   # loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
-#   # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
-#   # GCV = as.numeric(loglik / den / n)
-#   # print(i)
-#   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
-#   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-#   ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
-#   return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
-#   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
-# }
+getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
+{
+  n = ncol(Rtheta)
+  # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
+  # w = wz$weight
+  # z = wz$z
+
+  # return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
+
+  c.old = c.init
+  c.new = rep(0, n)
+  GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+  err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+
+  # while (loop < 15 & iter.diff > 1e-4) {
+  for(i in 1:1){ # outer iteration
+    if(err) break
+      # 2 * n * lambda0 * Rtheta2
+    Hess = GH$Hessian - 2 * lambda0 * Rtheta
+    Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
+
+        W = ginv(Hess)
+        z = (Hess %*% c.old - Grad) / lambda0
+        for(j in 1:n){
+        V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% t(W) %*% Rtheta[, j]
+        V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
+        V3 = t(Rtheta[, j]) %*% (t(W) %*% Rtheta[, j])
+        V4 = Rtheta[j, j] / lambda0
+
+        c.new[j] = (V1 - V2) / (V3 + V4)
+        loss = abs(c.old - c.new)
+        conv1 = min(loss[loss > 0]) < 1e-20
+        conv2 = abs(c.old[j] - c.new[j]) > 5
+        conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
+        # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
+        if(conv1 | conv2 | conv3) break
+        c.old[j] = c.new[j]  # if not convergence
+        }
+      if(conv1 | conv2 | conv3) break
+  }
+
+    if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
+print(i)
+  # zw = z * sqrt(w)
+  # Rw = Rtheta * w
+  # cw = c.init
+  # cw.new = temp = c.init / sqrt(w)
+  # sw = sqrt(w)
+  # fit = .Call("cox_c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
+
+  # b.new = fit$b.new
+  # c.new = fit$c.new
+  # cw.new = fit$cw.new
+
+  # z = (Hess %*% c.new - Grad) / lambda0
+  # loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
+  # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
+  # GCV = as.numeric(loglik / den / n)
+  # print(i)
+  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
+  ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
+  return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
+  # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
+}
 
 calculate_GH_for_C = function (initC, Gramat1, Gramat2, time, status, mscale, lambda0, riskset, Hess.FullNumer.unScale)
 {
@@ -342,28 +342,28 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
-  lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
-  # if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
+  # lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
+  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(0, len)
   save_theta <- list()
   for (k in 1:len) {
-    # if(algo == "CD"){
-      # fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new, model$ACV_pen,
-      #                   0, lambda0, lambda_theta[k], gamma, RS)
-      #
-      # save_theta[[k]] <- fit$theta.new
-      #
-      # measure[k] <- fit$ACV
-    # }
+    if(algo == "CD"){
+    fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new, model$ACV_pen,
+                      0, lambda0, lambda_theta[k], gamma, RS)
 
-    # if(algo == "QP"){
+    save_theta[[k]] <- fit$theta.new
+
+    measure[k] <- fit$ACV
+    }
+
+    if(algo == "QP"){
       fit = gettheta.QP(rep(1, d), model$c.new, G, time, status, lambda0, lambda_theta[k], RS, model$ACV_pen)
       save_theta[[k]] <- fit$theta.new
 
       measure[k] <- fit$ACV
-    # }
+    }
   }
   # print(save_theta)
   # print
@@ -376,12 +376,12 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   plot(xrange, measure[sel], main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood",
        ylim = range(measure[sel]), pch = 15, col = 'red')
 
-  # if(algo == "CD"){
-  #   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
-  # }
-  # if(algo == "QP"){
+  if(algo == "CD"){
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
-  # }
+  }
+  if(algo == "QP"){
+    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
+  }
 
   return(out)
 }
@@ -436,7 +436,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # loss = abs(theta.old - theta.new)
       # conv = max(loss) < 1e-12
       loss[j] = abs(theta.old[j] - theta.new[j])
-      conv2 = sum(loss == 0) == d
+      conv2 = sum(loss == 0) == d | is.infinite(theta.new[j]) | is.na(theta.new[j])
       # conv3 = max(loss) > 5
 
       # cat("i = ", i, "j =", j, "theta.new[j] =", theta.new[j], "loss =", max(loss), "\n")
@@ -453,11 +453,11 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
   }
 print(i)
 # print(theta.new)
-  if(i == 1 & (conv2)) theta.new = rep(0, d)
+  if(i == 1 & (conv2)) theta.old = rep(0, d)
 
   ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
 
-  return(list(theta.new = theta.new, ACV = ACV))
+  return(list(theta.new = theta.old, ACV = ACV))
 
   # return(list(Gw = Gw, zw.new = z * sqrt(w), uw.new = uw, w.new = w, theta.new = theta.new))
 }
