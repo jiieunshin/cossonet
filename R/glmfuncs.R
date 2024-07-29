@@ -96,7 +96,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     cw = c.init / sqrt(w)
     sw = sqrt(w)
 
-    fit = .Call("c_step", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
+    fit = .Call("glm_c_step", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
     f.new = c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
@@ -266,7 +266,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
   if(algo == "CD"){
-    theta.new = .Call("theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
+    theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
     # theta.new = save_theta[[id]]
     theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
