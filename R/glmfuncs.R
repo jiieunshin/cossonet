@@ -31,7 +31,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       cw = c.init / sqrt(w)
       sw = sqrt(w)
 
-      fit = .Call("glm_c_step", zw, Rw, cw, sw, n, n, cand.lambda[k], PACKAGE = "cdcosso")
+      fit = .Call("glm_c_step", zw, Rw, cw, sw, n, cand.lambda[k], PACKAGE = "cdcosso")
       b.new = fit$b.new
       c.new = fit$c.new
       cw.new = fit$cw.new
