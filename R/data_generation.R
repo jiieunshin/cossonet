@@ -58,11 +58,13 @@ data_generation = function(n, p, rho,
   # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
   # par(mfrow = c(1,1))
 
-  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
-  # f = 5 * f1(x[,1]) + 4 * ((3 * x[, 2] - 2)^2 - 1) + 6 * f5(x[, 3]) + 2 * f4(x[, 4]) + 2 * f3(x[, 5])
+  # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
 
   if(response == "regression"){
-    f = f + rnorm(n, 0, 1)
+    SNR = sqrt(var(f) / 1.5)
+    f = f + rnorm(n, 0, SNR)
+    # f = f + rnorm(n, 0, 1)
     out = list(x = x, y = f)
   }
 
@@ -76,6 +78,7 @@ data_generation = function(n, p, rho,
 
   if(response == "count"){
     mu = exp(f/sqrt(2)/p)
+    # mu = exp(f)
     y = rpois(n, mu)
     out = list(x = x, f = f, y = y)
   }
@@ -93,25 +96,25 @@ data_generation = function(n, p, rho,
     # x = cbind(x_sig, x_nois)
     # x = apply(x, 2, rescale)
 
-    Sigma = matrix(1, 5, 5)
-    for(j in 1:5){
-      for(k in 1:5){
-        Sigma[j, k] = rho^abs(j-k)
-      }
-    }
-
-    x_sig = rtmvnorm(n, mean = rep(0, 5), sigma = Sigma, lower = rep(-2, 5), upper = rep(2, 5))
-    x_nois = rtmvnorm(n, mean = rep(0, p-5), sigma = diag(1, p-5, p-5), lower = rep(-2, p-5), upper = rep(2, p-5))
-    x = cbind(x_sig, x_nois)
-    x = apply(x, 2, rescale)
-
-    f6 = function(t) cos(2 * pi * t) + sin(pi * t)
+    # Sigma = matrix(1, 5, 5)
+    # for(j in 1:5){
+    #   for(k in 1:5){
+    #     Sigma[j, k] = rho^abs(j-k)
+    #   }
+    # }
+    #
+    # x_sig = rtmvnorm(n, mean = rep(0, 5), sigma = Sigma, lower = rep(-2, 5), upper = rep(2, 5))
+    # x_nois = rtmvnorm(n, mean = rep(0, p-5), sigma = diag(1, p-5, p-5), lower = rep(-2, p-5), upper = rep(2, p-5))
+    # x = cbind(x_sig, x_nois)
+    # x = apply(x, 2, rescale)
+    #
+    # f6 = function(t) cos(2 * pi * t) + sin(pi * t)
 
     # f = 3 * (3 * x[, 1] - 2)^2 +  7 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 1 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 3)
 
     # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 2)
-    f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + 9 * (exp(x[, 5]) - 2) + 1 * f6(x[, 2]) + 5 * f4(x[, 4])
-    SNR = sqrt(var(f) / 6)
+    # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + 9 * (exp(x[, 5]) - 2) + 1 * f6(x[, 2]) + 5 * f4(x[, 4])
+    SNR = sqrt(var(f) / 1.5)
     f = f + rnorm(n, 0, SNR)
 
     surTime = rexp(n, exp(f))

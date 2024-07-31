@@ -185,34 +185,34 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
   # while (loop < 15 & iter.diff > 1e-4) {
-  for(i in 1:1){ # outer iteration
+  for(i in 1:15){ # outer iteration
     if(err) break
-      # 2 * n * lambda0 * Rtheta2
+    # 2 * n * lambda0 * Rtheta2
     Hess = GH$Hessian - 2 * lambda0 * Rtheta
     Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
 
-        W = ginv(Hess)
-        z = (Hess %*% c.old - Grad) / lambda0
-        for(j in 1:n){
-        V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% t(W) %*% Rtheta[, j]
-        V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
-        V3 = t(Rtheta[, j]) %*% (t(W) %*% Rtheta[, j])
-        V4 = Rtheta[j, j] / lambda0
+    W = ginv(Hess)
+    z = (Hess %*% c.old - Grad) / lambda0
+    for(j in 1:n){
+      V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% t(W) %*% Rtheta[, j]
+      V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
+      V3 = t(Rtheta[, j]) %*% (t(W) %*% Rtheta[, j])
+      V4 = Rtheta[j, j] / lambda0
 
-        c.new[j] = (V1 - V2) / (V3 + V4)
-        loss = abs(c.old - c.new)
-        conv1 = min(loss[loss > 0]) < 1e-20
-        conv2 = abs(c.old[j] - c.new[j]) > 5
-        conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
-        # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
-        if(conv1 | conv2 | conv3) break
-        c.old[j] = c.new[j]  # if not convergence
-        }
+      c.new[j] = (V1 - V2) / (V3 + V4)
+      loss = abs(c.old - c.new)
+      conv1 = min(loss[loss > 0]) < 1e-20
+      conv2 = abs(c.old[j] - c.new[j]) > 5
+      conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
+      # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
       if(conv1 | conv2 | conv3) break
+      c.old[j] = c.new[j]  # if not convergence
+    }
+    if(conv1 | conv2 | conv3) break
   }
 
-    if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
-print(i)
+  if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
+  print(i)
   # zw = z * sqrt(w)
   # Rw = Rtheta * w
   # cw = c.init
@@ -436,6 +436,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
       # loss = abs(theta.old - theta.new)
       # conv = max(loss) < 1e-12
       loss[j] = abs(theta.old[j] - theta.new[j])
+      # print(theta.new)
       conv2 = sum(loss == 0) == d | is.infinite(theta.new[j]) | is.na(theta.new[j])
       # conv3 = max(loss) > 5
 
@@ -451,8 +452,8 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
     }
     if(conv) break
   }
-print(i)
-# print(theta.new)
+  print(i)
+  # print(theta.new)
   if(i == 1 & (conv2)) theta.old = rep(0, d)
 
   ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
