@@ -62,7 +62,7 @@ data_generation = function(n, p, rho,
   f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
 
   if(response == "regression"){
-    SNR = sqrt(var(f) / 1.5)
+    SNR = sqrt(var(f) / 2)
     f = f + rnorm(n, 0, SNR)
     # f = f + rnorm(n, 0, 1)
     out = list(x = x, y = f)
@@ -114,7 +114,7 @@ data_generation = function(n, p, rho,
 
     # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 2)
     # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + 9 * (exp(x[, 5]) - 2) + 1 * f6(x[, 2]) + 5 * f4(x[, 4])
-    SNR = sqrt(var(f) / 1.5)
+    SNR = sqrt(var(f) / 2)
     f = f + rnorm(n, 0, SNR)
 
     surTime = rexp(n, exp(f))
