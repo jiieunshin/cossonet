@@ -62,8 +62,8 @@ data_generation = function(n, p, rho,
   f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
 
   if(response == "regression"){
-    SNR = sqrt(var(f) / 2)
-    f = f + rnorm(n, 0, SNR)
+    # SNR = sqrt(var(f) / 2)
+    # f = f + rnorm(n, 0, SNR)
     # f = f + rnorm(n, 0, 1)
     out = list(x = x, y = f)
   }
