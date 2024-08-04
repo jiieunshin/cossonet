@@ -19,10 +19,10 @@ data_generation = function(n, p, rho,
   # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
   # f5 = function(t) sin(pi * t^4) + t^4 - 0.4
 
-  f1 = function(t) 5 * sin(3*t)
+  f1 = function(t) 5 * sin(3*t) - 2.5
   f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
-  f3 = function(t) t * (1-t^2) * exp(3 * t) - 4
-  f4 = function(t) 4 * t
+  f3 = function(t) t * (1-t^2) * exp(3 * t) - 1
+  f4 = function(t) 4 * t - 2
   f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
 
 
@@ -62,14 +62,16 @@ data_generation = function(n, p, rho,
   f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
 
   if(response == "regression"){
-    # SNR = sqrt(var(f) / 2)
-    # f = f + rnorm(n, 0, SNR)
+    SNR = sqrt(var(f) / 2)
+    f = f + rnorm(n, 0, SNR)
     # f = f + rnorm(n, 0, 1)
     out = list(x = x, y = f)
   }
 
   if(response == "classification"){
-    prob = exp(f)/(exp(f) + 1)
+    SNR = sqrt(var(f) / 2)
+    e = rnorm(n, 0, SNR)
+    prob = exp(f + e)/(exp(f + e) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)
     # print(table(y))
@@ -77,8 +79,12 @@ data_generation = function(n, p, rho,
   }
 
   if(response == "count"){
-    mu = exp(f/sqrt(2)/p)
-    # mu = exp(f)
+    # mu = exp(f/sqrt(2)/p)
+
+    SNR = sqrt(var(f) / 3)
+    # print(SNR)
+    e = rnorm(n, 0, SNR)
+    mu = exp(f + e)
     y = rpois(n, mu)
     out = list(x = x, f = f, y = y)
   }
@@ -114,7 +120,7 @@ data_generation = function(n, p, rho,
 
     # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 2)
     # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + 9 * (exp(x[, 5]) - 2) + 1 * f6(x[, 2]) + 5 * f4(x[, 4])
-    SNR = sqrt(var(f) / 2)
+    SNR = sqrt(var(f) / 3)
     f = f + rnorm(n, 0, SNR)
 
     surTime = rexp(n, exp(f))
