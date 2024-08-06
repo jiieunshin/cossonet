@@ -48,7 +48,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   int iter = 0;
   double max_diff = 0;
   // outer loop
-  for (iter = 0; iter < 10; ++iter) {
+  for (iter = 0; iter < 20; ++iter) {
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
@@ -88,7 +88,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
         }
       }
 
-      if (max_diff <= 1e-6 || max_diff > 10) {
+      if (max_diff <= 1e-20 || max_diff > 10) {
         break;
       }
 
@@ -96,13 +96,13 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       cw_c[j] = cw_new[j];
     }
 
-    if (max_diff <= 1e-6 || max_diff > 10) {
+    if (max_diff <= 1e-20 || max_diff > 10) {
       break;
     }
 
   } // end outer iteration
 
-  if (max_diff > 1e-6 && iter == 0){
+  if (max_diff > 1e-20 && iter == 0){
     memcpy(cw_new, cw_c, nc * sizeof(double));
   }
 
@@ -188,7 +188,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double max_diff = 1e-10;
   int iter = 0;
 
-  for(iter = 0; iter < 10; iter++) {
+  for(iter = 0; iter < 20; iter++) {
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
       for(int k = 0; k < nc; k++) { // iterate by row
