@@ -13,17 +13,17 @@
 #' @export
 data_generation = function(n, p, rho,
                            response = c("regression", "classification", "count", "survival", "interaction")){
-  f1 = function(t) t - 0.5
-  f2 = function(t) (2 * t - 1)^2 - 0.4
-  f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
-  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
-  f5 = function(t) sin(pi * t^4) + t^4 - 0.4
+  # f1 = function(t) t - 0.5
+  # f2 = function(t) (2 * t - 1)^2 - 0.4
+  # f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
+  # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
+  # f5 = function(t) sin(pi * t^4) + t^4 - 0.4
 
-  # f1 = function(t) 5 * sin(3*t)
-  # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
-  # f3 = function(t) t * (1-t^2) * exp(3 * t) - 4
-  # f4 = function(t) 4 * t
-  # f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
+  f1 = function(t) 5 * sin(3*t)
+  f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
+  f3 = function(t) t * (1-t^2) * exp(3 * t) - 4
+  f4 = function(t) 4 * t
+  f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
 
   if(missing(response))
     type = "classification"
@@ -31,7 +31,7 @@ data_generation = function(n, p, rho,
 
   if(missing(n)) n = 200
   if(missing(p)) p = 10
-  if(missing(rho)) rho = 0.5
+  if(missing(rho)) rho = 0.8
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
@@ -40,7 +40,7 @@ data_generation = function(n, p, rho,
 
   x_sig = rmvnorm(n, sigma = Sigma)
 
-  SNR = sqrt(3*(p-5))
+  SNR = sqrt(.2*(p-5))
   x_nois = matrix(rnorm(n * (p-5), 0, SNR), n, (p-5))
   x = cbind(x_sig, x_nois)
 
