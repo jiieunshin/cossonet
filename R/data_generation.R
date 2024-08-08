@@ -13,17 +13,17 @@
 #' @export
 data_generation = function(n, p, rho,
                            response = c("regression", "classification", "count", "survival", "interaction")){
-  # f1 = function(t) t - 0.5
-  # f2 = function(t) (2 * t - 1)^2 - 0.4
-  # f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
-  # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
-  # f5 = function(t) sin(pi * t^4) + t^4 - 0.4
+  f1 = function(t) t - 0.5
+  f2 = function(t) (2 * t - 1)^2 - 0.4
+  f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
+  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
+  f5 = function(t) sin(pi * t^4) + t^4 - 0.4
 
-  f1 = function(t) 5 * sin(3*t)
-  f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
-  f3 = function(t) t * (1-t^2) * exp(3 * t) - 4
-  f4 = function(t) 4 * t
-  f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
+  # f1 = function(t) 5 * sin(3*t)
+  # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
+  # f3 = function(t) t * (1-t^2) * exp(3 * t) - 4
+  # f4 = function(t) 4 * t
+  # f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
 
   if(missing(response))
     type = "classification"
@@ -38,13 +38,16 @@ data_generation = function(n, p, rho,
   Sigma = matrix(rho, 5, 5)
   diag(Sigma) = 1
 
-  x_sig = rmvnorm(n, sigma = Sigma)
+  x = pnorm(rmvnorm(n, sigma = Sigma))
 
-  SNR = sqrt(.2*(p-5))
-  x_nois = matrix(rnorm(n * (p-5), 0, SNR), n, (p-5))
-  x = cbind(x_sig, x_nois)
+  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
 
-  x = apply(x, 2, pnorm)
+  # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
+
+  SNR = sd(f) / sqrt((p-5) * .4)
+  print(SNR)
+  x_nois = pnorm(matrix(rnorm(n * (p-5), 0, SNR), n, (p-5)))
+  x = cbind(x, x_nois)
 
 
   # Set the outer margins
@@ -59,8 +62,6 @@ data_generation = function(n, p, rho,
   # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
   # par(mfrow = c(1,1))
 
-  # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
-  f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
 
   if(response == "regression"){
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
@@ -82,12 +83,12 @@ data_generation = function(n, p, rho,
   }
 
   if(response == "count"){
-    # mu = exp(f/sqrt(2)/p)
+    mu = exp(f/sqrt(2)/p)
 
     # SNR = sqrt(var(f) / 4)
     # SNR = sqrt(.6*(p-5))
     # e = rnorm(n, 0, SNR)
-    mu = exp(f)
+    # mu = exp(f)
     y = rpois(n, mu)
     out = list(x = x, f = f, y = y)
   }
@@ -123,8 +124,8 @@ data_generation = function(n, p, rho,
 
     # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 2)
     # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + 9 * (exp(x[, 5]) - 2) + 1 * f6(x[, 2]) + 5 * f4(x[, 4])
-    SNR = sqrt(var(f) / 4)
-    f = f + rnorm(n, 0, SNR)
+    # SNR = sqrt(var(f) / 4)
+    # f = f + rnorm(n, 0, SNR)
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
