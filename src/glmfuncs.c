@@ -48,7 +48,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   int iter = 0;
   double max_diff = 0;
   // outer loop
-  for (iter = 0; iter < 25; ++iter) {
+  for (iter = 0; iter < 40; ++iter) {
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
@@ -188,7 +188,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double max_diff = 1e-10;
   int iter = 0;
 
-  for(iter = 0; iter < 25; iter++) {
+  for(iter = 0; iter < 40; iter++) {
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
       for(int k = 0; k < nc; k++) { // iterate by row

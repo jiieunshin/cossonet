@@ -49,12 +49,12 @@ data_generation = function(n, p, rho,
 
   f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
   V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
-  SNR = sqrt(V_sig / (p-5) / 0.6)
-  # print(V_sig)
+  SNR = sqrt(V_sig / (p-5) / 0.4)
+  print(V_sig)
 
   # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
   # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
-  # SNR = sqrt(V_sig / (p-5) / .6)
+  # SNR = sqrt(V_sig / (p-5) / 4)
 
   # print(SNR)
   x_nois = pnorm(matrix(rnorm(n * (p-5), 0, SNR), n, (p-5)))
