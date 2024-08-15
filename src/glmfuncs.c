@@ -95,7 +95,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       // If not convergence, update cw
       cw_c[j] = cw_new[j];
     }
-
+    Rprintf("max_diff: %g, iter: %d\n", max_diff, iter);
     if (max_diff <= 1e-20 || max_diff > 10) {
       break;
     }
@@ -231,7 +231,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       break;
     }
   } // end outer iteration
-
+  Rprintf("max_diff: %g, iter: %d\n", max_diff, iter);
   if (max_diff > 1e-20 && iter == 0){
     for (int k = 0; k < dc; ++k){
       theta_c[k] = 0;
