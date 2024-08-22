@@ -209,14 +209,14 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      double abs_diff = 0;
+      // double abs_diff = 0;
       max_diff = fabs(theta_c[0] - theta_new[0]);
       for (int k = 1; k < dc; ++k){
-        abs_diff = fabs(theta_c[k] - theta_new[k]);
+        max_diff = fabs(theta_c[k] - theta_new[k]);
 
-        if (abs_diff > max_diff){
-          max_diff = abs_diff;
-        }
+        // if (abs_diff > max_diff){
+        //   max_diff = abs_diff;
+        // }
       }
 
       if (max_diff <= 1e-6) {
@@ -240,7 +240,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // print
   Rprintf("\n iter: %d \n", iter);
   for (int k = 0; k < dc; ++k){
-    Rprintf("theta_new: %g \n", theta_new[k]);
+    Rprintf("theta_new: %g \n", theta_c[k]);
   }
   Rprintf("\n max_diff: %d \n", max_diff);
 
