@@ -48,7 +48,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   int iter = 0;
   double max_diff = 1e-4;
   // outer loop
-  for (iter = 0; iter < 40; ++iter) {
+  for (iter = 0; iter < 80; ++iter) {
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
@@ -78,14 +78,14 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
-      double abs_diff = 0;
+      // double abs_diff = 0;
       max_diff = fabs(cw_c[0] - cw_new[0]);
       for (int k = 1; k < nc; ++k){
-        abs_diff = fabs(cw_c[k] - cw_new[k]);
+        max_diff = fabs(cw_c[k] - cw_new[k]);
 
-        if (abs_diff > max_diff){
-          max_diff = abs_diff;
-        }
+        // if (abs_diff > max_diff){
+        //   max_diff = abs_diff;
+        // }
       }
 
       if (max_diff <= 1e-6 || max_diff > 10) {
@@ -188,7 +188,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double max_diff = 1e-4;
   int iter = 0;
 
-  for(iter = 0; iter < 40; iter++) {
+  for(iter = 0; iter < 80; iter++) {
     for(int j = 0; j < dc; j++) { // iterate by column
       double V1 = 0.0;
       for(int k = 0; k < nc; k++) { // iterate by row
