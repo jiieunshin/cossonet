@@ -7,6 +7,7 @@
 #' @param n The number of observation of a example dataset.
 #' @param p Dimension of a example dataset.
 #' @param rho Correlation for first five significance variables.
+#' @param SNR Signal-to-noise ratio.
 #' @param response Type of response variable.
 #'
 #' @return a list containing the predicted value for the test data (f.new) and the transformed value of that predicted value (mu.new).

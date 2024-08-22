@@ -19,6 +19,8 @@ data_generation(
 
 \item{rho}{Correlation for first five significance variables.}
 
+\item{SNR}{Signal-to-noise ratio.}
+
 \item{response}{Type of response variable.}
 }
 \value{
