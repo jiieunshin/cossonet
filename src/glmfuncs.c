@@ -237,7 +237,10 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
     }
   }
 
-  Rprintf("iter: %d\n, theta_new: %g", iter, theta_new);
+  // print
+  for (int k = 0; k < dc; ++k){
+    Rprintf("iter: %d, theta_new: %g \n", iter, theta_new[k]);
+  }
 
   // result
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, dc));
