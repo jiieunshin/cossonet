@@ -80,7 +80,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   ylab = expression("GCV(" * lambda[0] * ")")
 
   # optimal lambda1
-  id = length(which.min(measure))
+  min_val = min(measure)
+  id = max(which(measure == min_val))
   optlambda = cand.lambda[id]
 
   if(show) plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
@@ -257,7 +258,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
     main = "Poisson Family"
   }
 
-  id = length(which.min(measure))
+  min_val = min(measure)
+  id = max(which(measure == min_val))
   optlambda = lambda_theta[id]
 
   ylab = expression("GCV(" * lambda[theta] * ")")

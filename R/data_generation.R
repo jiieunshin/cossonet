@@ -37,15 +37,15 @@ data_generation = function(n, p, rho, SNR,
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
-  Sigma = matrix(rho, 5, 5)
-  diag(Sigma) = 1
+  # Sigma = matrix(rho, 5, 5)
+  # diag(Sigma) = 1
 
-  # Sigma = matrix(1, 5, 5)
-  # for(j in 1:5){
-  #   for(k in 1:5){
-  #     Sigma[j, k] = rho^abs(j-k)
-  #   }
-  # }
+  Sigma = matrix(1, 5, 5)
+  for(j in 1:5){
+    for(k in 1:5){
+      Sigma[j, k] = rho^abs(j-k)
+    }
+  }
 
   x = pnorm(rmvnorm(n, sigma = Sigma))
 
@@ -60,7 +60,6 @@ data_generation = function(n, p, rho, SNR,
   V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
   sd = sqrt(V_sig * (p-5) / SNR)
 
-  # f = x %*% rep(2, 5)
 
   x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
   x = cbind(x, x_nois)
