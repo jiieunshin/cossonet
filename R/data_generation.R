@@ -11,7 +11,7 @@
 #'
 #' @return a list containing the predicted value for the test data (f.new) and the transformed value of that predicted value (mu.new).
 #' @export
-data_generation = function(n, p, rho,
+data_generation = function(n, p, rho, SNR,
                            response = c("regression", "classification", "count", "survival", "interaction")){
   # f1 = function(t) t - 0.5
   # f2 = function(t) (2 * t - 1)^2 - 0.4
@@ -32,6 +32,7 @@ data_generation = function(n, p, rho,
   if(missing(n)) n = 200
   if(missing(p)) p = 10
   if(missing(rho)) rho = 0.8
+  if(missing(SNR)) SNR = 2
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
@@ -49,15 +50,18 @@ data_generation = function(n, p, rho,
 
   # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
   # V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
+  # sd = sqrt(V_sig * (p-5) / SNR)
+
   # SNR = sqrt(V_sig / (p-5) / 1.2)
   # print(V_sig)
 
   f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
   V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
-  SNR = sqrt(V_sig / (p-5) / 2)
+  sd = sqrt(V_sig * (p-5) / SNR)
 
-  # print(SNR)
-  x_nois = pnorm(matrix(rnorm(n * (p-5), 0, SNR), n, (p-5)))
+  # f = x %*% rep(2, 5)
+
+  x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
   x = cbind(x, x_nois)
 
 

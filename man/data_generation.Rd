@@ -8,6 +8,7 @@ data_generation(
   n,
   p,
   rho,
+  SNR,
   response = c("regression", "classification", "count", "survival", "interaction")
 )
 }
