@@ -238,8 +238,9 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   }
 
   // print
+  Rprintf("\n iter: %d \n", iter);
   for (int k = 0; k < dc; ++k){
-    Rprintf("iter: %d, theta_new: %g \n", iter, theta_new[k]);
+    Rprintf("theta_new: %g \n", theta_new[k]);
   }
 
   // result
