@@ -238,11 +238,11 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   }
 
   // print
-  Rprintf("\n iter: %d \n", iter);
-  for (int k = 0; k < dc; ++k){
-    Rprintf("theta_new: %g \n", theta_c[k]);
-  }
-  Rprintf("\n max_diff: %d \n", max_diff);
+  // Rprintf("\n iter: %d \n", iter);
+  // for (int k = 0; k < dc; ++k){
+  //   Rprintf("theta_new: %g \n", theta_c[k]);
+  // }
+  // Rprintf("\n max_diff: %d \n", max_diff);
 
 
   // result
