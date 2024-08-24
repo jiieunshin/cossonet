@@ -188,7 +188,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         cw = c.init / sqrt(w)
         sw = sqrt(w)[tr_id]
 
-        fit = .Call("glm_c_step", zw, Rw, Rtheta * w, cw, sw, m, cand.lambda[k], PACKAGE = "cdcosso")
+        fit = .Call("glm_c_step", zw, Rw, Rtheta * w, cw, sw, m, n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
         c.new = fit$c.new
         cw.new = fit$cw.new
@@ -278,7 +278,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     cw = c.init / sqrt(w)
     sw = sqrt(w)
 
-    fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
+    fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
     f.new = c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
