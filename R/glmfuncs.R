@@ -131,6 +131,9 @@
 #   return(out)
 # }
 
+# cand.lambda = lambda0
+# mscale = wt
+# obj = gaussian()
 cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 {
   cat("-- c-step -- \n")
@@ -182,7 +185,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     for (k in 1:len){
 
       if(algo == "CD"){
-        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = 'gaussian', lambda = 1e-4)$beta)
+        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = 'gaussian', lambda = cand.lambda[k])$beta)
         zw = z[tr_id] * sqrt(w[tr_id])
         Rw = tr_Rtheta * w[tr_id]
         cw = c.init / sqrt(w)
