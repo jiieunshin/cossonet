@@ -30,7 +30,9 @@
 # wt = rep(1, ncol(x))
 # kparam = 1
 # nfolds =5
-# algo = "QP"
+# algo = "CD"
+# lambda0 = exp(seq(log(2^{-6}), log(2^{6}), length.out = 20))
+# lambda_theta = exp(seq(log(2^{-6}), log(2^{6}), length.out = 20))
 cdcosso = function (x,
                     y,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
