@@ -242,22 +242,23 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   ylab = expression("GCV(" * lambda[0] * ")")
 
   # optimal lambda1
-  measure_mean = colMeans(measure)
-  measure_se = sd(measure) / sqrt(5)
+  measure_mean = colMeans(measure, na.rm = T)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
   min_id = which.min(measure_mean)
-  std_id = which.max(measure_mean <= (measure_mean[min_id] + measure_se[min_id]))
+  cand_id = which.max((measure_mean[min_id] + measure_se[min_id]) <= measure_mean)
+  std_id = ifelse(cand_id < min_id, min_id, cand_id)
   optlambda = cand.lambda[std_id]
 
   if(show){
-    plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
-    arrows(x0 = 1:length(measure_mean), y0 = measure_mean - measure_se,
-           x1 = 1:length(measure_mean), y1 = measure_mean + measure_se,
+    plot(log(cand.lambda), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+         ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
+    arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
+           x1 = log(cand.lambda), y1 = measure_mean + measure_se,
            angle = 90, code = 3, length = 0.1, col = "darkgray")
   }
 
   rm(tr_R)
   rm(te_R)
-
 
   R = array(NA, c(n, n, d))
   for(j in 1:d){
@@ -267,20 +268,27 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   Rtheta <- combine_kernel(R, mscale)
 
 
-
   if(algo == "CD"){
-    mu = obj$linkinv(f.init)
+    f.init = rep(0.5, n)
+    ff = f.init
+    mu = obj$linkinv(ff)
     w = obj$variance(mu)
-    z = f.init + (y - mu) / w
+    z = ff + (y - mu) / w
 
     c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
+
+    cw = c.init / sqrt(w)
+
     zw = z * sqrt(w)
     Rw = Rtheta * w
-    cw = c.init / sqrt(w)
     sw = sqrt(w)
 
     fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
-    f.new = c(fit$b.new + Rtheta %*% fit$c.new)
+    b.new = fit$b.new
+    cw.new = fit$cw.new
+    c.new = fit$cw.new * sqrt(w)
+
+    f.new = c(b.new + Rtheta %*% c.new)
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
     z.new = f.new + (y - mu.new) / w.new
