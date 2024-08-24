@@ -161,8 +161,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   for(f in 1:5){
     if(obj$family != "binomial"){
       fold = cvsplitID(n, 5)
-      tr_id = fold[, f]
-      te_id = as.vector(fold[, -f])
+      tr_id = as.vector(fold[, -f])
+      te_id = fold[, f]
       m = length(tr_id)
     } else{
 
@@ -415,8 +415,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   for(f in 1:5){
     if(obj$family != "binomial"){
       fold = cvsplitID(n, 5)
-      tr_id = fold[, f]
-      te_id = as.vector(fold[, -f])
+      tr_id = as.vector(fold[, -f])
+      te_id = fold[, f]
       m = length(tr_id)
     } else{
     }
