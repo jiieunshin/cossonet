@@ -29,12 +29,12 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   // Define variables
   double b_c = 0;
   double *cw_new = (double *)malloc(nc * sizeof(double));
-  double *c_new = (double *)malloc(nc * sizeof(double));
+  // double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
 
   for(int k = 0; k < nc; k++) {
     cw_new[k] = 0;
-    c_new[k] = 0;
+    // c_new[k] = 0;
     pow_Rc[k] = 0;
   }
 
@@ -48,8 +48,8 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   int iter = 0;
-  double new_diff = .1;
-  double diff = 1;
+  double min_diff = .1;
+  double diff;
 
   // outer loop
   for (iter = 0; iter < 25; ++iter) {
@@ -82,19 +82,19 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
-      for (int k = 0; k < nc; ++k){
-        diff = fabs(cw_c[k] - cw_new[k]);
+      // for (int k = 0; k < nc; ++k){
+        diff = fabs(cw_c[j] - cw_new[j]);
 
-        if (new_diff > diff){
-          new_diff = diff;
+        if (min_diff > diff){
+          min_diff = diff;
         }
 
-        if (new_diff <= 1e-6 || new_diff > 10) {
-          break;
-        }
-      }
+        // if (min_diff <= 1e-8 || min_diff > 10) {
+        //   break;
+        // }
+      // }
 
-      if (new_diff <= 1e-6 || new_diff > 10) {
+      if (min_diff <= 1e-8 || min_diff > 10) {
         break;
       }
 
@@ -102,20 +102,20 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_c[j] = cw_new[j];
     }
 
-    if (new_diff <= 1e-6 || new_diff > 10) {
+    if (min_diff <= 1e-8 || min_diff > 10) {
       break;
     }
 
   } // end outer iteration
 
-  if (new_diff > 1e-6 && iter == 0){
+  if (min_diff > 1e-8 && iter == 0){
     memcpy(cw_new, cw_c, nc * sizeof(double));
   }
 
   // Calculate c_new
-  for (int i = 0; i < nc; ++i) {
-    c_new[i] = cw_new[i] * sqrt(sw_c[i]);
-  }
+  // for (int i = 0; i < nc; ++i) {
+  //   c_new[i] = cw_new[i] * sqrt(sw_c[i]);
+  // }
 
   // result
   double sum3 = 0.0, sum4 = 0.0;
@@ -140,21 +140,21 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   // Copy values to result SEXP
   for (int i = 0; i < nc; ++i) {
     REAL(VECTOR_ELT(result, 0))[i] = cw_new[i];
-    REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
+    // REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
   }
 
   // Set names for the list elements
   SEXP name_ssp = PROTECT(allocVector(STRSXP, 5));
   SET_STRING_ELT(name_ssp, 0, mkChar("cw.new"));
   SET_STRING_ELT(name_ssp, 1, mkChar("b.new"));
-  SET_STRING_ELT(name_ssp, 2, mkChar("c.new"));
+  // SET_STRING_ELT(name_ssp, 2, mkChar("c.new"));
   SET_STRING_ELT(name_ssp, 3, mkChar("zw.new"));
   SET_STRING_ELT(name_ssp, 4, mkChar("sw.new"));
   setAttrib(result, R_NamesSymbol, name_ssp);
 
   // Free dynamically allocated memory
   free(cw_new);
-  free(c_new);
+  // free(c_new);
 
   UNPROTECT(2); // Unprotect result
   return result;

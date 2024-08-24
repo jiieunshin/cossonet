@@ -193,8 +193,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
         fit = .Call("glm_c_step", zw, Rw, Rtheta * w, cw, sw, m, n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
-        c.new = fit$c.new
         cw.new = fit$cw.new
+        c.new = fit$cw.new * sqrt(w)
       }
 
       # if(algo == "QP"){
