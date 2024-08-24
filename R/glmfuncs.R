@@ -182,14 +182,17 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
     te_Rtheta <- combine_kernel(te_R, mscale)
 
+    #
+    zw = z[tr_id] * sqrt(w[tr_id])
+    Rw = tr_Rtheta * w[tr_id]
+    sw = sqrt(w)[tr_id]
+
     for (k in 1:len){
 
       if(algo == "CD"){
         c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = 'gaussian', lambda = cand.lambda[k])$beta)
-        zw = z[tr_id] * sqrt(w[tr_id])
-        Rw = tr_Rtheta * w[tr_id]
+
         cw = c.init / sqrt(w)
-        sw = sqrt(w)[tr_id]
 
         fit = .Call("glm_c_step", zw, Rw, Rtheta * w, cw, sw, m, n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
@@ -211,7 +214,6 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         # validation
         testfhat = c(b.new + te_Rtheta %*% c.new)
         testmu = obj$linkinv(testfhat)
-        testw = obj$variance(testmu)
 
         # XX = fit$zw.new - te_Rw %*% fit$cw.new - fit$b.new * sqrt(w)
         # num = t(XX) %*% XX + 1

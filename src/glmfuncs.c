@@ -16,7 +16,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   int mc = INTEGER(m)[0];
   int nc = INTEGER(n)[0];
 
-  SEXP result = PROTECT(allocVector(VECSXP, 5)); // Extra space for b_new
+  SEXP result = PROTECT(allocVector(VECSXP, 4)); // Extra space for b_new
 
   // Convert R vectors to C arrays
   double *zw_c = REAL(zw);
@@ -156,7 +156,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   free(cw_new);
   // free(c_new);
 
-  UNPROTECT(2); // Unprotect result
+  UNPROTECT(1); // Unprotect result
   return result;
 }
 
