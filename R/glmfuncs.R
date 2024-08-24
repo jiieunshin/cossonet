@@ -260,14 +260,6 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   rm(tr_R)
   rm(te_R)
 
-  R = array(NA, c(n, n, d))
-  for(j in 1:d){
-    R[, , j] = K$K[[j]]
-  }
-
-  Rtheta <- combine_kernel(R, mscale)
-
-
   if(algo == "CD"){
     f.init = rep(0.5, n)
     ff = f.init
@@ -313,8 +305,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     z.new = f.new + (y - mu.new) / w.new
 
     out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
-               z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+               z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
+               cw.new = cw.new, c.new = c.new, optlambda = optlambda, conv = TRUE)
     }
 
   rm(K)
