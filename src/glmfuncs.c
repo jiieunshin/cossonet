@@ -12,7 +12,8 @@ void R_init_markovchain(DllInfo *dll) {
 
 
 // Define the sspline_cd fulention
-SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
+SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SEXP lambda0) {
+  int mc = INTEGER(m)[0];
   int nc = INTEGER(n)[0];
 
   SEXP result = PROTECT(allocVector(VECSXP, 5)); // Extra space for b_new
@@ -40,7 +41,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP n, SEXP lambd
   // calculate square term
   for(int j = 0; j < nc; j++) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < nc; k++) { // iterate by row
+    for(int k = 0; k < mc; k++) { // iterate by row
       add += Rw_c[j * nc + k] * Rw_c[j * nc + k];
     }
     pow_Rc[j] = 2 * add;
@@ -57,7 +58,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP n, SEXP lambd
     for (int j = 0; j < nc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for (int k = 0; k < nc; ++k) { // iterate by row
+      for (int k = 0; k < mc; ++k) { // iterate by row
         double Rc1 = 0.0;
         for (int l = 0; l < nc; ++l) {
           if (l != j) {
