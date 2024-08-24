@@ -215,13 +215,14 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         testfhat = c(b.new + te_Rtheta %*% c.new)
         testmu = obj$linkinv(testfhat)
 
-        # XX = fit$zw.new - te_Rw %*% fit$cw.new - fit$b.new * sqrt(w)
-        # num = t(XX) %*% XX + 1
-        # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
-        # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
-        # den = (1 - sum(diag(S)) / n)^2 + 1
-        if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
-        if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
+        XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w[tr_id])
+        num = t(XX) %*% XX + 1
+        den = (1 - sum(diag(Rw %*% ginv(Rw + diag(w[tr_id])/cand.lambda[k]))) / n)^2
+        S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
+        den = (1 - sum(diag(S)) / n)^2 + 1
+        measure[f, k] <- num / den
+        # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
+        # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
         # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
 
       }

@@ -16,7 +16,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   int mc = INTEGER(m)[0];
   int nc = INTEGER(n)[0];
 
-  SEXP result = PROTECT(allocVector(VECSXP, 4)); // Extra space for b_new
+  SEXP result = PROTECT(allocVector(VECSXP, 2)); // Extra space for b_new
 
   // Convert R vectors to C arrays
   double *zw_c = REAL(zw);
@@ -27,10 +27,13 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double lambda0_c = REAL(lambda0)[0];
 
   // Define variables
-  double b_c = 0;
   double *cw_new = (double *)malloc(nc * sizeof(double));
   // double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
+
+  if (cw_new == NULL || pow_Rc == NULL) {
+    error("Memory allocation failed");
+  }
 
   for(int k = 0; k < nc; k++) {
     cw_new[k] = 0;
@@ -48,7 +51,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   int iter = 0;
-  double min_diff = .1;
+  double min_diff = 1e-8;
   double diff;
 
   // outer loop
@@ -65,7 +68,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
             Rc1 += Rw_c[l * nc + k] * cw_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc1 - b_c * sw_c[k]) * Rw_c[j * nc + k];
+        V1 += (zw_c[k] - Rc1) * Rw_c[j * nc + k];
       }
       V1 = 2 * V1;
 
@@ -77,7 +80,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       }
       V2 = nc * lambda0_c * V2;
 
-      double V4 = nc * lambda0_c * Rw2_c[j * nc + j];
+      double V4 = mc * lambda0_c * Rw2_c[j * nc + j];
 
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
@@ -89,20 +92,17 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
           min_diff = diff;
         }
 
-        // if (min_diff <= 1e-8 || min_diff > 10) {
-        //   break;
-        // }
       // }
 
-      if (min_diff <= 1e-8 || min_diff > 10) {
-        break;
-      }
+      // if (min_diff <= 1e-8 || min_diff > 10) {
+      //   break;
+      // }
 
       // If not convergence, update cw
       cw_c[j] = cw_new[j];
     }
 
-    if (min_diff <= 1e-8 || min_diff > 10) {
+    if (min_diff <= 1e-8) {
       break;
     }
 
@@ -134,8 +134,8 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   SET_VECTOR_ELT(result, 0, allocVector(REALSXP, nc));
   SET_VECTOR_ELT(result, 1, ScalarReal(b_new));
   // SET_VECTOR_ELT(result, 2, allocVector(REALSXP, nc));
-  SET_VECTOR_ELT(result, 2, zw);
-  SET_VECTOR_ELT(result, 3, sw);
+  // SET_VECTOR_ELT(result, 2, zw);
+  // SET_VECTOR_ELT(result, 3, sw);
 
   // Copy values to result SEXP
   for (int i = 0; i < nc; ++i) {
@@ -144,19 +144,20 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   // Set names for the list elements
-  SEXP name_ssp = PROTECT(allocVector(STRSXP, 4));
+  SEXP name_ssp = PROTECT(allocVector(STRSXP, 2));
   SET_STRING_ELT(name_ssp, 0, mkChar("cw.new"));
   SET_STRING_ELT(name_ssp, 1, mkChar("b.new"));
   // SET_STRING_ELT(name_ssp, 2, mkChar("c.new"));
-  SET_STRING_ELT(name_ssp, 2, mkChar("zw.new"));
-  SET_STRING_ELT(name_ssp, 3, mkChar("sw.new"));
+  // SET_STRING_ELT(name_ssp, 2, mkChar("zw.new"));
+  // SET_STRING_ELT(name_ssp, 3, mkChar("sw.new"));
   setAttrib(result, R_NamesSymbol, name_ssp);
 
   // Free dynamically allocated memory
   free(cw_new);
+  free(pow_Rc);
   // free(c_new);
 
-  UNPROTECT(1); // Unprotect result
+  UNPROTECT(2); // Unprotect result
   return result;
 }
 
