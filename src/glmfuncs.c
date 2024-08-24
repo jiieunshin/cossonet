@@ -12,7 +12,7 @@ void R_init_markovchain(DllInfo *dll) {
 
 
 // Define the sspline_cd fulention
-SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
+SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   int nc = INTEGER(n)[0];
 
   SEXP result = PROTECT(allocVector(VECSXP, 5)); // Extra space for b_new
@@ -20,6 +20,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
   // Convert R vectors to C arrays
   double *zw_c = REAL(zw);
   double *Rw_c = REAL(Rw);
+  double *Rw2_c = REAL(Rw2);
   double *cw_c = REAL(cw);
   double *sw_c = REAL(sw);
   double lambda0_c = REAL(lambda0)[0];
@@ -73,7 +74,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP cw, SEXP sw, SEXP n, SEXP lambda0) {
       }
       V2 = nc * lambda0_c * V2;
 
-      double V4 = nc * lambda0_c * Rw_c[j * nc + j];
+      double V4 = nc * lambda0_c * Rw2_c[j * nc + j];
 
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 

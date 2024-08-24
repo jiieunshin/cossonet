@@ -1,3 +1,136 @@
+# cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
+# {
+#   cat("-- c-step -- \n")
+#   cat("proceeding... \n")
+#   d = K$numK
+#   n <- length(y)
+#   len = length(cand.lambda)
+#
+#   R = array(NA, c(n, n, d))
+#   for(j in 1:d){
+#     R[, , j] = K$K[[j]]
+#   }
+#
+#   Rtheta <- combine_kernel(R, mscale)
+#   f.init = rep(0.5, n)
+#
+#   measure <- rep(NA, len)
+#   for (k in 1:len) {
+#
+#     if(algo == "CD"){
+#
+#       # initialize
+#       ff = f.init
+#       mu = obj$linkinv(ff)
+#       w = obj$variance(mu)
+#       z = ff + (y - mu) / w
+#
+#       c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = cand.lambda[k])$beta)
+#       zw = z * sqrt(w)
+#       Rw = Rtheta * w
+#       cw = c.init / sqrt(w)
+#       sw = sqrt(w)
+#
+#       fit = .Call("glm_c_step", zw, Rw, cw, sw, n, cand.lambda[k], PACKAGE = "cdcosso")
+#       b.new = fit$b.new
+#       c.new = fit$c.new
+#       cw.new = fit$cw.new
+#     }
+#
+#     if(algo == "QP"){
+#       c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = cand.lambda[k])$beta)
+#       fit = sspline.QP(Rtheta, y, f.init, cand.lambda[k], obj, c.init)
+#       b.new = fit$b.new
+#       c.new = fit$c.new
+#       cw.new = fit$cw.new
+#     }
+#     if(sum(is.nan(cw.new)) == n){
+#       next
+#     } else{
+#       ff = f.init
+#       mu = obj$linkinv(ff)
+#       w = obj$variance(mu)
+#       Rw = Rtheta * w
+#
+#       # validation
+#       testfhat = c(b.new + Rtheta %*% c.new)
+#       testmu = obj$linkinv(testfhat)
+#       testw = obj$variance(testmu)
+#
+#       XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
+#       num = t(XX) %*% XX + 1
+#       # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
+#       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
+#       den = (1 - sum(diag(S)) / n)^2 + 1
+#       measure[k] <- as.vector( num / den / n)
+#     }
+#   }
+#
+#   # plotting error bar
+#   if(obj$family == 'gaussian'){
+#     main = "Gaussian Family"
+#   }
+#   if(obj$family == 'binomial'){
+#     main = "Binomial Family"
+#   }
+#   if(obj$family == 'poisson'){
+#     main = "Poisson Family"
+#   }
+#
+#   ylab = expression("GCV(" * lambda[0] * ")")
+#
+#   # optimal lambda1
+#   id = which.min(measure)
+#   optlambda = cand.lambda[id]
+#
+#   if(show) plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+#
+#   if(algo == "CD"){
+#     mu = obj$linkinv(f.init)
+#     w = obj$variance(mu)
+#     z = f.init + (y - mu) / w
+#
+#     c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
+#     zw = z * sqrt(w)
+#     Rw = Rtheta * w
+#     cw = c.init / sqrt(w)
+#     sw = sqrt(w)
+#
+#     fit = .Call("glm_c_step", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
+#     f.new = c(fit$b.new + Rtheta %*% fit$c.new)
+#     mu.new = obj$linkinv(f.new)
+#     w.new = obj$variance(mu.new)
+#     z.new = f.new + (y - mu.new) / w.new
+#
+#     if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+#     if(obj$family == "gaussian") miss <- mean((y - f.new)^2)
+#     if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
+#
+#     cat("training error:", miss, "\n")
+#
+#     out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
+#                z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
+#                cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+#   }
+#
+#   if(algo == "QP"){
+#     c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
+#     fit = sspline.QP(Rtheta, y, f.init, optlambda, obj, c.init)
+#     f.new = c(fit$b.new + Rtheta %*% fit$c.new)
+#     mu.new = obj$linkinv(f.new)
+#     w.new = obj$variance(mu.new)
+#     z.new = f.new + (y - mu.new) / w.new
+#
+#     out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
+#                z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
+#                cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)  }
+#
+#   rm(K)
+#   rm(Rtheta)
+#
+#   return(out)
+# }
+
 cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 {
   cat("-- c-step -- \n")
@@ -12,57 +145,85 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   }
 
   Rtheta <- combine_kernel(R, mscale)
+
+  # initialize
   f.init = rep(0.5, n)
+  ff = f.init
+  mu = obj$linkinv(ff)
+  w = obj$variance(mu)
+  z = ff + (y - mu) / w
 
-  measure <- rep(NA, len)
-  for (k in 1:len) {
-
-    if(algo == "CD"){
-
-      # initialize
-      ff = f.init
-      mu = obj$linkinv(ff)
-      w = obj$variance(mu)
-      z = ff + (y - mu) / w
-
-      c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = cand.lambda[k])$beta)
-      zw = z * sqrt(w)
-      Rw = Rtheta * w
-      cw = c.init / sqrt(w)
-      sw = sqrt(w)
-
-      fit = .Call("glm_c_step", zw, Rw, cw, sw, n, cand.lambda[k], PACKAGE = "cdcosso")
-      b.new = fit$b.new
-      c.new = fit$c.new
-      cw.new = fit$cw.new
-    }
-
-    if(algo == "QP"){
-      c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = cand.lambda[k])$beta)
-      fit = sspline.QP(Rtheta, y, f.init, cand.lambda[k], obj, c.init)
-      b.new = fit$b.new
-      c.new = fit$c.new
-      cw.new = fit$cw.new
-    }
-    if(sum(is.nan(cw.new)) == n){
-      next
+  #
+  measure <- matrix(NA, 5, len)
+  for(f in 1:5){
+    if(obj$family != "binomial"){
+      fold = cvsplitID(n, 5)
+      tr_id = fold[, f]
+      te_id = as.vector(fold[, -f])
+      m = length(tr_id)
     } else{
-      ff = f.init
-      mu = obj$linkinv(ff)
-      w = obj$variance(mu)
-      Rw = Rtheta * w
 
-      # validation
-      testfhat = c(b.new + Rtheta %*% c.new)
-      testmu = obj$linkinv(testfhat)
-      testw = obj$variance(testmu)
+    }
 
-      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
-      num = t(XX) %*% XX + 1
-      # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
-      S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
-      den = (1 - sum(diag(S)) / n)^2 + 1
-      measure[k] <- as.vector( num / den / n)
+    tr_R = array(NA, c(m, n, d))
+    for(j in 1:d){
+      tr_R[, , j] = K$K[[j]][tr_id, ]
+    }
+
+    tr_Rtheta <- combine_kernel(tr_R, mscale)
+
+    te_R = array(NA, c(n-m, n, d))
+    for(j in 1:d){
+      te_R[, , j] = K$K[[j]][te_id, ]
+    }
+
+    te_Rtheta <- combine_kernel(te_R, mscale)
+
+    for (k in 1:len){
+
+      if(algo == "CD"){
+        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = 'gaussian', lambda = cand.lambda[k])$beta)
+        zw = z[tr_id] * sqrt(w[tr_id])
+        Rw = tr_Rtheta * w[tr_id]
+        cw = c.init / sqrt(w)
+        sw = sqrt(w)
+
+        fit = .Call("glm_c_step", zw, Rw, Rtheta * w, cw, sw, n, cand.lambda[k], PACKAGE = "cdcosso")
+        b.new = fit$b.new
+        c.new = fit$c.new
+        cw.new = fit$cw.new
+      }
+
+      # if(algo == "QP"){
+      #   c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = cand.lambda[k])$beta)
+      #   fit = sspline.QP(Rtheta, y, f.init, cand.lambda[k], obj, c.init)
+      #   b.new = fit$b.new
+      #   c.new = fit$c.new
+      #   cw.new = fit$cw.new
+      # }
+      if(sum(is.nan(cw.new)) == n){
+        next
+      } else{
+        te_f = f.init[te_id]
+        te_mu = obj$linkinv(te_f)
+        te_w = obj$variance(te_mu)[te_id]
+        te_Rw = te_Rtheta * te_w
+
+        # validation
+        testfhat = c(b.new + te_Rtheta %*% c.new)
+        testmu = obj$linkinv(testfhat)
+        testw = obj$variance(testmu)
+
+        # XX = fit$zw.new - te_Rw %*% fit$cw.new - fit$b.new * sqrt(w)
+        # num = t(XX) %*% XX + 1
+        # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
+        # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
+        # den = (1 - sum(diag(S)) / n)^2 + 1
+        if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
+        if(obj$family == "binomial") measure[f, k] <- miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+        # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
+
+      }
     }
   }
 
@@ -80,11 +241,31 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   ylab = expression("GCV(" * lambda[0] * ")")
 
   # optimal lambda1
-  min_val = min(measure)
-  id = max(which(measure == min_val))
-  optlambda = cand.lambda[id]
+  measure_mean = colMeans(measure)
+  measure_se = sd(measure) / sqrt(5)
+  min_id = which.min(measure_mean)
+  std_id = which.max(measure_mean <= (measure_mean[min_id] + measure_se[min_id]))
+  optlambda = cand.lambda[std_id]
 
-  if(show) plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  if(show){
+    plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+    arrows(x0 = 1:length(measure_mean), y0 = measure_mean - measure_se,
+           x1 = 1:length(measure_mean), y1 = measure_mean + measure_se,
+           angle = 90, code = 3, length = 0.1, col = "darkgray")
+  }
+
+  rm(tr_R)
+  rm(te_R)
+
+
+  R = array(NA, c(n, n, d))
+  for(j in 1:d){
+    R[, , j] = K$K[[j]]
+  }
+
+  Rtheta <- combine_kernel(R, mscale)
+
+
 
   if(algo == "CD"){
     mu = obj$linkinv(f.init)
@@ -97,7 +278,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     cw = c.init / sqrt(w)
     sw = sqrt(w)
 
-    fit = .Call("glm_c_step", zw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
+    fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, optlambda, PACKAGE = "cdcosso")
     f.new = c(fit$b.new + Rtheta %*% fit$c.new)
     mu.new = obj$linkinv(f.new)
     w.new = obj$variance(mu.new)
@@ -124,13 +305,15 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
     out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
                z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)  }
+               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+    }
 
   rm(K)
   rm(Rtheta)
 
   return(out)
 }
+
 
 sspline.cd = function (R, y, f, lambda0, obj, c.init)
 {
@@ -226,27 +409,41 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
-  measure <- rep(NA, len)
+  measure <- matrix(NA, 5, len)
   save_theta <- list()
-  for (k in 1:len) {
-    if(algo == "CD") {
-      theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
-      save_theta[[k]] <- theta.new
+  for(f in 1:5){
+    if(obj$family != "binomial"){
+      fold = cvsplitID(n, 5)
+      tr_id = fold[, f]
+      te_id = as.vector(fold[, -f])
+      m = length(tr_id)
+    } else{
     }
 
-    if(algo == "QP") {
-      theta.new = nng.QP(Gw, uw, theta = init.theta, lambda_theta[k], gamma)
-      save_theta[[k]] <- theta.new
+    for (k in 1:len) {
+      if(algo == "CD") {
+        theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], n, d, init.theta, lambda_theta[k], gamma)
+        theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
+        save_theta[[k]] <- theta.adj
+      }
+
+      # if(algo == "QP") {
+      #   theta.new = nng.QP(Gw, uw, theta = init.theta, lambda_theta[k], gamma)
+      #   save_theta[[k]] <- theta.new
+      # }
+
+      # XX = model$zw.new - Gw %*% theta.adj
+      # num = t(XX) %*% XX + 1
+      # den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
+      # measure[k] <- as.vector(num / den /n)
+
+      testfhat = G[te_id, ] %*% theta.adj
+      testmu = obj$linkinv(testfhat)
+      if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
+      if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
+      # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
     }
-
-    theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
-
-    XX = model$zw.new - Gw %*% theta.adj
-    num = t(XX) %*% XX + 1
-    den = (1 - sum(diag( Gw %*% ginv( t(Gw) %*% Gw) %*% t(Gw) )) / n)^2 + 1
-    measure[k] <- as.vector(num / den /n)
   }
-
   # plotting error bar
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"
@@ -258,14 +455,25 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
     main = "Poisson Family"
   }
 
-  min_val = min(measure)
-  id = max(which(measure == min_val))
-  optlambda = lambda_theta[id]
+  # min_val = min(measure)
+  # id = max(which(measure == min_val))
+  # optlambda = lambda_theta[id]
+
+  measure_mean = colMeans(measure)
+  measure_se = sd(measure) / sqrt(5)
+  min_id = which.min(measure_mean)
+  std_id = which.max(measure_mean <= (measure_mean[min_id] + measure_se[min_id]))
+  optlambda = lambda_theta[std_id]
 
   ylab = expression("GCV(" * lambda[theta] * ")")
 
   xrange = log(lambda_theta)
-  plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  # plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+
+  plot(log(lambda_theta), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
+  arrows(x0 = 1:length(measure_mean), y0 = measure_mean - measure_se,
+         x1 = 1:length(measure_mean), y1 = measure_mean + measure_se,
+         angle = 90, code = 3, length = 0.1, col = "darkgray")
 
   if(algo == "CD"){
     theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
