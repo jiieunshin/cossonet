@@ -472,7 +472,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   xrange = log(lambda_theta)
   # plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
-  plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+  plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
        ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
   arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
