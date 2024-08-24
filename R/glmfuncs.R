@@ -221,7 +221,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
         # den = (1 - sum(diag(S)) / n)^2 + 1
         if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
-        if(obj$family == "binomial") measure[f, k] <- miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
+        if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
         # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
 
       }
@@ -292,8 +292,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     cat("training error:", miss, "\n")
 
     out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
-               z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+               z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
+               cw.new = cw.new, c.new = c.new, optlambda = optlambda, conv = TRUE)
   }
 
   if(algo == "QP"){
@@ -460,10 +460,11 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   # id = max(which(measure == min_val))
   # optlambda = lambda_theta[id]
 
-  measure_mean = colMeans(measure)
-  measure_se = sd(measure) / sqrt(5)
+  measure_mean = colMeans(measure, na.rm = T)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
   min_id = which.min(measure_mean)
-  std_id = which.max(measure_mean <= (measure_mean[min_id] + measure_se[min_id]))
+  cand_id = which.max((measure_mean[min_id] + measure_se[min_id]) <= measure_mean)
+  std_id = ifelse(cand_id < min_id, min_id, cand_id)
   optlambda = lambda_theta[std_id]
 
   ylab = expression("GCV(" * lambda[theta] * ")")
@@ -471,9 +472,10 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   xrange = log(lambda_theta)
   # plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
-  plot(log(lambda_theta), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
-  arrows(x0 = 1:length(measure_mean), y0 = measure_mean - measure_se,
-         x1 = 1:length(measure_mean), y1 = measure_mean + measure_se,
+  plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+       ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
+  arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
+         x1 = log(lambda_theta), y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
 
   if(algo == "CD"){
