@@ -207,10 +207,6 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       if(sum(is.nan(cw.new)) == n){
         next
       } else{
-        te_f = f.init[te_id]
-        te_mu = obj$linkinv(te_f)
-        te_w = obj$variance(te_mu)[te_id]
-        te_Rw = te_Rtheta * te_w
 
         # validation
         testfhat = c(b.new + te_Rtheta %*% c.new)
@@ -223,7 +219,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
         # den = (1 - sum(diag(S)) / n)^2 + 1
         if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
-        if(obj$family == "binomial") measure[f, k] <- miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+        if(obj$family == "binomial") measure[f, k] <- miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
         # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
 
       }

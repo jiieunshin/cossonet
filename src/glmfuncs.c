@@ -133,9 +133,9 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   // Set values in result SEXP
   SET_VECTOR_ELT(result, 0, allocVector(REALSXP, nc));
   SET_VECTOR_ELT(result, 1, ScalarReal(b_new));
-  SET_VECTOR_ELT(result, 2, allocVector(REALSXP, nc));
-  SET_VECTOR_ELT(result, 3, zw);
-  SET_VECTOR_ELT(result, 4, sw);
+  // SET_VECTOR_ELT(result, 2, allocVector(REALSXP, nc));
+  SET_VECTOR_ELT(result, 2, zw);
+  SET_VECTOR_ELT(result, 3, sw);
 
   // Copy values to result SEXP
   for (int i = 0; i < nc; ++i) {
@@ -144,12 +144,12 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   // Set names for the list elements
-  SEXP name_ssp = PROTECT(allocVector(STRSXP, 5));
+  SEXP name_ssp = PROTECT(allocVector(STRSXP, 4));
   SET_STRING_ELT(name_ssp, 0, mkChar("cw.new"));
   SET_STRING_ELT(name_ssp, 1, mkChar("b.new"));
   // SET_STRING_ELT(name_ssp, 2, mkChar("c.new"));
-  SET_STRING_ELT(name_ssp, 3, mkChar("zw.new"));
-  SET_STRING_ELT(name_ssp, 4, mkChar("sw.new"));
+  SET_STRING_ELT(name_ssp, 2, mkChar("zw.new"));
+  SET_STRING_ELT(name_ssp, 3, mkChar("sw.new"));
   setAttrib(result, R_NamesSymbol, name_ssp);
 
   // Free dynamically allocated memory
