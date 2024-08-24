@@ -186,7 +186,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     zw = z[tr_id] * sqrt(w[tr_id])
     Rw = tr_Rtheta * w[tr_id]
     sw = sqrt(w)[tr_id]
-
+    Rw2 = Rtheta * w
     for (k in 1:len){
 
       if(algo == "CD"){
@@ -194,7 +194,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
         cw = c.init / sqrt(w)
 
-        fit = .Call("glm_c_step", zw, Rw, Rtheta * w, cw, sw, m, n, cand.lambda[k], PACKAGE = "cdcosso")
+        fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, m, n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
         cw.new = fit$cw.new
         c.new = fit$cw.new * sqrt(w)
