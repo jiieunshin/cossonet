@@ -191,8 +191,8 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   }
 
   // outer iteration
-  double new_diff = .1;
-  double diff = 1;
+  double min_diff = .1;
+  double diff;
   int iter = 0;
 
   for(iter = 0; iter < 25; iter++) {
@@ -216,19 +216,18 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      for (int k = 0; k < nc; ++k){
-        diff = fabs(theta_c[k] - theta_new[k]);
+      diff = fabs(theta_c[j] - theta_new[j]);
 
-        if (new_diff > diff){
-          new_diff = diff;
-        }
-
-        if (new_diff <= 1e-6 || new_diff > 5) {
-          break;
-        }
+      if (min_diff > diff){
+        min_diff = diff;
       }
 
-      if (new_diff <= 1e-6 || new_diff > 5) {
+      // if (min_diff <= 1e-8 || min_diff > 10) {
+      //   break;
+      // }
+      // }
+
+      if (min_diff <= 1e-8 || min_diff > 10) {
         break;
       }
 
@@ -236,11 +235,11 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       theta_c[j] = theta_new[j];
     }
 
-    if (new_diff <= 1e-6) {
+    if (min_diff <= 1e-8) {
       break;
     }
   } // end outer iteration
-  if (new_diff > 1e-6 && iter == 0){
+  if (min_diff > 1e-8 && iter == 0){
     for (int k = 0; k < dc; ++k){
       theta_c[k] = 0;
     }
