@@ -248,11 +248,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   measure_mean = colMeans(measure, na.rm = T)
   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n-m)
   min_id = which.min(measure_mean)
-  cand_ids = which((measure_mean >= measure_mean[min_id]) &
-                     (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
-  cand_ids = cand_ids[cand_ids >= min_id]
-  std_id = max(cand_ids)
-  optlambda = cand.lambda[std_id]
+  optlambda = cand.lambda[min_id]
 
   if(show){
     plot(log(cand.lambda), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
