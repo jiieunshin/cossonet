@@ -27,16 +27,16 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double lambda0_c = REAL(lambda0)[0];
 
   // Define variables
-  double *cw_new = (double *)malloc(nc * sizeof(double));
+  // double *cw_new = (double *)malloc(nc * sizeof(double));
   // double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
-
-  if (cw_new == NULL || pow_Rc == NULL) {
-    error("Memory allocation failed");
-  }
+  double cw_new;
+  // if (cw_new == NULL || pow_Rc == NULL) {
+  //   error("Memory allocation failed");
+  // }
 
   for(int k = 0; k < nc; k++) {
-    cw_new[k] = 0;
+    // cw_new[k] = 0;
     // c_new[k] = 0;
     pow_Rc[k] = 0;
   }
@@ -82,11 +82,11 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       double V4 = mc * lambda0_c * Rw2_c[j * nc + j];
 
-      cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
+      cw_new = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
       // for (int k = 0; k < nc; ++k){
-        diff = fabs(cw_c[j] - cw_new[j]);
+        diff = fabs(cw_c[j] - cw_new);
 
         if (min_diff > diff){
           min_diff = diff;
@@ -99,7 +99,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       }
 
       // If not convergence, update cw
-      cw_c[j] = cw_new[j];
+      cw_c[j] = cw_new;
     }
 
     if (min_diff <= 1e-8 || min_diff > 5) {
@@ -108,9 +108,9 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
   } // end outer iteration
 
-  if ((min_diff > 1e-8 || min_diff > 5) && iter == 0){
-    memcpy(cw_new, cw_c, nc * sizeof(double));
-  }
+  // if ((min_diff > 1e-8 || min_diff > 5) && iter == 0){
+  //   memcpy(cw_new, cw_c, nc * sizeof(double));
+  // }
 
   // Calculate c_new
   // for (int i = 0; i < nc; ++i) {
@@ -122,7 +122,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   for (int k = 0; k < mc; ++k) { // iterate by row
     double Rc = 0.0;
     for (int l = 0; l < nc; ++l) { // iterate by col
-      Rc += Rw_c[l * nc + k] * cw_new[l];   // /////////// k와 l 순서 바꾸기
+      Rc += Rw_c[l * nc + k] * cw_c[l];   // /////////// k와 l 순서 바꾸기
     }
     sum3 += (zw_c[k] - Rc) * sw_c[k];
     sum4 += sw_c[k];
@@ -139,7 +139,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
   // Copy values to result SEXP
   for (int i = 0; i < nc; ++i) {
-    REAL(VECTOR_ELT(result, 0))[i] = cw_new[i];
+    REAL(VECTOR_ELT(result, 0))[i] = cw_c[i];
     // REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
   }
 
@@ -153,11 +153,11 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   setAttrib(result, R_NamesSymbol, name_ssp);
 
   // Free dynamically allocated memory
-  free(cw_new);
+  // free(cw_new);
   free(pow_Rc);
   // free(c_new);
 
-  UNPROTECT(2); // Unprotect result
+  UNPROTECT(1); // Unprotect result
   return result;
 }
 
