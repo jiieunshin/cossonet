@@ -199,7 +199,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         cw.new = fit$cw.new
         c.new = cw.new * sqrt(w)
         # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
-        cat("C calculate:", b.new, "\n")
+        # cat("C calculate:", b.new, "\n")
       }
 
       # if(algo == "QP"){
@@ -262,6 +262,8 @@ print(measure)
 
   rm(tr_R)
   rm(te_R)
+  rm(tr_Rtheta)
+  rm(te_Rtheta)
 
   if(algo == "CD"){
     # f.init = rep(0.5, n)

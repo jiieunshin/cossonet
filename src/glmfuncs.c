@@ -157,7 +157,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   free(pow_Rc);
   // free(c_new);
 
-  UNPROTECT(1); // Unprotect result
+  UNPROTECT(2); // Unprotect result
   return result;
 }
 
@@ -175,11 +175,12 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
-  double *theta_new = (double *)malloc(dc * sizeof(double));
+  // double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
+  double theta_new = 0;
 
   for (int k = 0; k < dc; ++k){
-    theta_new[k] = 0;
+    // theta_new[k] = 0;
     pow_theta[k] = 0;
   }
 
@@ -192,33 +193,33 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   }
 
   // outer iteration
-  double min_diff = .1;
-  double diff;
   int iter = 0;
+  double min_diff = 100;
+  double diff;
 
-  for(iter = 0; iter < 25; iter++) {
-    for(int j = 0; j < dc; j++) { // iterate by column
+  for(iter = 0; iter < 25; ++iter) {
+    for(int j = 0; j < dc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for(int k = 0; k < nc; k++) { // iterate by row
+      for(int k = 0; k < nc; ++k) { // iterate by row
         double GT = 0.0;
-        for(int l = 0; l < dc; l++) { // iterate by column except j
+        for(int l = 0; l < dc; ++l) { // iterate by column except j
           if(l != j) {
             GT += Gw_c[l * nc + k] * theta_c[l];
           }
         }
         V1 += (uw_c[k] - GT) * Gw_c[j * nc + k];
       }
-      V1 *= 2;
+      V1 = 2 * V1;
 
       if(V1 > 0 && r < fabs(V1)) {
-        theta_new[j] = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
+        theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
-        theta_new[j] = 0;
+        theta_new = 0;
       }
 
       // If convergence criteria are met, break the loop
-      diff = fabs(theta_c[j] - theta_new[j]);
+      diff = fabs(theta_c[j] - theta_new);
 
       if (min_diff > diff){
         min_diff = diff;
@@ -234,7 +235,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If not convergence, Update theta_new.
-      theta_c[j] = theta_new[j];
+      theta_c[j] = theta_new;
     }
 
     if (min_diff <= 1e-8) {
@@ -261,10 +262,9 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
     REAL(theta_new_r)[j] = theta_c[j];
   }
 
-  free(theta_new);
   free(pow_theta);
 
-  UNPROTECT(1);
+  UNPROTECT(2);
 
   return theta_new_r;
 }
