@@ -394,9 +394,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
     main = "Poisson Family"
   }
 
-  measure_mean = colMeans(measure, na.rm = T)
-  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n)
-  min_id = which.min(measure_mean)
+  min_id = which.min(measure)
   optlambda = lambda_theta[min_id]
 
   ylab = expression("GCV(" * lambda[theta] * ")")
