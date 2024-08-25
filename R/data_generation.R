@@ -14,17 +14,17 @@
 #' @export
 data_generation = function(n, p, rho, SNR,
                            response = c("regression", "classification", "count", "survival", "interaction")){
-  f1 = function(t) t - 0.5
-  f2 = function(t) (2 * t - 1)^2 - 0.4
-  f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
-  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
-  f5 = function(t) sin(pi * t^4) + t^4 - 0.4
+  # f1 = function(t) t - 0.5
+  # f2 = function(t) (2 * t - 1)^2 - 0.4
+  # f3 = function(t) sin(2 * pi * t) / (2 - sin(pi * t))
+  # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^2 + 0.5*sin(2 * pi * t)^3 - 0.4
+  # f5 = function(t) sin(pi * t^4) + t^4 - 0.4
 
-  # f1 = function(t) 5 * sin(3*t)
-  # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
-  # f3 = function(t)  t * (1-t^2) * exp(3 * t) - 4
-  # f4 = function(t) 4 * t
-  # f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
+  f1 = function(t) 5 * sin(3*t)
+  f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
+  f3 = function(t)  t * (1-t^2) * exp(3 * t) - 4
+  f4 = function(t) 4 * t
+  f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
 
   if(missing(response))
     type = "classification"
@@ -32,20 +32,20 @@ data_generation = function(n, p, rho, SNR,
 
   if(missing(n)) n = 200
   if(missing(p)) p = 10
-  if(missing(rho)) rho = 0.5
+  if(missing(rho)) rho = 0.8
   if(missing(SNR)) SNR = 2
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
-  Sigma = matrix(rho, 5, 5)
-  diag(Sigma) = 1
+  # Sigma = matrix(rho, 5, 5)
+  # diag(Sigma) = 1
 
-  # Sigma = matrix(1, 5, 5)
-  # for(j in 1:5){
-  #   for(k in 1:5){
-  #     Sigma[j, k] = rho^abs(j-k)
-  #   }
-  # }
+  Sigma = matrix(1, 5, 5)
+  for(j in 1:5){
+    for(k in 1:5){
+      Sigma[j, k] = rho^abs(j-k)
+    }
+  }
 
 
   x = pnorm(rmvnorm(n, sigma = Sigma))
@@ -61,16 +61,16 @@ data_generation = function(n, p, rho, SNR,
 
 
 
-  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
-  V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
-  sd = sqrt(V_sig / (p-5) / SNR)
+  # f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  # V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
+  # sd = sqrt(V_sig / (p-5) / SNR)
 
   # SNR = sqrt(V_sig / (p-5) / 1.2)
   # print(V_sig)
 
-  # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
-  # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
-  # sd = sqrt(V_sig * (p-5) / SNR)
+  f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
+  V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
+  sd = sqrt(V_sig / (p-5) / SNR)
 print(sd)
 
   x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
