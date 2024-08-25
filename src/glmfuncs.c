@@ -122,7 +122,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   for (int k = 0; k < mc; ++k) { // iterate by row
     double Rc = 0.0;
     for (int l = 0; l < nc; ++l) { // iterate by col
-      Rc += Rw_c[l * nc + k] * cw_new[l];
+      Rc += Rw_c[k * nc + l] * cw_new[l];   // /////////// k와 l 순서 바꾸기
     }
     sum3 += (zw_c[k] - Rc) * sw_c[k];
     sum4 += sw_c[k];

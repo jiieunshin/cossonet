@@ -228,7 +228,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       }
     }
   }
-
+print(measure)
   # plotting error bar
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"
@@ -246,9 +246,9 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   measure_mean = colMeans(measure, na.rm = T)
   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
   min_id = which.min(measure_mean)
-  cand_id = which.max((measure_mean[min_id] + measure_se[min_id]) <= measure_mean)
-  std_id = ifelse(cand_id < min_id, min_id, cand_id)
-  optlambda = cand.lambda[std_id]
+  # cand_id = which.max((measure_mean[min_id] + measure_se[min_id]) <= measure_mean)
+  # std_id = ifelse(cand_id < min_id, min_id, cand_id)
+  optlambda = cand.lambda[min_id]
 
   if(show){
     plot(log(cand.lambda), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
@@ -262,11 +262,11 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   rm(te_R)
 
   if(algo == "CD"){
-    f.init = rep(0.5, n)
-    ff = f.init
-    mu = obj$linkinv(ff)
-    w = obj$variance(mu)
-    z = ff + (y - mu) / w
+    # f.init = rep(0.5, n)
+    # ff = f.init
+    # mu = obj$linkinv(ff)
+    # w = obj$variance(mu)
+    # z = ff + (y - mu) / w
 
     c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
 
@@ -456,7 +456,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   if(obj$family == 'poisson'){
     main = "Poisson Family"
   }
-
+print(save_theta)
   # min_val = min(measure)
   # id = max(which(measure == min_val))
   # optlambda = lambda_theta[id]
