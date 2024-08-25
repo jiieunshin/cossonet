@@ -73,6 +73,11 @@ data_generation = function(n, p, rho, SNR,
   sd = sqrt(V_sig / (p-5) / SNR)
 print(sd)
 
+
+f = x[,1:5] %*% rep(3, 5)
+V_sig = var(x[,1]) + var(x[,2]) + var(x[,3]) + var(x[,4]) + var(x[,5])
+sd = sqrt(V_sig / (p-5) / SNR)
+
   x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
   # x_nois = matrix(runif(n * (p-5)), n, (p-5))
   x = cbind(x, x_nois)
