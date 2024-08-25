@@ -264,7 +264,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
   free(pow_theta);
 
-  UNPROTECT(2);
+  UNPROTECT(1);
 
   return theta_new_r;
 }
