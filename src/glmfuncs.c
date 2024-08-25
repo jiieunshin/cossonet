@@ -186,7 +186,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   for(int j = 0; j < dc; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < nc; k++) { // iterate by row
-      add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
+      add += Gw_c[k * nc + j] * Gw_c[k * nc + j];       // /////////// k와 l 순서 바꾸기
     }
     pow_theta[j] = add;
   }
