@@ -230,7 +230,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       }
     }
   }
-print(measure)
+# print(measure)
   # plotting error bar
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"
@@ -460,7 +460,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   if(obj$family == 'poisson'){
     main = "Poisson Family"
   }
-print(save_theta)
+# print(save_theta)
   # min_val = min(measure)
   # id = max(which(measure == min_val))
   # optlambda = lambda_theta[id]
