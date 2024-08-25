@@ -33,17 +33,10 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
       fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, cand.lambda[k], PACKAGE = "cdcosso")
       b.new = fit$b.new
-      c.new = fit$c.new
       cw.new = fit$cw.new
+      c.new = cw.new * sqrt(w)
     }
 
-    if(algo == "QP"){
-      c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = cand.lambda[k])$beta)
-      fit = sspline.QP(Rtheta, y, f.init, cand.lambda[k], obj, c.init)
-      b.new = fit$b.new
-      c.new = fit$c.new
-      cw.new = fit$cw.new
-    }
     if(sum(is.nan(cw.new)) == n){
       next
     } else{
@@ -57,7 +50,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       testmu = obj$linkinv(testfhat)
       testw = obj$variance(testmu)
 
-      XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w)
+      XX = zw - Rw %*% cw.new - b.new * sqrt(w)
       num = t(XX) %*% XX + 1
       # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + diag(w)/cand.lambda[k]))) / n)^2
       S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
@@ -85,45 +78,36 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
   if(show) plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
-  if(algo == "CD"){
-    mu = obj$linkinv(f.init)
-    w = obj$variance(mu)
-    z = f.init + (y - mu) / w
 
-    c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
-    zw = z * sqrt(w)
-    Rw = Rtheta * w
-    cw = c.init / sqrt(w)
-    sw = sqrt(w)
+  mu = obj$linkinv(f.init)
+  w = obj$variance(mu)
+  z = f.init + (y - mu) / w
 
-    fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
-    f.new = c(fit$b.new + Rtheta %*% fit$c.new)
-    mu.new = obj$linkinv(f.new)
-    w.new = obj$variance(mu.new)
-    z.new = f.new + (y - mu.new) / w.new
+  c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
+  zw = z * sqrt(w)
+  Rw = Rtheta * w
+  cw = c.init / sqrt(w)
+  sw = sqrt(w)
 
-    if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
-    if(obj$family == "gaussian") miss <- mean((y - f.new)^2)
-    if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
+  fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
+  b.new = fit$b.new
+  cw.new = fit$cw.new
+  c.new = cw.new * sqrt(w)
 
-    cat("training error:", miss, "\n")
+  f.new = c(b.new + Rtheta %*% c.new)
+  mu.new = obj$linkinv(f.new)
+  w.new = obj$variance(mu.new)
+  z.new = f.new + (y - mu.new) / w.new
 
-    out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
-               z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
-  }
+  if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+  if(obj$family == "gaussian") miss <- mean((y - f.new)^2)
+  if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
 
-  if(algo == "QP"){
-    c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
-    fit = sspline.QP(Rtheta, y, f.init, optlambda, obj, c.init)
-    f.new = c(fit$b.new + Rtheta %*% fit$c.new)
-    mu.new = obj$linkinv(f.new)
-    w.new = obj$variance(mu.new)
-    z.new = f.new + (y - mu.new) / w.new
+  cat("training error:", miss, "\n")
 
-    out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
-               z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = fit$b.new,
-               cw.new = fit$cw.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)  }
+  out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
+             z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
+             cw.new = cw.new, c.new = c.new, optlambda = optlambda, conv = TRUE)
 
   rm(K)
   rm(Rtheta)
