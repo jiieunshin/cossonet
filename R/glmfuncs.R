@@ -157,10 +157,10 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   z = ff + (y - mu) / w
 
   #
+  fold = cvsplitID(n, 5)
   measure <- matrix(NA, 5, len)
   for(f in 1:5){
     if(obj$family != "binomial"){
-      fold = cvsplitID(n, 5)
       tr_id = as.vector(fold[, -f])
       te_id = fold[, f]
       m = length(tr_id)
@@ -197,7 +197,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, m, n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
         cw.new = fit$cw.new
-        c.new = fit$cw.new * sqrt(w)
+        c.new = cw.new * sqrt(w)
       }
 
       # if(algo == "QP"){
@@ -215,13 +215,13 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         testfhat = c(b.new + te_Rtheta %*% c.new)
         testmu = obj$linkinv(testfhat)
 
-        XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(w[tr_id])
-        num = t(XX) %*% XX + 1
-        den = (1 - sum(diag(Rw %*% ginv(Rw + diag(w[tr_id])/cand.lambda[k]))) / n)^2
-        S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
-        den = (1 - sum(diag(S)) / n)^2 + 1
-        measure[f, k] <- num / den
-        # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
+        # XX = zw - Rw %*% cw.new - b.new * sqrt(w[tr_id])
+        # num = t(XX) %*% XX + 1
+        # den = (1 - sum(diag(Rw %*% ginv(Rw + diag(w[tr_id])/cand.lambda[k]))) / n)^2
+        # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
+        # den = (1 - sum(diag(S)) / n)^2 + 1
+        # measure[f, k] <- num / den
+        if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
         # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
         # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
 

@@ -51,7 +51,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   int iter = 0;
-  double min_diff = 1e-8;
+  double min_diff = 100;
   double diff;
 
   // outer loop
@@ -94,15 +94,15 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       // }
 
-      // if (min_diff <= 1e-8 || min_diff > 10) {
-      //   break;
-      // }
+      if (min_diff <= 1e-8 || min_diff > 10) {
+        break;
+      }
 
       // If not convergence, update cw
       cw_c[j] = cw_new[j];
     }
 
-    if (min_diff <= 1e-8) {
+    if (min_diff <= 1e-8 || min_diff > 10) {
       break;
     }
 
@@ -122,7 +122,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   for (int k = 0; k < mc; ++k) { // iterate by row
     double Rc = 0.0;
     for (int l = 0; l < nc; ++l) { // iterate by col
-      Rc += Rw2_c[l * nc + k] * cw_new[l];
+      Rc += Rw_c[l * nc + k] * cw_new[l];
     }
     sum3 += (zw_c[k] - Rc) * sw_c[k];
     sum4 += sw_c[k];
