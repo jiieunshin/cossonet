@@ -31,9 +31,10 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   // double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
   double cw_new;
-  // if (cw_new == NULL || pow_Rc == NULL) {
-  //   error("Memory allocation failed");
-  // }
+
+  if (pow_Rc == NULL) {
+    error("Memory allocation failed");
+  }
 
   for(int k = 0; k < nc; k++) {
     // cw_new[k] = 0;
@@ -42,10 +43,10 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   // calculate square term
-  for(int j = 0; j < nc; j++) { // iterate by column
+  for(int j = 0; j < nc; ++j) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < mc; k++) { // iterate by row
-      add += Rw_c[j * nc + k] * Rw_c[j * nc + k];
+    for(int k = 0; k < mc; ++k) { // iterate by row
+      add += Rw_c[j * mc + k] * Rw_c[j * mc + k];
     }
     pow_Rc[j] = 2 * add;
   }
@@ -65,10 +66,10 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
         double Rc1 = 0.0;
         for (int l = 0; l < nc; ++l) {
           if (l != j) {
-            Rc1 += Rw_c[l * nc + k] * cw_c[l];
+            Rc1 += Rw_c[l * mc + k] * cw_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc1) * Rw_c[j * nc + k];
+        V1 += (zw_c[k] - Rc1) * Rw_c[j * mc + k];
       }
       V1 = 2 * V1;
 
@@ -122,7 +123,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   for (int k = 0; k < mc; ++k) { // iterate by row
     double Rc = 0.0;
     for (int l = 0; l < nc; ++l) { // iterate by col
-      Rc += Rw_c[l * nc + k] * cw_c[l];   // /////////// k와 l 순서 바꾸기
+      Rc += Rw_c[l * mc + k] * cw_c[l];   // /////////// k와 l 순서 바꾸기
     }
     sum3 += (zw_c[k] - Rc) * sw_c[k];
     sum4 += sw_c[k];
@@ -178,6 +179,11 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
   double theta_new = 0;
+
+  // 메모리 할당 실패 시 처리 방법
+  if (pow_theta == NULL) {
+    error("Memory allocation failed for pow_theta");
+  }
 
   for (int k = 0; k < dc; ++k){
     // theta_new[k] = 0;
@@ -242,6 +248,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       break;
     }
   } // end outer iteration
+
   if (min_diff > 1e-8 && iter == 0){
     for (int k = 0; k < dc; ++k){
       theta_c[k] = 0;
