@@ -246,7 +246,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
   # optimal lambda1
   measure_mean = colMeans(measure, na.rm = T)
-  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n-m)
   min_id = which.min(measure_mean)
   # cand_id = which.max((measure_mean[min_id] + measure_se[min_id]) <= measure_mean)
   # std_id = ifelse(cand_id < min_id, min_id, cand_id)
@@ -466,7 +466,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   # optlambda = lambda_theta[id]
 
   measure_mean = colMeans(measure, na.rm = T)
-  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n-m)
   min_id = which.min(measure_mean)
   cand_ids = which((measure_mean >= measure_mean[min_id]) &
                      (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
