@@ -37,15 +37,15 @@ data_generation = function(n, p, rho, SNR,
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
-  # Sigma = matrix(rho, 5, 5)
-  # diag(Sigma) = 1
+  Sigma = matrix(rho, 5, 5)
+  diag(Sigma) = 1
 
-  Sigma = matrix(1, 5, 5)
-  for(j in 1:5){
-    for(k in 1:5){
-      Sigma[j, k] = rho^abs(j-k)
-    }
-  }
+  # Sigma = matrix(1, 5, 5)
+  # for(j in 1:5){
+  #   for(k in 1:5){
+  #     Sigma[j, k] = rho^abs(j-k)
+  #   }
+  # }
 
 
   x = pnorm(rmvnorm(n, sigma = Sigma))
