@@ -45,7 +45,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   for(int j = 0; j < nc; j++) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < mc; k++) { // iterate by row
-      add += Rw_c[j * nc + k] * Rw_c[j * nc + k];
+      add += Rw_c[k * nc + j] * Rw_c[k * nc + j];  // /////////// k와 l 순서 바꾸기
     }
     pow_Rc[j] = 2 * add;
   }
@@ -65,17 +65,17 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
         double Rc1 = 0.0;
         for (int l = 0; l < nc; ++l) {
           if (l != j) {
-            Rc1 += Rw_c[l * nc + k] * cw_c[l];
+            Rc1 += Rw_c[k * nc + l] * cw_c[l];    // /////////// k와 l 순서 바꾸기
           }
         }
-        V1 += (zw_c[k] - Rc1) * Rw_c[j * nc + k];
+        V1 += (zw_c[k] - Rc1) * Rw_c[k * nc + j];  // /////////// k와 l 순서 바꾸기
       }
       V1 = 2 * V1;
 
       double V2 = 0.0;
       for (int l = 0; l < nc; ++l) {
         if (l != j) {
-          V2 += Rw2_c[l * nc + j] * cw_c[l];
+          V2 += Rw2_c[j * nc + l] * cw_c[l];   // /////////// k와 l 순서 바꾸기
         }
       }
       V2 = nc * lambda0_c * V2;
@@ -203,10 +203,10 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
         double GT = 0.0;
         for(int l = 0; l < dc; l++) { // iterate by column except j
           if(l != j) {
-            GT += Gw_c[l * nc + k] * theta_c[l];
+            GT += Gw_c[k * nc + l] * theta_c[l];    // /////////// k와 l 순서 바꾸기
           }
         }
-        V1 += (uw_c[k] - GT) * Gw_c[j * nc + k];
+        V1 += (uw_c[k] - GT) * Gw_c[k * nc + j];   // /////////// k와 l 순서 바꾸기
       }
       V1 *= 2;
 
