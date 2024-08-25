@@ -63,7 +63,7 @@ data_generation = function(n, p, rho, SNR,
 
   f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
   V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
-  sd = sqrt(V_sig * (p-5) / SNR)
+  sd = sqrt(V_sig / (p-5) / SNR)
 
   # SNR = sqrt(V_sig / (p-5) / 1.2)
   # print(V_sig)
