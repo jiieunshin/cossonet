@@ -94,7 +94,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       // }
 
-      if (min_diff <= 1e-8 || min_diff > 10) {
+      if (min_diff <= 1e-8 || min_diff > 5) {
         break;
       }
 
@@ -102,13 +102,13 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_c[j] = cw_new[j];
     }
 
-    if (min_diff <= 1e-8 || min_diff > 10) {
+    if (min_diff <= 1e-8 || min_diff > 5) {
       break;
     }
 
   } // end outer iteration
 
-  if (min_diff > 1e-8 && iter == 0){
+  if ((min_diff > 1e-8 || min_diff > 5) && iter == 0){
     memcpy(cw_new, cw_c, nc * sizeof(double));
   }
 

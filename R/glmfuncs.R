@@ -190,7 +190,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     for (k in 1:len){
 
       if(algo == "CD"){
-        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = 'gaussian', lambda = cand.lambda[k])$beta)
+        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = 'gaussian', lambda = 1e-4)$beta)
 
         cw = c.init / sqrt(w)
 
@@ -198,7 +198,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         b.new = fit$b.new
         cw.new = fit$cw.new
         c.new = cw.new * sqrt(w)
-        cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
+        # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
         cat("C calculate:", b.new, "\n")
       }
 
