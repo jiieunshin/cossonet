@@ -228,7 +228,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       // }
       // }
 
-      if (min_diff <= 1e-8 || min_diff > 10) {
+      if (min_diff <= 1e-8) {
         break;
       }
 
