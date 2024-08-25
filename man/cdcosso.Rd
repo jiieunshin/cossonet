@@ -18,9 +18,9 @@ cdcosso(
      6
  }), length.out = 20)),
   lambda_theta = exp(seq(log(2^{
-     -6
+     -10
  }), log(2^{
-     6
+     4
  }), length.out = 20)),
   gamma = 0.95,
   scale = TRUE
