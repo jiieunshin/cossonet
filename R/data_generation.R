@@ -48,31 +48,31 @@ data_generation = function(n, p, rho, SNR,
   # }
 
 
-  x = pnorm(rmvnorm(n, sigma = Sigma))
+  # x = pnorm(rmvnorm(n, sigma = Sigma))
 
 
-
-  # x = matrix(0, n, 5)
-  # x[, 1] = runif(n)
-  # U = runif(n)
-  # for(j in 2:5){
-  #   x[, j] = (runif(n) + 2 * U)/(1 + 2)
-  # }
+  t = 3
+  x = matrix(0, n, 5)
+  x[, 1] = runif(n)
+  U = runif(n)
+  for(j in 2:5){
+    x[, j] = (runif(n) + t * U)/(1 + t)
+  }
 
 
 
   f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
   V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
-  sd = sqrt(V_sig / (p-5) / SNR)
+  sd = sqrt(var(f) / SNR)
 
 
   # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
   # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
-  # sd = sqrt(V_sig / (p-5) / SNR)
+  # sd = sqrt(var(f) / SNR)
 print(sd)
 
-  x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
-  # x_nois = matrix(runif(n * (p-5)), n, (p-5))
+  # x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
+  x_nois = matrix(runif(n * (p-5)), n, (p-5))
   x = cbind(x, x_nois)
 
 
@@ -92,16 +92,16 @@ print(sd)
   if(response == "regression"){
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
     # print(SNR)
-    # f = f + rnorm(n, 0, SNR)
-    # f = f
+    f = f + rnorm(n, 0, .1)
+
     out = list(x = x, y = f)
   }
 
   if(response == "classification"){
     # SNR = sqrt(var(f) / 4)
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
-    # e = rnorm(n, 0, SNR)
-    prob = exp(f)/(exp(f) + 1)
+    e = rnorm(n, 0, .1)
+    prob = exp(f + e)/(exp(f + e) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)
     # print(table(y))
