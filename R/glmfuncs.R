@@ -196,8 +196,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
         testmu = obj$linkinv(testfhat)
 
         if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
-        # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
-        # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
+        if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
+        if(obj$family == "poisson") measure[k] <- mean(poisson()$dev.resids(y, testmu, rep(1, n)))
 
       }
     }
@@ -453,10 +453,13 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
     tr_id = tr_id[!is.na(tr_id)]
     te_id = te_id[!is.na(te_id)]
 
+    tr_n = length(tr_id)
+    te_n = length(te_id)
+
     m = length(tr_id)
 
     for (k in 1:len) {
-      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], m, d, init.theta, lambda_theta[k], gamma)
+      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], tr_n, d, init.theta, lambda_theta[k], gamma)
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       save_theta[[k]] <- theta.adj
 
@@ -480,7 +483,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   }
 
   measure_mean = colMeans(measure, na.rm = T)
-  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n-m)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(te_n)
   min_id = which.min(measure_mean)
   cand_ids = which((measure_mean >= measure_mean[min_id]) &
                      (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
