@@ -141,7 +141,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   z = ff + (y - mu) / w
 
   #
-  fold = cvsplitID(n, 5, family = obj$family)
+  fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
   for(f in 1:5){
     tr_id = as.vector(fold[, -f])
@@ -438,7 +438,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   len = length(lambda_theta)
 
   measure <- matrix(NA, 5, len)
-  fold = cvsplitID(n, 5, family = obj$family)
+  fold = cvsplitID(n, 5, y, family = obj$family)
 
   save_theta <- list()
   for(f in 1:5){
