@@ -214,7 +214,7 @@ rescale_theta = function (x)
   return(x)
 }
 
-cvsplitID = function (n, folds)
+cvsplitID = function (n, folds, y, family)
 {
   fsize <- floor(n/folds)
   splits <- fsize * rep(1, folds)
@@ -222,13 +222,63 @@ cvsplitID = function (n, folds)
   if (nextra > 0) {
     splits[1:nextra] <- splits[1:nextra] + 1
   }
-  randid <- sample(1:n, n)
-  IDmat <- matrix(NA, ncol = folds, nrow = ceiling(n/folds))
-  IDmat[, 1] <- randid[1:splits[1]]
-  for (i in 2:folds) {
-    tempid <- randid[(cumsum(splits)[i - 1] + 1):(cumsum(splits)[i])]
-    length(tempid) <- ceiling(n/folds)
-    IDmat[, i] <- tempid
+
+  if(family != "binomial"){
+    randid <- sample(1:n, n)
+    IDmat <- matrix(NA, ncol = folds, nrow = ceiling(n/folds))
+    IDmat[, 1] <- randid[1:splits[1]]
+    for (i in 2:folds) {
+      tempid <- randid[(cumsum(splits)[i - 1] + 1):(cumsum(splits)[i])]
+      length(tempid) <- ceiling(n/folds)
+      IDmat[, i] <- tempid
+    }
+  }
+
+  if(family == "binomial"){
+    stop("The input of y is essential.")
+
+    # Separate indices for 0s and 1s
+    idx_0 <- which(y == 0)
+    idx_1 <- which(y == 1)
+
+    n0 <- length(idx_0)
+    n1 <- length(idx_1)
+
+    # Compute fold sizes for each class
+    fsize_0 <- floor(n0 / folds)
+    fsize_1 <- floor(n1 / folds)
+
+    splits_0 <- fsize_0 * rep(1, folds)
+    splits_1 <- fsize_1 * rep(1, folds)
+
+    nextra_0 <- n0 - folds * fsize_0
+    nextra_1 <- n1 - folds * fsize_1
+
+    if (nextra_0 > 0) splits_0[1:nextra_0] <- splits_0[1:nextra_0] + 1
+    if (nextra_1 > 0) splits_1[1:nextra_1] <- splits_1[1:nextra_1] + 1
+
+    randid_0 <- sample(idx_0, n0)
+    randid_1 <- sample(idx_1, n1)
+
+    IDmat <- matrix(NA, ncol = folds, nrow = ceiling(n / folds))
+
+    # Assign 0s and 1s to folds
+    for (i in 1:folds) {
+      if(i == 1){
+        tempid_0 <- randid_0[1:(cumsum(splits_0)[i])]
+        tempid_1 <- randid_1[1:(cumsum(splits_1)[i])]
+      } else{
+        tempid_0 <- randid_0[(cumsum(splits_0)[i - 1] + 1):(cumsum(splits_0)[i])]
+        tempid_1 <- randid_1[(cumsum(splits_1)[i - 1] + 1):(cumsum(splits_1)[i])]
+      }
+
+      tempid <- c(tempid_0, tempid_1)
+      length(tempid) <- ceiling(n / folds)
+      IDmat[, i] <- tempid
+    }
   }
   return(IDmat)
 }
+
+
+

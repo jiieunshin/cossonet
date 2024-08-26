@@ -141,16 +141,12 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   z = ff + (y - mu) / w
 
   #
-  fold = cvsplitID(n, 5)
+  fold = cvsplitID(n, 5, family = obj$family)
   measure <- matrix(NA, 5, len)
   for(f in 1:5){
-    if(obj$family != "binomial"){
-      tr_id = as.vector(fold[, -f])
-      te_id = fold[, f]
-      m = length(tr_id)
-    } else{
-
-    }
+    tr_id = as.vector(fold[, -f])
+    te_id = fold[, f]
+    m = length(tr_id)
 
     tr_R = array(NA, c(m, n, d))
     for(j in 1:d){
@@ -442,15 +438,13 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   len = length(lambda_theta)
 
   measure <- matrix(NA, 5, len)
+  fold = cvsplitID(n, 5, family = obj$family)
+
   save_theta <- list()
   for(f in 1:5){
-    if(obj$family != "binomial"){
-      fold = cvsplitID(n, 5)
-      tr_id = as.vector(fold[, -f])
-      te_id = fold[, f]
-      m = length(tr_id)
-    } else{
-    }
+    tr_id = as.vector(fold[, -f])
+    te_id = fold[, f]
+    m = length(tr_id)
 
     for (k in 1:len) {
       theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], m, d, init.theta, lambda_theta[k], gamma)
