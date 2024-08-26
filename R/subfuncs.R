@@ -235,7 +235,7 @@ cvsplitID = function (n, folds, y, family)
   }
 
   if(family == "binomial"){
-    stop("The input of y is essential.")
+    if(is.null(y)) stop("The input of y is essential.")
 
     # Separate indices for 0s and 1s
     idx_0 <- which(y == 0)
