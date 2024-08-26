@@ -117,7 +117,7 @@
 
 # cand.lambda = lambda0
 # mscale = wt
-# obj = gaussian()
+# obj = binomial()
 cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 {
   cat("-- c-step -- \n")
@@ -146,16 +146,21 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   for(f in 1:5){
     tr_id = as.vector(fold[, -f])
     te_id = fold[, f]
-    m = length(tr_id)
 
-    tr_R = array(NA, c(m, n, d))
+    tr_id = tr_id[!is.na(tr_id)]
+    te_id = te_id[!is.na(te_id)]
+
+    tr_n = length(tr_id)
+    te_n = length(te_id)
+
+    tr_R = array(NA, c(tr_n, n, d))
     for(j in 1:d){
       tr_R[, , j] = K$K[[j]][tr_id, ]
     }
 
     tr_Rtheta <- combine_kernel(tr_R, mscale)
 
-    te_R = array(NA, c(n-m, n, d))
+    te_R = array(NA, c(te_n, n, d))
     for(j in 1:d){
       te_R[, , j] = K$K[[j]][te_id, ]
     }
@@ -170,11 +175,11 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     for (k in 1:len){
 
       if(algo == "CD"){
-        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = 'gaussian', lambda = 1e-4)$beta)
+        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = obj$family, lambda = 1e-4)$beta)
 
         cw = c.init / sqrt(w)
 
-        fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, m, n, cand.lambda[k], PACKAGE = "cdcosso")
+        fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, tr_n, n, cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
         cw.new = fit$cw.new
         c.new = cw.new * sqrt(w)
@@ -213,7 +218,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
   # optimal lambda1
   measure_mean = colMeans(measure, na.rm = T)
-  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(n-m)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(te_n)
   min_id = which.min(measure_mean)
   optlambda = cand.lambda[min_id]
 
@@ -444,6 +449,10 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   for(f in 1:5){
     tr_id = as.vector(fold[, -f])
     te_id = fold[, f]
+
+    tr_id = tr_id[!is.na(tr_id)]
+    te_id = te_id[!is.na(te_id)]
+
     m = length(tr_id)
 
     for (k in 1:len) {
