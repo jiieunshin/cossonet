@@ -31,8 +31,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       cw = c.init / sqrt(w)
       sw = sqrt(w)
 
-      # fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, cand.lambda[k], PACKAGE = "cdcosso")
-      fit = sspline.cd(Rtheta, y, ff, cand.lambda[k], obj, c.init)
+      fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, cand.lambda[k], PACKAGE = "cdcosso")
+      # fit = sspline.cd(Rtheta, y, ff, cand.lambda[k], obj, c.init)
       b.new = fit$b.new
       cw.new = fit$cw.new
       c.new = cw.new * sqrt(w)
@@ -90,8 +90,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
 
-  # fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
-  fit = sspline.cd(Rtheta, y, ff, optlambda, obj, c.init)
+  fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
+  # fit = sspline.cd(Rtheta, y, ff, optlambda, obj, c.init)
 
   b.new = fit$b.new
   cw.new = fit$cw.new
@@ -375,8 +375,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
 
   for (k in 1:len) {
     if(algo == "CD") {
-      # theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
-      theta.new = nng.cd(Gw, uw, init.theta, lambda_theta[k], gamma)
+      theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      # theta.new = nng.cd(Gw, uw, init.theta, lambda_theta[k], gamma)
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       save_theta[[k]] <- theta.adj
     }
@@ -407,8 +407,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   xrange = log(lambda_theta)
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
-  # theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
-  theta.new = nng.cd(Gw, uw, init.theta, optlambda, gamma)
+  theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
+  # theta.new = nng.cd(Gw, uw, init.theta, optlambda, gamma)
   # theta.new = save_theta[[id]]
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
