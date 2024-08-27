@@ -109,8 +109,8 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
   } // end outer iteration
 
-  Rprintf("min_diff: %f\n", min_diff);
-  Rprintf("iter: %d\n", iter);
+  // Rprintf("min_diff: %f\n", min_diff);
+  // Rprintf("iter: %d\n", iter);
 
   // if ((min_diff > 1e-8 || min_diff > 5) && iter == 0){
   //   memcpy(cw_new, cw_c, nc * sizeof(double));
@@ -265,8 +265,8 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // }
   // Rprintf("\n max_diff: %d \n", max_diff);
 
-  Rprintf("min_diff: %f\n", min_diff);
-  Rprintf("iter: %d\n", iter);
+  // Rprintf("min_diff: %f\n", min_diff);
+  // Rprintf("iter: %d\n", iter);
 
   // result
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, dc));

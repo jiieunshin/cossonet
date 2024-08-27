@@ -15,17 +15,20 @@
 data_generation = function(n, p, rho, SNR,
                            response = c("regression", "classification", "count", "survival", "interaction")){
 
-  # f1 = function(t) t - 0.5
-  # f2 = function(t) (2 * t - 1)^2 - 0.4
-  # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-  # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.4
-  # f5 = function(t) sin(pi * t^4) + t^4 - 0.4
+  if(response == "classification"){
+    f1 = function(t) t - 0.5
+    f2 = function(t) (2 * t - 1)^2 - 0.4
+    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.4
+  }
+    # f5 = function(t) sin(pi * t^4) + t^4 - 0.4
 
-
-  f1 = function(t) t
-  f2 = function(t) (2 * t - 1)^2
-  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+  if(response == "regression"){
+    f1 = function(t) t
+    f2 = function(t) (2 * t - 1)^2
+    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+  }
 
   # f1 = function(t) 5 * sin(3*t)
   # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
@@ -40,7 +43,7 @@ data_generation = function(n, p, rho, SNR,
   if(missing(n)) n = 200
   if(missing(p)) p = 10
   if(missing(rho)) rho = 0.8
-  if(missing(SNR)) SNR = 2
+  if(missing(SNR)) SNR = 8
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
@@ -58,7 +61,7 @@ data_generation = function(n, p, rho, SNR,
   # x = pnorm(rmvnorm(n, sigma = Sigma))
 
 
-  t = 3
+  t = 1
   x = matrix(runif(n * 4), n, 4)
   # x[, 1] = runif(n)
   U = runif(n)
@@ -71,7 +74,7 @@ data_generation = function(n, p, rho, SNR,
   f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
   # print(f)
   V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
-  # sd = sqrt(var(f) / SNR)
+  sd = sqrt(V_sig / SNR)
 
 
   # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
@@ -101,7 +104,7 @@ data_generation = function(n, p, rho, SNR,
   if(response == "regression"){
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
     # print(SNR)
-    f = f + rnorm(n, 0, sqrt(1.74))
+    f = f + rnorm(n, 0, sd)
 
     out = list(x = x, y = f)
   }
@@ -110,7 +113,7 @@ data_generation = function(n, p, rho, SNR,
     f = f - 3
     # SNR = sqrt(var(f) / 4)
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
-    e = rnorm(n, 0, sqrt(1.74))
+    e = rnorm(n, 0, sd)
     prob = exp(f + e)/(exp(f + e) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)
