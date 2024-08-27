@@ -15,21 +15,21 @@
 data_generation = function(n, p, rho, SNR,
                            response = c("regression", "classification", "count", "survival", "interaction")){
 
-  if(response == "classification"){
-    f1 = function(t) t - 0.5
-    f2 = function(t) (2 * t - 1)^2 - 0.4
-    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) - 0.1
-    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.4
-    f5 = function(t) sin(pi * t^4) + t^4 - 0.4
-  }
-
-  if(response == "regression"){
+  # if(response == "classification"){
+  #   f1 = function(t) t - 0.5
+  #   f2 = function(t) (2 * t - 1)^2 - 0.4
+  #   f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) - 0.1
+  #   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.4 - 0.4
+  #   f5 = function(t) sin(pi * t^4) + t^4 - 0.5
+  # }
+  #
+  # if(response == "regression"){
     f1 = function(t) t
     f2 = function(t) (2 * t - 1)^2
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
-    f5 = function(t) sin(pi * t^4) + t^4
-  }
+    # f5 = function(t) sin(pi * t^4) + t^4
+  # }
 
   # f1 = function(t) 5 * sin(3*t)
   # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
@@ -63,17 +63,17 @@ data_generation = function(n, p, rho, SNR,
 
 
   t = 1
-  x = matrix(runif(n * 5), n, 5)
+  x = matrix(runif(n * p), n, p)
   U = runif(n)
-  for(j in 1:5){
+  for(j in 1:p){
     x[, j] = (runif(n) + t * U)/(1 + t)
   }
 
 
 
-  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
   # print(f)
-  V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
+  V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
   sd = sqrt(V_sig / SNR)
 
 
@@ -84,8 +84,8 @@ data_generation = function(n, p, rho, SNR,
 print(sd)
 
   # x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd/sqrt(p-5)), n, (p-5)))
-  x_nois = matrix(runif(n * (p-5)), n, (p-5))
-  x = cbind(x, x_nois)
+  # x_nois = matrix(runif(n * (p-5)), n, (p-5))
+  # x = cbind(x, x_nois)
 
 
   # Set the outer margins

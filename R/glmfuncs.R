@@ -31,7 +31,8 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
       cw = c.init / sqrt(w)
       sw = sqrt(w)
 
-      fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, cand.lambda[k], PACKAGE = "cdcosso")
+      # fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, cand.lambda[k], PACKAGE = "cdcosso")
+      fit = sspline.cd(Rtheta, y, ff, cand.lambda[k], obj, c.init)
       b.new = fit$b.new
       cw.new = fit$cw.new
       c.new = cw.new * sqrt(w)
@@ -89,7 +90,9 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
 
-  fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
+  # fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
+  fit = sspline.cd(Rtheta, y, ff, optlambda, obj, c.init)
+
   b.new = fit$b.new
   cw.new = fit$cw.new
   c.new = cw.new * sqrt(w)
@@ -288,7 +291,7 @@ sspline.cd = function (R, y, f, lambda0, obj, c.init)
   cw = c.init / sqrt(w)
   sw = sqrt(w)
   cw.new = rep(0, n)
-  for(i in 1:10){ # outer iteration
+  for(i in 1:15){ # outer iteration
 
     for(j in 1:n){
       L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
@@ -372,7 +375,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
 
   for (k in 1:len) {
     if(algo == "CD") {
-      theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      # theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, lambda_theta[k], gamma)
+      theta.new = nng.cd(Gw, uw, init.theta, lambda_theta[k], gamma)
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       save_theta[[k]] <- theta.adj
     }
@@ -403,7 +407,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   xrange = log(lambda_theta)
   plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
-  theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
+  # theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
+  theta.new = nng.cd(Gw, uw, init.theta, optlambda, gamma)
   # theta.new = save_theta[[id]]
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
@@ -526,7 +531,7 @@ nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
-  for(i in 1:10){
+  for(i in 1:15){
     for(j in 1:d){
       theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
 
@@ -555,7 +560,7 @@ nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
   r = lambda_theta * gamma * n
   theta.new = rep(0, d)
 
-  for(i in 1:10){ # outer iteration
+  for(i in 1:15){ # outer iteration
     Dmat = t(Gw) %*% Gw + diag(n * lambda_theta * gamma, d)
     dvec = as.vector(2 * t(uw) %*% Gw)
     Amat = t(rbind(diag(1, d), rep(-1, d)))
