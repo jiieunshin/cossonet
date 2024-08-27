@@ -15,12 +15,12 @@ cdcosso(
   lambda0 = exp(seq(log(2^{
      -11
  }), log(2^{
-     3
+     2
  }), length.out = 20)),
   lambda_theta = exp(seq(log(2^{
-     -16
+     -11
  }), log(2^{
-     6
+     2
  }), length.out = 20)),
   gamma = 0.95,
   scale = TRUE
