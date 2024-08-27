@@ -78,7 +78,7 @@ data_generation = function(n, p, rho, SNR,
   # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
   # sd = sqrt(var(f) / SNR)
   # sd = .1
-print(sd)
+# print(sd)
 
   # x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
   # x_nois = matrix(runif(n * (p-5)), n, (p-5))
@@ -107,7 +107,7 @@ print(sd)
   }
 
   if(response == "classification"){
-    f = f - 3
+    # f = f - 3
     # SNR = sqrt(var(f) / 4)
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
     e = rnorm(n, 0, sqrt(1.74))
