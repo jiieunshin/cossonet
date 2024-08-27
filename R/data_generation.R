@@ -107,6 +107,7 @@ print(sd)
   }
 
   if(response == "classification"){
+    f = f - 4
     # SNR = sqrt(var(f) / 4)
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
     e = rnorm(n, 0, sqrt(1.74))
