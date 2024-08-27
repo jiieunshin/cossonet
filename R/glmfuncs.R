@@ -197,7 +197,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
         if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
         if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-        if(obj$family == "poisson") measure[k] <- mean(poisson()$dev.resids(y, testmu, rep(1, n)))
+        if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
 
       }
     }
@@ -467,7 +467,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
       testmu = obj$linkinv(testfhat)
       if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-      # if(obj$family = "poisson") measure[k] <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
+      if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
     }
   }
 
