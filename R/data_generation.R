@@ -58,7 +58,7 @@ data_generation = function(n, p, rho, SNR,
   # x = pnorm(rmvnorm(n, sigma = Sigma))
 
 
-  t = 0
+  t = 3
   x = matrix(runif(n * 4), n, 4)
   # x[, 1] = runif(n)
   U = runif(n)
