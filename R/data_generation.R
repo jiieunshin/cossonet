@@ -58,11 +58,11 @@ data_generation = function(n, p, rho, SNR,
   # x = pnorm(rmvnorm(n, sigma = Sigma))
 
 
-  t = 1
-  x = matrix(runif(n * p), n, p)
+  t = 0
+  x = matrix(runif(n * 4), n, 4)
   # x[, 1] = runif(n)
   U = runif(n)
-  for(j in 1:p){
+  for(j in 1:4){
     x[, j] = (runif(n) + t * U)/(1 + t)
   }
 
@@ -81,8 +81,8 @@ data_generation = function(n, p, rho, SNR,
 # print(sd)
 
   # x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd), n, (p-5)))
-  # x_nois = matrix(runif(n * (p-5)), n, (p-5))
-  # x = cbind(x, x_nois)
+  x_nois = matrix(runif(n * (p-4)), n, (p-4))
+  x = cbind(x, x_nois)
 
 
   # Set the outer margins
@@ -107,7 +107,7 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "classification"){
-    # f = f - 3
+    f = f - 3
     # SNR = sqrt(var(f) / 4)
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
     e = rnorm(n, 0, sqrt(1.74))
