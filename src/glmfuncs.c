@@ -27,17 +27,17 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double lambda0_c = REAL(lambda0)[0];
 
   // Define variables
-  // double *cw_new = (double *)malloc(nc * sizeof(double));
+  double *cw_new = (double *)malloc(nc * sizeof(double));
   // double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
-  double cw_new;
+  // double cw_new;
 
   if (pow_Rc == NULL) {
     error("Memory allocation failed");
   }
 
   for(int k = 0; k < nc; k++) {
-    // cw_new[k] = 0;
+    cw_new[k] = 0;
     // c_new[k] = 0;
     pow_Rc[k] = 0;
   }
@@ -83,11 +83,11 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       double V4 = mc * lambda0_c * Rw2_c[j * nc + j];
 
-      cw_new = (V1 - V2) / (pow_Rc[j] + V4);
+      cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
       // for (int k = 0; k < nc; ++k){
-        diff = fabs(cw_c[j] - cw_new) / fabs(cw_c[j]);
+        diff = fabs(cw_c[j] - cw_new[j]);
 
         if (min_diff > diff){
           min_diff = diff;
@@ -95,15 +95,15 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       // }
 
-      if (min_diff <= 1e-4 || min_diff > 3) {
+      if (min_diff <= 1e-6 || min_diff > 10) {
         break;
       }
 
       // If not convergence, update cw
-      cw_c[j] = cw_new;
+      cw_c[j] = cw_new[j];
     }
 
-    if (min_diff <= 1e-4 || min_diff > 3) {
+    if (min_diff <= 1e-6 || min_diff > 10) {
       break;
     }
 
@@ -112,9 +112,9 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   // Rprintf("min_diff: %f\n", min_diff);
   // Rprintf("iter: %d\n", iter);
 
-  // if ((min_diff > 1e-6 || min_diff > 5) || iter == 0){
-  //   memcpy(cw_c, cw_c, nc * sizeof(double));
-  // }
+  if (min_diff > 10 || iter == 0){
+    memcpy(cw_new, cw_c, nc * sizeof(double));
+  }
 
   // Calculate c_new
   // for (int i = 0; i < nc; ++i) {
@@ -206,7 +206,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double min_diff = 1;
   double diff;
 
-  for(iter = 0; iter < 40; ++iter) {
+  for(iter = 0; iter < 25; ++iter) {
     for(int j = 0; j < dc; ++j) { // iterate by column
 
       double V1 = 0.0;
@@ -228,7 +228,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      diff = fabs(theta_c[j] - theta_new) / fabs(theta_c[j]);
+      diff = fabs(theta_c[j] - theta_new);
 
       if (min_diff > diff){
         min_diff = diff;
@@ -239,7 +239,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       // }
       // }
 
-      if (min_diff <= 1e-4 || min_diff > 4) {
+      if (min_diff <= 1e-6 || min_diff > 10) {
         break;
       }
 
@@ -247,12 +247,12 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       theta_c[j] = theta_new;
     }
 
-    if (min_diff <= 1e-4 || min_diff > 4) {
+    if (min_diff <= 1e-6 || min_diff > 10) {
       break;
     }
   } // end outer iteration
 
-  if (min_diff > 4 || iter == 0){
+  if (min_diff > 10 || iter == 0){
     for (int k = 0; k < dc; ++k){
       theta_c[k] = 0;
     }
