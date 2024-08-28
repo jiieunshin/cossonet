@@ -228,7 +228,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      diff = fabs(theta_c[j] - theta_new);
+      diff = fabs(theta_c[j] - theta_new) / fabs(theta_c[j]);
 
       if (min_diff > diff){
         min_diff = diff;
