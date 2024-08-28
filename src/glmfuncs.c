@@ -95,7 +95,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       // }
 
-      if (min_diff <= 1e-3 || min_diff > 5) {
+      if (min_diff <= 1e-6 || min_diff > 5) {
         break;
       }
 
@@ -103,7 +103,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_c[j] = cw_new[j];
     }
 
-    if (min_diff <= 1e-3 || min_diff > 5) {
+    if (min_diff <= 1e-6 || min_diff > 5) {
       break;
     }
 
@@ -239,7 +239,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       // }
       // }
 
-      if (min_diff <= 1e-3 || min_diff > 3) {
+      if (min_diff <= 1e-6 || min_diff > 3) {
         break;
       }
 
@@ -247,7 +247,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       theta_c[j] = theta_new;
     }
 
-    if (min_diff <= 1e-3 || min_diff > 3) {
+    if (min_diff <= 1e-6 || min_diff > 3) {
       break;
     }
   } // end outer iteration
