@@ -56,7 +56,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double diff;
 
   // outer loop
-  for (iter = 0; iter < 80; ++iter) {
+  for (iter = 0; iter < 40; ++iter) {
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
@@ -103,9 +103,9 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_c[j] = cw_new[j];
     }
 
-    if (min_diff <= 1e-6 || min_diff > 5) {
-      break;
-    }
+    // if (min_diff <= 1e-6 || min_diff > 2) {
+    //   break;
+    // }
 
   } // end outer iteration
 
@@ -206,7 +206,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double min_diff = 1;
   double diff;
 
-  for(iter = 0; iter < 40; ++iter) {
+  for(iter = 0; iter < 20; ++iter) {
     for(int j = 0; j < dc; ++j) { // iterate by column
 
       double V1 = 0.0;
@@ -239,7 +239,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       // }
       // }
 
-      if (min_diff <= 1e-6 || min_diff > 3) {
+      if (min_diff <= 1e-6) {
         break;
       }
 
@@ -247,12 +247,12 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       theta_c[j] = theta_new;
     }
 
-    if (min_diff <= 1e-6 || min_diff > 3) {
-      break;
-    }
+    // if (min_diff <= 1e-6) {
+    //   break;
+    // }
   } // end outer iteration
 
-  if (min_diff > 3 || iter == 0){
+  if (iter == 0){
     for (int k = 0; k < dc; ++k){
       theta_c[k] = 0;
     }
