@@ -51,9 +51,9 @@ data_generation = function(n, p, rho, SNR,
   Sigma = matrix(rho, 4, 4)
   diag(Sigma) = 1
 
-  # Sigma = matrix(1, 5, 5)
-  # for(j in 1:5){
-  #   for(k in 1:5){
+  # Sigma = matrix(1, 4, 4)
+  # for(j in 1:4){
+  #   for(k in 1:4){
   #     Sigma[j, k] = rho^abs(j-k)
   #   }
   # }
