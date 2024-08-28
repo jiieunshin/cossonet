@@ -111,7 +111,7 @@ print(sd)
 
   if(response == "classification"){
     # e = rnorm(n, 0, sd)
-    f = f - 3
+    f = f - 4
     prob = exp(f)/(exp(f) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)

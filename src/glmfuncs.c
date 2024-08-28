@@ -56,7 +56,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double diff;
 
   // outer loop
-  for (iter = 0; iter < 40; ++iter) {
+  for (iter = 0; iter < 20; ++iter) {
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
