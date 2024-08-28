@@ -112,7 +112,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   // Rprintf("min_diff: %f\n", min_diff);
   // Rprintf("iter: %d\n", iter);
 
-  // if ((min_diff > 1e-6 || min_diff > 5) && iter == 0){
+  // if ((min_diff > 1e-6 || min_diff > 5) || iter == 0){
   //   memcpy(cw_c, cw_c, nc * sizeof(double));
   // }
 
@@ -252,7 +252,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
     }
   } // end outer iteration
 
-  if ((min_diff > 1e-6 || min_diff > 5) && iter == 0){
+  if (min_diff > 1e-6 || iter == 0){
     for (int k = 0; k < dc; ++k){
       theta_c[k] = 0;
     }
