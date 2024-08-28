@@ -28,7 +28,7 @@ data_generation = function(n, p, rho, SNR,
     f2 = function(t) (2 * t - 1)^2
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
-    # f5 = function(t) sin(pi * t^4) + t^4
+    f5 = function(t) sin(pi * t^4) + t^4
   # }
 
   # f1 = function(t) 5 * sin(3*t)
@@ -48,7 +48,7 @@ data_generation = function(n, p, rho, SNR,
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
-  Sigma = matrix(rho, 4, 4)
+  Sigma = matrix(rho, 5, 5)
   diag(Sigma) = 1
 
   # Sigma = matrix(1, 5, 5)
@@ -63,17 +63,17 @@ data_generation = function(n, p, rho, SNR,
 
 
   # t = 1
-  # x = matrix(runif(n * 4), n, 4)
+  # x = matrix(runif(n * 5), n, 5)
   # U = runif(n)
-  # for(j in 1:4){
+  # for(j in 1:5){
   #   x[, j] = (runif(n) + t * U)/(1 + t)
   # }
 
 
 
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
+  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
   # print(f)
-  V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
+  V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
   sd = sqrt(V_sig / SNR)
 
 
@@ -83,7 +83,7 @@ data_generation = function(n, p, rho, SNR,
   # sd = .1
 print(sd)
 
-  x_nois = pnorm(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)))
+  x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd/sqrt(p-5)), n, (p-5)))
   # x_nois = matrix(runif(n * (p-4)), n, (p-4))
   x = cbind(x, x_nois)
 
@@ -111,7 +111,7 @@ print(sd)
 
   if(response == "classification"){
     # e = rnorm(n, 0, sd)
-    f = f - 4
+    f = f - 5
     prob = exp(f)/(exp(f) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)
