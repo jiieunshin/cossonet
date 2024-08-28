@@ -63,9 +63,9 @@ data_generation = function(n, p, rho, SNR,
 
 
   # t = 1
-  # x = matrix(runif(n * 4), n, 4)
+  # x = matrix(runif(n * p), n, p)
   # U = runif(n)
-  # for(j in 1:4){
+  # for(j in 1:p){
   #   x[, j] = (runif(n) + t * U)/(1 + t)
   # }
 
