@@ -28,7 +28,7 @@ data_generation = function(n, p, rho, SNR,
     f2 = function(t) (2 * t - 1)^2
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
-    # f5 = function(t) sin(pi * t^4) + t^4
+    f5 = function(t) sin(pi * t^4) + t^4
   # }
 
   # f1 = function(t) 5 * sin(3*t)
@@ -71,9 +71,9 @@ data_generation = function(n, p, rho, SNR,
 
 
 
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
+  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
   # print(f)
-  V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
+  V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
   sd = sqrt(V_sig / SNR)
 
 
