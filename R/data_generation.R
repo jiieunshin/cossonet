@@ -62,12 +62,12 @@ data_generation = function(n, p, rho, SNR,
   x = pnorm(rmvnorm(n, sigma = Sigma))
 
 
-  t = 1
-  x = matrix(runif(n * p), n, p)
-  U = runif(n)
-  for(j in 1:p){
-    x[, j] = (runif(n) + t * U)/(1 + t)
-  }
+  # t = 1
+  # x = matrix(runif(n * 4), n, 4)
+  # U = runif(n)
+  # for(j in 1:4){
+  #   x[, j] = (runif(n) + t * U)/(1 + t)
+  # }
 
 
 
@@ -83,9 +83,9 @@ data_generation = function(n, p, rho, SNR,
   # sd = .1
 print(sd)
 
-  # x_nois = pnorm(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)))
-  # x_nois = matrix(runif(n * (p-5)), n, (p-5))
-  # x = cbind(x, x_nois)
+  x_nois = pnorm(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)))
+  # x_nois = matrix(runif(n * (p-4)), n, (p-4))
+  x = cbind(x, x_nois)
 
 
   # Set the outer margins
@@ -104,7 +104,7 @@ print(sd)
   if(response == "regression"){
     # SNR = sqrt(.6*(p-5)) # SNR = 4일 때
     # print(SNR)
-    f = f + rnorm(n, 0, sd)
+    # f = f + rnorm(n, 0, sd)
 
     out = list(x = x, y = f)
   }
