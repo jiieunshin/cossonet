@@ -57,7 +57,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double avg_diff;
 
   // outer loop
-  for (iter = 0; iter < 40; ++iter) {
+  for (iter = 0; iter < 100; ++iter) {
     avg_diff = 0.0;
 
     // update cw
@@ -92,7 +92,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       avg_diff += diff[j];
 
-      if (avg_diff <= 1e-4) {
+      if (cw_new[j] <= 1e-4) {
         break;
       }
 
@@ -227,7 +227,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
       avg_diff += diff[j];
 
-      if (avg_diff <= eps) {
+      if ((diff[j] > 0) & (diff[j] <= eps)) {
         break;
       }
 
