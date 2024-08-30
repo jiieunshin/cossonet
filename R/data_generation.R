@@ -44,7 +44,7 @@ data_generation = function(n, p, rho, SNR,
   if(missing(n)) n = 200
   if(missing(p)) p = 10
   if(missing(rho)) rho = 0.8
-  if(missing(SNR)) SNR = 15
+  if(missing(SNR)) SNR = 8
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
@@ -71,9 +71,9 @@ data_generation = function(n, p, rho, SNR,
 
 
 
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4]) + 4 * f5(x[,5])
   # print(f)
-  V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
+  V_sig = var(5 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4])) + var(4 * f5(x[,5]))
   sd = sqrt(var(f) / SNR)
 
 

@@ -52,7 +52,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   int iter = 0;
-  double min_diff = 1.0;
+  double min_diff = 10.0;
   double diff;
   double avg_diff;
 
@@ -112,7 +112,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
     }
   } // End outer iteration
 
-  Rprintf("min_diff: %f\n", min_diff);
+  Rprintf("min_diff: %f\n", avg_diff);
   Rprintf("iter: %d\n", iter);
 
   // result
@@ -197,7 +197,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
   // outer iteration
   int iter = 0;
-  double min_diff = 1.0;
+  double min_diff = 10.0;
   double diff;
   double avg_diff;
 
@@ -263,7 +263,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // }
   // Rprintf("\n max_diff: %d \n", max_diff);
 
-  Rprintf("min_diff: %f\n", min_diff);
+  Rprintf("min_diff: %f\n", avg_diff);
   Rprintf("iter: %d\n", iter);
 
   // result
