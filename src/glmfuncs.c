@@ -53,7 +53,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
   int iter = 0;
   // double min_diff = 10;
-  double *diff = (double *)malloc(nc * sizeof(double));
+  double diff;
   double avg_diff;
 
   // outer loop
@@ -88,11 +88,11 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
-      diff[j] = fabs(cw_c[j] - cw_new[j]);
+      diff = fabs(cw_c[j] - cw_new[j]);
 
-      avg_diff += diff[j];
+      avg_diff += diff;
 
-      if ((cw_new[j] > 0) & (diff[j] <= 1e-4)) {
+      if (((cw_new[j] > 0) & (diff <= 1e-4)) | (diff > 10)) {
         break;
       }
 
@@ -103,7 +103,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
     avg_diff /= nc; // Calculate the average difference
 
     // Check for convergence based on average difference
-    if (avg_diff <= 1e-4) {
+    if ((avg_diff <= 1e-4) | (diff > 10) ) {
       break;
     }
   } // End outer iteration

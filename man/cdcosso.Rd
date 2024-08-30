@@ -18,7 +18,7 @@ cdcosso(
      2
  }), length.out = 20)),
   lambda_theta = exp(seq(log(2^{
-     -18
+     -22
  }), log(2^{
      2
  }), length.out = 20)),
