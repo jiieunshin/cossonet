@@ -57,7 +57,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double avg_diff;
 
   // outer loop
-  for (iter = 0; iter < 20; ++iter) {
+  for (iter = 0; iter < 100; ++iter) {
     avg_diff = 0.0;
 
     // update cw
@@ -198,7 +198,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double avg_diff;
   double eps = 1e-8 / dc;
 
-  for(iter = 0; iter < 20; ++iter) {
+  for(iter = 0; iter < 10; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
 
