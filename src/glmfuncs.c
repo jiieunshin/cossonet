@@ -57,7 +57,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double avg_diff;
 
   // outer loop
-  for (iter = 0; iter < 100; ++iter) {
+  for (iter = 0; iter < 40; ++iter) {
     avg_diff = 0.0;
 
     // update cw
@@ -92,7 +92,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       avg_diff += diff[j];
 
-      if (diff[j] <= 1e-8) {
+      if (avg_diff <= 1e-4) {
         break;
       }
 
@@ -103,7 +103,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
     avg_diff /= nc; // Calculate the average difference
 
     // Check for convergence based on average difference
-    if (avg_diff <= 1e-8) {
+    if (avg_diff <= 1e-4) {
       break;
     }
   } // End outer iteration
@@ -196,8 +196,9 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // double min_diff = 10.0;
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
+  double eps = 1e-4 / dc;
 
-  for(iter = 0; iter < 100; ++iter) {
+  for(iter = 0; iter < 40; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
 
@@ -226,7 +227,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
       avg_diff += diff[j];
 
-      if (avg_diff <= 1e-8) {
+      if (avg_diff <= eps) {
         break;
       }
 
@@ -237,7 +238,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
     avg_diff /= dc;  // Calculate the average difference
 
     // Check for convergence based on average difference
-    if (avg_diff <= 1e-8) {
+    if (avg_diff <= eps) {
       break;
     }
   } // end outer iteration
