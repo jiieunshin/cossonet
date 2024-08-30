@@ -71,10 +71,10 @@ data_generation = function(n, p, rho, SNR,
 
 
 
-  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 2 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 3 * f5(x[,5])
   # print(f)
-  V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4])) + var(2 * f5(x[,5]))
-  sd = sqrt(var(f) / SNR)
+  V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4])) + var(3 * f5(x[,5]))
+  sd = sqrt(V_sig / SNR)
 
 
   # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
