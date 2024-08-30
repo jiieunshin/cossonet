@@ -52,11 +52,13 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   int iter = 0;
-  double min_diff = 10;
+  double min_diff = 1.0;
   double diff;
+  double avg_diff;
 
   // outer loop
   for (iter = 0; iter < 100; ++iter) {
+    avg_diff = 0.0;
 
     // update cw
     for (int j = 0; j < nc; ++j) { // iterate by column
@@ -86,40 +88,28 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
-      // for (int k = 0; k < nc; ++k){
+      if (fabs(cw_c[j]) > .1) {
         diff = fabs(cw_c[j] - cw_new[j]) / fabs(cw_c[j]);
-
-        if (min_diff > diff){
-          min_diff = diff;
-        }
-
-      // }
-
-      if (min_diff <= 1e-8) {
-        break;
+      } else {
+        diff = fabs(cw_new[j]);
       }
 
-      // If not convergence, update cw
+      avg_diff += diff;
+
+      // Update cw with the new value
       cw_c[j] = cw_new[j];
     }
 
-    if (min_diff <= 1e-8) {
+    avg_diff /= nc; // Calculate the average difference
+
+    // Check for convergence based on average difference
+    if (avg_diff <= 1e-8) {
       break;
     }
-
-  } // end outer iteration
+  } // End outer iteration
 
   Rprintf("min_diff: %f\n", min_diff);
   Rprintf("iter: %d\n", iter);
-
-  // if (min_diff > 10 || iter == 0){
-  //   memcpy(cw_new, cw_c, nc * sizeof(double));
-  // }
-
-  // Calculate c_new
-  // for (int i = 0; i < nc; ++i) {
-  //   c_new[i] = cw_new[i] * sqrt(sw_c[i]);
-  // }
 
   // result
   double sum3 = 0.0, sum4 = 0.0;
@@ -203,10 +193,14 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
   // outer iteration
   int iter = 0;
-  double min_diff = 1;
+  double min_diff = 1.0;
   double diff;
+  double avg_diff;
 
   for(iter = 0; iter < 100; ++iter) {
+    avg_diff = 0.0;  // Initialize avg_diff for averaging
+
+
     for(int j = 0; j < dc; ++j) { // iterate by column
 
       double V1 = 0.0;
@@ -228,26 +222,22 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      diff = fabs(theta_c[j] - theta_new) / fabs(theta_c[j]) ;
-
-      if (min_diff > diff){
-        min_diff = diff;
+      if (fabs(theta_c[j]) > .1) {
+        diff = fabs(theta_c[j] - theta_new) / fabs(theta_c[j]);
+      } else {
+        diff = fabs(theta_new);  // Only use the numerator when denominator is too small
       }
 
-      // if (min_diff <= 1e-8 || min_diff > 10) {
-      //   break;
-      // }
-      // }
+      avg_diff += diff;
 
-      if (min_diff <= 1e-8) {
-        break;
-      }
-
-      // If not convergence, Update theta_new.
+      // Update theta with the new value
       theta_c[j] = theta_new;
     }
 
-    if (min_diff <= 1e-8) {
+    avg_diff /= dc;  // Calculate the average difference
+
+    // Check for convergence based on average difference
+    if (avg_diff <= 1e-8) {
       break;
     }
   } // end outer iteration
