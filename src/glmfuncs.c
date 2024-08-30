@@ -91,10 +91,14 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       if (fabs(cw_c[j]) > .1) {
         diff = fabs(cw_c[j] - cw_new[j]) / fabs(cw_c[j]);
       } else {
-        diff = fabs(cw_new[j]);
+        diff = fabs(cw_c[j] - cw_new[j]);
       }
 
       avg_diff += diff;
+
+      if (avg_diff <= 1e-8) {
+        break;
+      }
 
       // Update cw with the new value
       cw_c[j] = cw_new[j];
@@ -169,9 +173,9 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
-  // double *theta_new = (double *)malloc(dc * sizeof(double));
+  double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
-  double theta_new = 0;
+  // double theta_new = 0;
 
   // 메모리 할당 실패 시 처리 방법
   if (pow_theta == NULL) {
@@ -179,7 +183,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   }
 
   for (int k = 0; k < dc; ++k){
-    // theta_new[k] = 0;
+    theta_new[k] = 0;
     pow_theta[k] = 0;
   }
 
@@ -216,22 +220,26 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       V1 = 2 * V1;
 
       if(V1 > 0 && r < fabs(V1)) {
-        theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
+        theta_new[j] = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
-        theta_new = 0;
+        theta_new[j] = 0;
       }
 
       // If convergence criteria are met, break the loop
       if (fabs(theta_c[j]) > .1) {
-        diff = fabs(theta_c[j] - theta_new) / fabs(theta_c[j]);
+        diff = fabs(theta_c[j] - theta_new[j]) / fabs(theta_c[j]);
       } else {
-        diff = fabs(theta_new);  // Only use the numerator when denominator is too small
+        diff = fabs(theta_c[j] - theta_new[j]);  // Only use the numerator when denominator is too small
       }
 
       avg_diff += diff;
 
+      if (avg_diff <= 1e-8) {
+        break;
+      }
+
       // Update theta with the new value
-      theta_c[j] = theta_new;
+      theta_c[j] = theta_new[j];
     }
 
     avg_diff /= dc;  // Calculate the average difference
