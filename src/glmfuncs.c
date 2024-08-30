@@ -52,8 +52,8 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   }
 
   int iter = 0;
-  double min_diff = 10.0;
-  double diff;
+  // double min_diff = 10;
+  double *diff = (double *)malloc(nc * sizeof(double));
   double avg_diff;
 
   // outer loop
@@ -88,15 +88,11 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
-      if (fabs(cw_c[j]) > .1) {
-        diff = fabs(cw_c[j] - cw_new[j]) / fabs(cw_c[j]);
-      } else {
-        diff = fabs(cw_c[j] - cw_new[j]);
-      }
+      diff[j] = fabs(cw_c[j] - cw_new[j]) / fabs(cw_c[j]);
 
-      avg_diff += diff;
+      avg_diff += diff[j];
 
-      if (avg_diff <= 1e-8) {
+      if (diff[j] <= 1e-8) {
         break;
       }
 
@@ -197,12 +193,12 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
   // outer iteration
   int iter = 0;
-  double min_diff = 10.0;
-  double diff;
+  // double min_diff = 10.0;
+  double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
   for(iter = 0; iter < 100; ++iter) {
-    avg_diff = 0.0;  // Initialize avg_diff for averaging
+    avg_diff = 0;  // Initialize avg_diff for averaging
 
 
     for(int j = 0; j < dc; ++j) { // iterate by column
@@ -226,15 +222,11 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      if (fabs(theta_c[j]) > .1) {
-        diff = fabs(theta_c[j] - theta_new[j]) / fabs(theta_c[j]);
-      } else {
-        diff = fabs(theta_c[j] - theta_new[j]);  // Only use the numerator when denominator is too small
-      }
+      diff[j] = fabs(theta_c[j] - theta_new[j]) / fabs(theta_c[j]);
 
-      avg_diff += diff;
+      avg_diff += diff[j];
 
-      if (avg_diff <= 1e-8) {
+      if (diff[j] <= 1e-8) {
         break;
       }
 
