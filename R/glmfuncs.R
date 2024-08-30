@@ -231,10 +231,10 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   optlambda = cand.lambda[min_id]
 
   if(show){
-    plot(log(cand.lambda), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+    plot(log(cand.lambda)[sel_id], measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
          ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
-    arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
-           x1 = log(cand.lambda), y1 = measure_mean + measure_se,
+    arrows(x0 = log(cand.lambda)[sel_id], y0 = measure_mean - measure_se,
+           x1 = log(cand.lambda)[sel_id], y1 = measure_mean + measure_se,
            angle = 90, code = 3, length = 0.1, col = "darkgray")
   }
 
@@ -515,10 +515,10 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   xrange = log(lambda_theta)
   # plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
-  plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
+  plot(log(lambda_theta)[sel_id], measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
        ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
-  arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
-         x1 = log(lambda_theta), y1 = measure_mean + measure_se,
+  arrows(x0 = log(lambda_theta)[sel_id], y0 = measure_mean - measure_se,
+         x1 = log(lambda_theta)[sel_id], y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
 
     theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
