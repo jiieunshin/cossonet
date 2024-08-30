@@ -88,7 +88,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
-      diff[j] = fabs(cw_c[j] - cw_new[j]) / fabs(cw_c[j]);
+      diff[j] = fabs(cw_c[j] - cw_new[j]);
 
       avg_diff += diff[j];
 
@@ -222,7 +222,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      diff[j] = fabs(theta_c[j] - theta_new[j]) / fabs(theta_c[j] + 1);
+      diff[j] = fabs(theta_c[j] - theta_new[j]);
 
       avg_diff += diff[j];
 
