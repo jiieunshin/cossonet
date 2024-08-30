@@ -92,7 +92,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       avg_diff += diff[j];
 
-      if (cw_new[j] <= 1e-4) {
+      if ((cw_new[j] > 0) & (diff[j] <= 1e-4)) {
         break;
       }
 
@@ -227,7 +227,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
       avg_diff += diff[j];
 
-      if ((diff[j] > 0) & (diff[j] <= eps)) {
+      if ((theta_new[j] > 0) & (diff[j] <= eps)) {
         break;
       }
 
