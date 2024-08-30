@@ -222,11 +222,11 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       }
 
       // If convergence criteria are met, break the loop
-      diff[j] = fabs(theta_c[j] - theta_new[j]) / fabs(theta_c[j]);
+      diff[j] = fabs(theta_c[j] - theta_new[j]) / fabs(theta_c[j] + 1);
 
       avg_diff += diff[j];
 
-      if (diff[j] <= 1e-8) {
+      if (avg_diff <= 1e-8) {
         break;
       }
 
