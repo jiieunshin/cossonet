@@ -27,17 +27,17 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double lambda0_c = REAL(lambda0)[0];
 
   // Define variables
-  double *cw_new = (double *)malloc(nc * sizeof(double));
+  // double *cw_new = (double *)malloc(nc * sizeof(double));
   // double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(nc * sizeof(double));
-  // double cw_new;
+  double cw_new;
 
   if (pow_Rc == NULL) {
     error("Memory allocation failed");
   }
 
   for(int k = 0; k < nc; k++) {
-    cw_new[k] = 0;
+    // cw_new[k] = 0;
     // c_new[k] = 0;
     pow_Rc[k] = 0;
   }
@@ -57,7 +57,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double avg_diff;
 
   // outer loop
-  for (iter = 0; iter < 100; ++iter) {
+  for (iter = 0; iter < 500; ++iter) {
     avg_diff = 0.0;
 
     // update cw
@@ -85,25 +85,25 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
       double V4 = mc * lambda0_c * Rw2_c[j * nc + j];
 
-      cw_new[j] = (V1 - V2) / (pow_Rc[j] + V4);
+      cw_new = (V1 - V2) / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
-      diff = fabs(cw_c[j] - cw_new[j]) / fabs(cw_c[j] + 1);
+      diff = fabs(cw_c[j] - cw_new) / fabs(cw_c[j] + 1);
 
       avg_diff += diff;
 
-      if ((cw_new[j] > 0) & (diff > 5)) {
-        break;
+      if ((diff < 1e-6) | (diff > 10)) {
+        cw_new = cw_c[j];
       }
 
       // Update cw with the new value
-      cw_c[j] = cw_new[j];
+      cw_c[j] = cw_new;
     }
 
     avg_diff /= nc; // Calculate the average difference
 
     // Check for convergence based on average difference
-    if ((avg_diff <= 1e-2) | (diff > 5) ) {
+    if (avg_diff <= 1e-4) {
       break;
     }
   } // End outer iteration
@@ -169,9 +169,9 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   // SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
-  double *theta_new = (double *)malloc(dc * sizeof(double));
+  // double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
-  // double theta_new = 0;
+  double theta_new = 0;
 
   // 메모리 할당 실패 시 처리 방법
   if (pow_theta == NULL) {
@@ -179,7 +179,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   }
 
   for (int k = 0; k < dc; ++k){
-    theta_new[k] = 0;
+    // theta_new[k] = 0;
     pow_theta[k] = 0;
   }
 
@@ -197,7 +197,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
-  for(iter = 0; iter < 100; ++iter) {
+  for(iter = 0; iter < 500; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
 
@@ -216,28 +216,28 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
       V1 = 2 * V1;
 
       if(V1 > 0 && r < fabs(V1)) {
-        theta_new[j] = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
+        theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
-        theta_new[j] = 0;
+        theta_new = 0;
       }
 
       // If convergence criteria are met, break the loop
-      diff[j] = fabs(theta_c[j] - theta_new[j]) / fabs(theta_c[j] + 1);
+      diff[j] = fabs(theta_c[j] - theta_new) / fabs(theta_c[j] + 1);
 
       avg_diff += diff[j];
 
-      if ((theta_new[j] > 0) & (diff[j] <= 1e-2)) {
+      if ((theta_new > 0) & (diff[j] <= 1e-4)) {
         break;
       }
 
       // Update theta with the new value
-      theta_c[j] = theta_new[j];
+      theta_c[j] = theta_new;
     }
 
     avg_diff /= dc;  // Calculate the average difference
 
     // Check for convergence based on average difference
-    if (avg_diff <= 1e-2) {
+    if (avg_diff <= 1e-4) {
       break;
     }
   } // end outer iteration
