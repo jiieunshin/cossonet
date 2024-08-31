@@ -508,7 +508,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
                      (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
   cand_ids = cand_ids[cand_ids >= min_id]
   std_id = max(cand_ids)
-  optlambda = lambda_theta[min_id]
+  optlambda = lambda_theta[std_id]
 
   ylab = expression("GCV(" * lambda[theta] * ")")
 
