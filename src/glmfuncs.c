@@ -198,7 +198,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
-  for(iter = 0; iter < 80; ++iter) {
+  for(iter = 0; iter < 20; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
 
