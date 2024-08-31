@@ -53,7 +53,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
   int iter = 0;
   // double min_diff = 10;
-  double diff;
+  double diff = 0.0;
   double avg_diff;
 
   // outer loop
