@@ -90,11 +90,12 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       // If convergence criteria are met, break the loop
       diff = fabs(cw_c[j] - cw_new) / fabs(cw_c[j] + 1);
 
-      avg_diff += diff;
-
       if ((diff < 1e-6) | (diff > 10)) {
         cw_new = cw_c[j];
+        diff = fabs(cw_c[j] - cw_new) / fabs(cw_c[j] + 1);
       }
+
+      avg_diff += diff;
 
       // Update cw with the new value
       cw_c[j] = cw_new;
