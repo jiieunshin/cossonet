@@ -43,20 +43,20 @@ data_generation = function(n, p, rho, SNR,
 
   if(missing(n)) n = 200
   if(missing(p)) p = 10
-  if(missing(rho)) rho = 0.8
+  if(missing(rho)) rho = 0.5
   if(missing(SNR)) SNR = 8
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
-  # Sigma = matrix(rho, 4, 4)
-  # diag(Sigma) = 1
+  Sigma = matrix(rho, 4, 4)
+  diag(Sigma) = 1
 
-  Sigma = matrix(1, 4, 4)
-  for(j in 1:4){
-    for(k in 1:4){
-      Sigma[j, k] = rho^abs(j-k)
-    }
-  }
+  # Sigma = matrix(1, 4, 4)
+  # for(j in 1:4){
+  #   for(k in 1:4){
+  #     Sigma[j, k] = rho^abs(j-k)
+  #   }
+  # }
 
 
   x = pnorm(rmvnorm(n, sigma = Sigma))
