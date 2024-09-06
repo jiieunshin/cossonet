@@ -81,7 +81,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
           V2 += Rw2_c[l * nc + j] * cw_c[l];
         }
       }
-      V2 = nc * lambda0_c * V2;
+      V2 = mc * lambda0_c * V2;
 
       double V4 = mc * lambda0_c * Rw2_c[j * nc + j];
 
@@ -166,7 +166,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
   double *theta_c = REAL(theta);
   double lambda_theta_c = REAL(lambda_theta)[0];
   double gamma_c = REAL(gamma)[0];
-  double r = lambda_theta_c * gamma_c * nc;
+  double r = lambda_theta_c * gamma_c * nc / 2;
   // SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
