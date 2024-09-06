@@ -475,7 +475,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
     m = length(tr_id)
 
     for (k in 1:len) {
-      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], tr_n, d, init.theta, lambda_theta[k], gamma)
+      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], n, tr_n, d, init.theta, lambda_theta[k], gamma)
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       save_theta[[k]] <- theta.adj
 

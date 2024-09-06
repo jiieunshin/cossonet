@@ -157,9 +157,10 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 }
 
 
-SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
+SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP m, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
   // Convert R vectors to C arrays
   int nc = INTEGER(n)[0]; // Extract the value of n
+  int mc = INTEGER(m)[0];
   int dc = INTEGER(d)[0]; // Extract the value of d
   double *uw_c = REAL(uw);
   double *Gw_c = REAL(Gw);
@@ -186,8 +187,8 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
 
   for(int j = 0; j < dc; j++) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < nc; k++) { // iterate by row
-      add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
+    for(int k = 0; k < mc; k++) { // iterate by row
+      add += Gw_c[j * mc + k] * Gw_c[j * mc + k];
     }
     pow_theta[j] = add;
   }
@@ -205,20 +206,20 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP d, SEXP theta, SEXP lambda_th
     for(int j = 0; j < dc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for(int k = 0; k < nc; ++k) { // iterate by row
+      for(int k = 0; k < mc; ++k) { // iterate by row
         double GT = 0.0;
         for(int l = 0; l < dc; ++l) { // iterate by column except j
           if(l != j) {
-            GT += Gw_c[l * nc + k] * theta_c[l];
+            GT += Gw_c[l * mc + k] * theta_c[l];
           }
         }
-        V1 += (uw_c[k] - GT) * Gw_c[j * nc + k];
+        V1 += (uw_c[k] - GT) * Gw_c[j * mc + k];
       }
       // V1 = 2 * V1;
 
 
       if(V1 > 0 && r < fabs(V1)) {
-        theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c));
+        theta_new = V1 / (pow_theta[j] + mc * lambda_theta_c * (1-gamma_c));
         // theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
         theta_new = 0;
