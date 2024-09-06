@@ -284,7 +284,7 @@ cvsplitID = function (n, folds, y, family)
 KL = function(f, obj){
   if(obj$family == "gaussian") B = f^2/2
   if(obj$family == "binomial") B = log(1 + exp(f))
-  if(obj$family == "gaussian") B = exp(f)
+  if(obj$family == "poisson") B = exp(f)
 
   return(mean(-(obj$linkinv(f) * f) + B))
 }

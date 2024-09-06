@@ -20,15 +20,15 @@ data_generation = function(n, p, rho, SNR,
   # f2 = function(t) (2 * t - 1)^2 - 0.4
   # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
   # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.2
-  # # f5 = function(t) sin(pi * t^4) + t^4 - 0.6
+  # f5 = function(t) sin(pi * t^4) + t^4 - 0.6
   # }
   #
   # if(response == "regression"){
-  #   f1 = function(t) t
-  #   f2 = function(t) (2 * t - 1)^2
-  #   f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-  #   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
-  #   f5 = function(t) sin(pi * t^4) + t^4
+    # f1 = function(t) t
+    # f2 = function(t) (2 * t - 1)^2
+    # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+    # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+    # f5 = function(t) sin(pi * t^4) + t^4
   # }
 
   f1 = function(t) 5 * sin(3*t) - 2
@@ -48,24 +48,24 @@ data_generation = function(n, p, rho, SNR,
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
-  Sigma = matrix(rho, 5, 5)
-  diag(Sigma) = 1
+  # Sigma = matrix(rho, 5, 5)
+  # diag(Sigma) = 1
 
-  # Sigma = matrix(1, 5, 5)
-  # for(j in 1:5){
-  #   for(k in 1:5){
-  #     Sigma[j, k] = rho^abs(j-k)
-  #   }
-  # }
+  Sigma = matrix(1, 5, 5)
+  for(j in 1:5){
+    for(k in 1:5){
+      Sigma[j, k] = rho^abs(j-k)
+    }
+  }
 
 
   x = pnorm(rmvnorm(n, sigma = Sigma))
 
 
   # t = 2
-  # x = matrix(runif(n * 4), n, 4)
+  # x = matrix(runif(n * 5), n, 5)
   # U = runif(n)
-  # for(j in 1:4){
+  # for(j in 1:5){
   #   x[, j] = (runif(n) + t * U)/(1 + t)
   # }
 
@@ -84,7 +84,7 @@ data_generation = function(n, p, rho, SNR,
 print(sd)
 
   x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd/sqrt(p-5)), n, (p-5)))
-  # x_nois = matrix(runif(n * (p-4)), n, (p-4))
+  # x_nois = matrix(runif(n * (p-5)), n, (p-5))
   x = cbind(x, x_nois)
 
 
@@ -110,7 +110,7 @@ print(sd)
   }
 
   if(response == "classification"){
-    # e = rnorm(n, 0, sd)
+    e = rnorm(n, 0, sd)
     # f = f - 5
     prob = exp(f)/(exp(f) + 1)
     y = rbinom(n, 1, prob)
@@ -120,7 +120,7 @@ print(sd)
   }
 
   if(response == "count"){
-    mu = exp(f)
+    mu = exp(f/(2*sqrt(p)))
     y = rpois(n, mu)
     out = list(x = x, f = f, y = y)
   }
