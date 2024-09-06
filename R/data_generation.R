@@ -16,11 +16,11 @@ data_generation = function(n, p, rho, SNR,
                            response = c("regression", "classification", "count", "survival", "interaction")){
 
   # if(response == "classification"){
-  # f1 = function(t) t - 0.5
-  # f2 = function(t) (2 * t - 1)^2 - 0.4
-  # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-  # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.2
-  # f5 = function(t) sin(pi * t^4) + t^4 - 0.6
+  f1 = function(t) t - 0.5
+  f2 = function(t) (2 * t - 1)^2 - 0.4
+  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.2
+  f5 = function(t) sin(pi * t^4) + t^4 - 0.6
   # }
   #
   # if(response == "regression"){
@@ -31,11 +31,11 @@ data_generation = function(n, p, rho, SNR,
     # f5 = function(t) sin(pi * t^4) + t^4
   # }
 
-  f1 = function(t) 5 * sin(3*t) - 2
-  f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
-  f3 = function(t)  t * (1-t^2) * exp(3 * t) - 4
-  f4 = function(t) 4 * t
-  f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
+  # f1 = function(t) 5 * sin(3*t) - 2
+  # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
+  # f3 = function(t)  t * (1-t^2) * exp(3 * t) - 4
+  # f4 = function(t) 4 * t
+  # f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
 
   if(missing(response))
     type = "classification"

@@ -81,9 +81,9 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
           V2 += Rw2_c[l * nc + j] * cw_c[l];
         }
       }
-      V2 = mc * lambda0_c * V2;
+      V2 = nc * lambda0_c * V2;
 
-      double V4 = mc * lambda0_c * Rw2_c[j * nc + j];
+      double V4 = nc * lambda0_c * Rw2_c[j * nc + j];
 
       cw_new = (V1 - V2) / (pow_Rc[j] + V4);
 
