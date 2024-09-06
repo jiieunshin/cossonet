@@ -219,7 +219,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP m, SEXP d, SEXP theta, SEXP l
 
 
       if(V1 > 0 && r < fabs(V1)) {
-        theta_new = V1 / (pow_theta[j] + mc * lambda_theta_c * (1-gamma_c));
+        theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c));
         // theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
         theta_new = 0;

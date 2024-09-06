@@ -525,7 +525,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
 
-    theta.new = .Call("glm_theta_step", Gw, uw, n, d, init.theta, optlambda, gamma)
+    theta.new = .Call("glm_theta_step", Gw, uw, n, n, d, init.theta, optlambda, gamma)
     # theta.new = save_theta[[id]]
     theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
