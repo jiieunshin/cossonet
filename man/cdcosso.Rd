@@ -13,7 +13,7 @@ cdcosso(
   algo = c("CD", "QP"),
   kparam = 1,
   lambda0 = exp(seq(log(2^{
-     -22
+     -12
  }), log(2^{
      2
  }), length.out = 20)),
