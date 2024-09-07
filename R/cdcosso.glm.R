@@ -47,21 +47,12 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kpara
   # nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
   par(mfrow = c(1,1))
 
-  if(algo == "CD")
-    out = list(data = list(x = x, y = y, R = sspline_cvfit$R, kernel = type, kparam = kparam),
-               tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit,
-               theta_step = nng_fit,
-               family = obj$family,
-               algorithm = algo)
-
-  if(algo == "QP")
-    out = list(data = list(x = x, y = y, R = sspline_cvfit$R, kernel = type, kparam = kparam),
-               tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-               c_step = sspline_cvfit,
-               theta_step = nng_fit,
-               family = obj$family,
-               algorithm = algo)
+  out = list(data = list(x = x, y = y, R = sspline_cvfit$R, basis.id = basis.id, kernel = type, kparam = kparam),
+             tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
+             c_step = sspline_cvfit,
+             theta_step = nng_fit,
+             family = obj$family,
+             algorithm = algo)
 
   return(out)
 }

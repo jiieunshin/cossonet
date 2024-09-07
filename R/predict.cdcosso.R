@@ -13,15 +13,15 @@
 predict.cdcosso = function(model, testx)
 {
   family = model$family
-  if(family == "gaussian") fam = gaussian()
-  if(family == "binomial") fam = binomial()
-  if(family == "poisson") fam = poisson()
+  if(family == "gaussian") obj = gaussian()
+  if(family == "binomial") obj = binomial()
+  if(family == "poisson") obj = poisson()
 
-  tr_n = dim(model$data$x)[1]
+  tr_n = dim(model$data$basis.id)[1]
   te_n <- dim(testx)[1]
 
   if(class(testx)[1] == "data.frame") testx = matrix(unlist(testx), nrow = te_n)
-  testx = apply(testx, 2, rescale)
+  testx = pnorm(testx)
   K = make_anovaKernel(testx, model$data$x, model$data$kernel, model$data$kparam)
 
   d = K$numK
@@ -37,8 +37,11 @@ predict.cdcosso = function(model, testx)
   c.new = model$c_step$c.new
   f.new = c(Rtheta %*% c.new + model$c_step$b.new)
 
+  rm(K)
+  rm(R)
+
   if(family != "Cox"){
-    mu.new = fam$linkinv(f.new)
+    mu.new = obj$linkinv(f.new)
     out = list(f.new = f.new, mu.new = mu.new)
   }
 
@@ -48,5 +51,3 @@ predict.cdcosso = function(model, testx)
 
   return(out)
 }
-
-
