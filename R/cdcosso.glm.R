@@ -8,6 +8,8 @@
 #' @param x Input matrix with $n$ observations and $p$ dimension.
 #' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
 #' @param wt A weight vector for components.
+#' @param nbasis The number of basis.
+#' @param basis.id The index of basis.
 #' @param lambda0 A vector of tuning parameter to select optimal smoothing parameter.
 #' @param lambda_theta A vector of tuning parameter to select optimal tuning parameter.
 #' @param gamma The elastic net mixing parameter between 0 and 1. When `gamma = 1`, the penalty is to be LASSO. When `gamma = 0`, the penalty is to be ridge penalty. The default is `gamma = 0.95`.
@@ -20,15 +22,21 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo)
+cdcosso.glm = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo)
 {
   n = length(y)
   p = length(wt)
 
   cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
-  nbasis = as.integer(max(40, ceiling(12 * n^(2/9))))
-  basis.id = sort(sample(1:n, nbasis))
+  if (missing(nbasis) & missing(basis.id)) {
+    nbasis = max(40, ceiling(12 * n^(2/9)))
+    basis.id = sort(sample(1:n, nbasis))
+  }
+  if (missing(nbasis) & !missing(basis.id))
+    nbasis <- length(basis.id)
+  if (!missing(nbasis) & missing(basis.id))
+    basis.id <- sort(sample(1:n, nbasis))
 
   K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
@@ -47,7 +55,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kpara
   # nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
   par(mfrow = c(1,1))
 
-  out = list(data = list(x = x, y = y, R = sspline_cvfit$R, basis.id = basis.id, kernel = type, kparam = kparam),
+  out = list(data = list(x = x, y = y, R = sspline_cvfit$R, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = sspline_cvfit,
              theta_step = nng_fit,

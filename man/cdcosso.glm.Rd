@@ -8,6 +8,8 @@ cdcosso.glm(
   x,
   y,
   wt,
+  nbasis,
+  basis.id,
   lambda0,
   lambda_theta,
   gamma,
@@ -24,6 +26,10 @@ cdcosso.glm(
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
 
 \item{wt}{A weight vector for components.}
+
+\item{nbasis}{The number of basis.}
+
+\item{basis.id}{The index of basis.}
 
 \item{lambda0}{A vector of tuning parameter to select optimal smoothing parameter.}
 

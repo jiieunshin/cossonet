@@ -9,6 +9,8 @@
 #' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
 #' @param family A character string representing one of the built-in families. The value depends on the type of response variable, `family='gaussian'` for continuous, `family='binomial'` forj binary class, `family='poisson'` for non-negative count , and `family='Cox'` for survival.
 #' @param kernel Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
+#' @param nbasis The number of basis.
+#' @param basis.id The index of basis.
 #' @param effect Effect of the component to be analyzed, `effect = "main"` for main effect (default), and `effect = "interaction"` for interaction.
 #' @param algo Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
 #' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
@@ -36,6 +38,7 @@
 cdcosso = function (x,
                     y,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
+                    nbasis, basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
                     algo = c("CD", "QP"),
@@ -90,7 +93,7 @@ cdcosso = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo),
+               glm = cdcosso.glm(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo),
                Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
                # Negbin, svm 추???
   )

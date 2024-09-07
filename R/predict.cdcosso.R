@@ -31,8 +31,7 @@ predict.cdcosso = function(model, testx)
     R[, , j] = K$K[[j]][, model$data$basis.id]
   }
 
-  wt = rep(1, d)
-  Rtheta <- wsGram(R, model$theta_step$theta.new/wt^2)
+  Rtheta <- wsGram(R, model$theta_step$theta.new/model$data$wt^2)
 
   c.new = model$c_step$c.new
   f.new = c(Rtheta %*% c.new + model$c_step$b.new)

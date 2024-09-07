@@ -8,6 +8,8 @@ cdcosso(
   x,
   y,
   family = c("gaussian", "binomial", "poisson", "Cox"),
+  nbasis,
+  basis.id,
   kernel = c("linear", "gaussian", "poly", "spline"),
   effect = c("main", "interaction"),
   algo = c("CD", "QP"),
@@ -32,6 +34,10 @@ cdcosso(
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
 
 \item{family}{A character string representing one of the built-in families. The value depends on the type of response variable, \code{family='gaussian'} for continuous, \code{family='binomial'} forj binary class, \code{family='poisson'} for non-negative count , and \code{family='Cox'} for survival.}
+
+\item{nbasis}{The number of basis.}
+
+\item{basis.id}{The index of basis.}
 
 \item{kernel}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
