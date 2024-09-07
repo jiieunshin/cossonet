@@ -484,7 +484,7 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
     for (k in 1:len) {
       theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h[tr_id]/2, tr_n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma))
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
-      # save_theta[[k]] <- theta.adj
+      save_theta[[k]] <- theta.adj
 
       testfhat = G[te_id, ] %*% theta.adj
       testmu = obj$linkinv(testfhat)
@@ -530,18 +530,18 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
 
-    theta.new = .Call("glm_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma))
-    # theta.new = save_theta[[id]]
-    theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
+  theta.new = .Call("glm_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma))
+  # theta.new = save_theta[[id]]
+  theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-    f.new = c(G %*% theta.adj)
-    mu.new = obj$linkinv(f.new)
+  f.new = c(G %*% theta.adj)
+  mu.new = obj$linkinv(f.new)
 
-    if(obj$family == "binomial") miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
-    if(obj$family == "gaussian") miss <- mean((y[te_id] - f.new)^2)
-    if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, te_n)))
+  if(obj$family == "binomial") miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
+  if(obj$family == "gaussian") miss <- mean((y[te_id] - f.new)^2)
+  if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, te_n)))
 
-    cat("training error:", miss, "\n")
+  cat("training error:", miss, "\n")
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   return(out)
