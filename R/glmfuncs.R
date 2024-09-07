@@ -444,7 +444,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # model = sspline_cvfit
 # lambda0 = model$optlambda
 # mscale = wt
-cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj, algo)
+cv.nng = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj, algo)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -452,7 +452,7 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
   d = length(mscale)
 
   # solve theta
-  G <- matrix(0, nrow(model$R[, ,1]), d)
+  G <- matrix(0, n, d)
   for (j in 1:d) {
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
@@ -484,9 +484,16 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
     for (k in 1:len) {
       theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h[tr_id]/2, tr_n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma))
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
-      save_theta[[k]] <- theta.adj
+      # save_theta[[k]] <- theta.adj
 
-      testfhat = G[te_id, ] %*% theta.adj
+      te_R = array(NA, c(te_n, nbasis, d))
+      for(j in 1:d){
+        te_R[, , j] = K$K[[j]][te_id, basis.id]
+      }
+
+      testfhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+
+      # testfhat = G[te_id, ] %*% theta.adj
       testmu = obj$linkinv(testfhat)
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
@@ -494,7 +501,7 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
       measure[f, k] <- KL(testfhat, obj)
     }
   }
-
+print(measure)
   # plotting error bar
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"
