@@ -121,8 +121,8 @@
 
 # cand.lambda = lambda0
 # mscale = wt
-# obj = gaussian()
-cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
+# obj = binomial()
+cv.sspline = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, algo, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -130,12 +130,19 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   n <- length(y)
   len = length(cand.lambda)
 
-  R = array(NA, c(n, n, d))
+  R = array(NA, c(n, nbasis, d))
   for(j in 1:d){
-    R[, , j] = K$K[[j]]
+    R[, , j] = K$K[[j]][, basis.id]
   }
 
   Rtheta <- combine_kernel(R, mscale)
+
+  R2 = array(NA, c(nbasis, nbasis, d))
+  for(j in 1:d){
+    R2[, , j] = K$K[[j]][basis.id, basis.id]
+  }
+
+  Rtheta2 <- combine_kernel(R2, mscale)
 
   # initialize
   f.init = rep(0.5, n)
@@ -157,26 +164,16 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    nbasis = max(40, ceiling(12 * tr_n^(2/9)))
-    basis.id = sort(sample(1:tr_n, nbasis))
-
     tr_R = array(NA, c(tr_n, nbasis, d))
     for(j in 1:d){
-      tr_R[, , j] = K$K[[j]][tr_id, tr_id][, basis.id]
+      tr_R[, , j] = K$K[[j]][tr_id, basis.id]
     }
 
     tr_Rtheta <- combine_kernel(tr_R, mscale)
 
-    tr_R2 = array(NA, c(nbasis, nbasis, d))
-    for(j in 1:d){
-      tr_R2[, , j] = K$K[[j]][tr_id, tr_id][basis.id, basis.id]
-    }
-
-    tr_Rtheta2 <- combine_kernel(tr_R2, mscale)
-
     te_R = array(NA, c(te_n, nbasis, d))
     for(j in 1:d){
-      te_R[, , j] = K$K[[j]][te_id, tr_id][, basis.id]
+      te_R[, , j] = K$K[[j]][te_id, basis.id]
     }
 
     te_Rtheta <- combine_kernel(te_R, mscale)
@@ -185,11 +182,11 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     zw = z[tr_id] * sqrt(w)[tr_id]
     Rw = tr_Rtheta * w[tr_id]
     sw = sqrt(w)[tr_id]
-    Rw2 = tr_Rtheta2 * w[tr_id][basis.id]
+    Rw2 = Rtheta2 * w[basis.id]
     for (k in 1:len){
 
       if(algo == "CD"){
-        c.init = as.vector(glmnet(tr_Rtheta2, y[basis.id], family = obj$family, lambda = cand.lambda[k])$beta)
+        c.init = as.vector(glmnet(Rtheta2, y[basis.id], family = obj$family, lambda = cand.lambda[k])$beta)
 
         cw = c.init / sqrt(w)[basis.id]
 
@@ -255,19 +252,18 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   rm(tr_Rtheta)
   rm(te_Rtheta)
 
+  c.init = as.vector(glmnet(Rtheta2, y[basis.id], family = obj$family, lambda = optlambda)$beta)
 
-  c.init = as.vector(glmnet(Rtheta, y, family = 'gaussian', lambda = optlambda)$beta)
-
-  cw = c.init / sqrt(w)
+  cw = c.init / sqrt(w)[basis.id]
 
   zw = z * sqrt(w)
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, te_n, nbasis, n * optlambda, PACKAGE = "cdcosso")
+  fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
   b.new = fit$b.new
   cw.new = fit$cw.new
-  c.new = fit$cw.new * sqrt(w)
+  c.new = cw.new * sqrt(w)[basis.id]
 
   f.new = c(b.new + Rtheta %*% c.new)
   mu.new = obj$linkinv(f.new)
@@ -280,14 +276,13 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
 
   cat("training error:", miss, "\n")
 
+  rm(K)
+  rm(Rtheta)
+
   out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
              cw.new = cw.new, c.new = c.new, optlambda = optlambda, conv = TRUE)
 
-
-
-  rm(K)
-  rm(Rtheta)
 
   return(out)
 }
@@ -446,8 +441,9 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 #   return(out)
 # }
 
-
-cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
+# model = sspline_cvfit
+# lambda0 = model$optlambda
+cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj, algo)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -461,13 +457,15 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
   }
 
   Gw = G * sqrt(model$w.new)
-  uw = model$zw.new - model$b.new * sqrt(model$w.new) - (n/2) * lambda0 * model$cw.new
+  uw = model$zw.new - model$b.new * sqrt(model$w.new)
+
+  h = rep(0, d)
+  for (j in 1:d) {
+    h[j] = n * lambda0 * t(model$c.new) %*% model$R[basis.id, , j] %*% model$c.new
+  }
 
   init.theta = rep(1, d)
-
-  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
-
   measure <- matrix(NA, 5, len)
   fold = cvsplitID(n, 5, y, family = obj$family)
 
@@ -482,10 +480,8 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    m = length(tr_id)
-
     for (k in 1:len) {
-      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], n, tr_n, d, init.theta, lambda_theta[k], gamma)
+      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h[tr_id]/2, tr_n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma))
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       save_theta[[k]] <- theta.adj
 
@@ -535,7 +531,7 @@ cv.nng = function(model, y, mscale, lambda0, lambda_theta, gamma, obj, algo)
          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
 
-    theta.new = .Call("glm_theta_step", Gw, uw, n, n, d, init.theta, optlambda, gamma)
+    theta.new = .Call("glm_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma))
     # theta.new = save_theta[[id]]
     theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 

@@ -27,16 +27,19 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kpara
 
   cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
+  nbasis = as.integer(max(40, ceiling(12 * n^(2/9))))
+  basis.id = sort(sample(1:n, nbasis))
+
   K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
   cat("kernel:", type, "and d =", d, "\n")
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline(K, y, rep(1, p)/wt^2, lambda0, obj, type, kparam, algo, show = TRUE) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, algo, show = TRUE) ## 초기값 설정. 수정할 함수
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
+  nng_fit = cv.nng(sspline_cvfit, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd

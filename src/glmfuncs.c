@@ -157,23 +157,23 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 }
 
 
-SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP m, SEXP d, SEXP theta, SEXP lambda_theta, SEXP gamma) {
+SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r1, SEXP r2) {
   // Convert R vectors to C arrays
   int nc = INTEGER(n)[0]; // Extract the value of n
-  int mc = INTEGER(m)[0];
   int dc = INTEGER(d)[0]; // Extract the value of d
-  double *uw_c = REAL(uw);
   double *Gw_c = REAL(Gw);
+  double *uw_c = REAL(uw);
+  double *h_c = REAL(h);
   double *theta_c = REAL(theta);
-  double lambda_theta_c = REAL(lambda_theta)[0];
-  double gamma_c = REAL(gamma)[0];
-  double r = lambda_theta_c * gamma_c * nc / 2;
+  double r1_c = REAL(r1)[0];
+  double r2_c = REAL(r2)[0];
+
   // SEXP out = PROTECT(allocVector(VECSXP, 3));
 
   // Define variables
   // double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
-  double theta_new = 0;
+  double theta_new;
 
   // 메모리 할당 실패 시 처리 방법
   if (pow_theta == NULL) {
@@ -187,8 +187,8 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP m, SEXP d, SEXP theta, SEXP l
 
   for(int j = 0; j < dc; j++) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < mc; k++) { // iterate by row
-      add += Gw_c[j * mc + k] * Gw_c[j * mc + k];
+    for(int k = 0; k < nc; k++) { // iterate by row
+      add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
     }
     pow_theta[j] = add;
   }
@@ -202,24 +202,24 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP n, SEXP m, SEXP d, SEXP theta, SEXP l
   for(iter = 0; iter < 60; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
-
     for(int j = 0; j < dc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for(int k = 0; k < mc; ++k) { // iterate by row
+      for(int k = 0; k < nc; ++k) { // iterate by row
         double GT = 0.0;
         for(int l = 0; l < dc; ++l) { // iterate by column except j
           if(l != j) {
-            GT += Gw_c[l * mc + k] * theta_c[l];
+            GT += Gw_c[l * nc + k] * theta_c[l];
           }
         }
-        V1 += (uw_c[k] - GT) * Gw_c[j * mc + k];
+        V1 += (uw_c[k] - GT) * Gw_c[j * nc + k];
       }
+      V1 = V1 - h_c[j];
       // V1 = 2 * V1;
 
 
-      if(V1 > 0 && r < fabs(V1)) {
-        theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c));
+      if(V1 > 0 && r1_c < fabs(V1)) {
+        theta_new = (V1 - r1_c) / (pow_theta[j] + r2_c);
         // theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
         theta_new = 0;
