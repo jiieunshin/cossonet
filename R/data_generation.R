@@ -16,11 +16,11 @@ data_generation = function(n, p, rho, SNR,
                            response = c("regression", "classification", "count", "survival", "interaction")){
 
   # if(response == "classification"){
-  # f1 = function(t) t - 0.5
-  # f2 = function(t) (2 * t - 1)^2 - 0.4
-  # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-  # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.2
-  # f5 = function(t) sin(pi * t^4) + t^4 - 0.6
+  f1 = function(t) t - 0.5
+  f2 = function(t) (2 * t - 1)^2 - 0.4
+  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 - 0.2
+  f5 = function(t) sin(pi * t^4) + t^4 - 0.6
   # }
   #
   # # if(response == "regression"){
@@ -31,11 +31,11 @@ data_generation = function(n, p, rho, SNR,
   #   f5 = function(t) sin(pi * t^4) + t^4
   # }
 
-  f1 = function(t) 5 * sin(3*t) - 2
-  f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
-  f3 = function(t)  t * (1-t^2) * exp(3 * t) - 4
-  f4 = function(t) 4 * t
-  f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
+  # f1 = function(t) 5 * sin(3*t) - 2
+  # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
+  # f3 = function(t)  t * (1-t^2) * exp(3 * t) - 4
+  # f4 = function(t) 4 * t
+  # f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
 
   if(missing(response))
     type = "classification"
@@ -71,16 +71,16 @@ data_generation = function(n, p, rho, SNR,
 
 
 
-  # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 3 * f5(x[,5])
+  f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + 3 * f5(x[,5])
   # + 3 * f5(x[,5])
   # print(f)
-  # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4])) + var(3 * f5(x[,5]))
-  # sd = sqrt(V_sig / SNR)
+  V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4])) + var(3 * f5(x[,5]))
+  sd = sqrt(V_sig / SNR)
 
-  f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
-  V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
-  sd = sqrt(var(f) / SNR)
-  print(sd)
+  # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + f5(x[,5])
+  # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) + var(f5(x[,5]))
+  # sd = sqrt(var(f) / SNR)
+  # print(sd)
 
   x_nois = pnorm(matrix(rnorm(n * (p-5), 0, sd/sqrt(p-5)), n, (p-5)))
   x = cbind(x, x_nois)

@@ -21,7 +21,7 @@ predict.cdcosso = function(model, testx)
   te_n <- dim(testx)[1]
 
   if(class(testx)[1] == "data.frame") testx = matrix(unlist(testx), nrow = te_n)
-  testx = pnorm(testx)
+  testx = apply(testx, 2, rescale)
   K = make_anovaKernel(testx, model$data$x, model$data$kernel, model$data$kparam)
 
   d = K$numK
@@ -33,15 +33,13 @@ predict.cdcosso = function(model, testx)
 
   Rtheta <- wsGram(R, model$theta_step$theta.new/model$data$wt^2)
 
-  c.new = model$c_step$c.new
-  f.new = c(Rtheta %*% c.new + model$c_step$b.new)
+  f.new = c(Rtheta %*% model$c_step$c.new + model$c_step$b.new)
 
   rm(K)
   rm(R)
 
   if(family != "Cox"){
-    mu.new = obj$linkinv(f.new)
-    out = list(f.new = f.new, mu.new = mu.new)
+    out = list(f.new = f.new, mu.new = obj$linkinv(f.new))
   }
 
   if(family == "Cox"){
