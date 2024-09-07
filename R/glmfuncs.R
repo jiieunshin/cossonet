@@ -182,35 +182,31 @@ cv.sspline = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, k
     zw = z[tr_id] * sqrt(w)[tr_id]
     Rw = tr_Rtheta * w[tr_id]
     sw = sqrt(w)[tr_id]
-    Rw2 = Rtheta2 * w[basis.id]
+
     for (k in 1:len){
 
       if(algo == "CD"){
-        c.init = as.vector(glmnet(Rtheta2, y[basis.id], family = obj$family, lambda = cand.lambda[k])$beta)
+        c.init = as.vector(glmnet(Rw, zw, family = 'gaussian', lambda = cand.lambda[k])$beta)
 
-        cw = c.init / sqrt(w)[basis.id]
+        # cw = c.init / sqrt(w)[basis.id]
 
-        fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, tr_n, nbasis, n * cand.lambda[k], PACKAGE = "cdcosso")
+        fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, n * cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
-        cw.new = fit$cw.new
-        c.new = cw.new * sqrt(w)[basis.id]
+        c.new = fit$cw.new
+        # c.new = cw.new * sqrt(w)[basis.id]
         # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
         # cat("C calculate:", b.new, "\n")
       }
 
-        if(sum(is.nan(cw.new)) == n){
-        next
-      } else{
+      # validation
+      testfhat = c(b.new + te_Rtheta %*% c.new)
+      testmu = obj$linkinv(testfhat)
 
-        # validation
-        testfhat = c(b.new + te_Rtheta %*% c.new)
-        testmu = obj$linkinv(testfhat)
+      # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
+      # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
+      # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
+      measure[f, k] <- KL(testfhat, obj)
 
-        # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
-        # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-        # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-        measure[f, k] <- KL(testfhat, obj)
-      }
     }
   }
 
@@ -252,18 +248,17 @@ cv.sspline = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, k
   rm(tr_Rtheta)
   rm(te_Rtheta)
 
-  c.init = as.vector(glmnet(Rtheta2, y[basis.id], family = obj$family, lambda = optlambda)$beta)
-
-  cw = c.init / sqrt(w)[basis.id]
-
   zw = z * sqrt(w)
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
+  c.init = as.vector(glmnet(Rw, zw, family = 'gaussian', lambda = optlambda)$beta)
+
+  # cw = c.init / sqrt(w)[basis.id]
+
+  fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
   b.new = fit$b.new
-  cw.new = fit$cw.new
-  c.new = cw.new * sqrt(w)[basis.id]
+  c.new = fit$cw.new
 
   f.new = c(b.new + Rtheta %*% c.new)
   mu.new = obj$linkinv(f.new)
@@ -278,10 +273,11 @@ cv.sspline = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, k
 
   rm(K)
   rm(Rtheta)
+  rm(Rw)
 
   out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
-             cw.new = cw.new, c.new = c.new, optlambda = optlambda, conv = TRUE)
+             c.new = c.new, optlambda = optlambda, conv = TRUE)
 
 
   return(out)
