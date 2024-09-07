@@ -17,7 +17,7 @@ predict.cdcosso = function(model, testx)
   if(family == "binomial") obj = binomial()
   if(family == "poisson") obj = poisson()
 
-  tr_n = dim(model$data$basis.id)[1]
+  tr_n = length(model$data$basis.id)
   te_n <- dim(testx)[1]
 
   if(class(testx)[1] == "data.frame") testx = matrix(unlist(testx), nrow = te_n)
@@ -28,7 +28,7 @@ predict.cdcosso = function(model, testx)
   R = array(NA, c(te_n, tr_n, d))
 
   for(j in 1:d){
-    R[, , j] = K$K[[j]]
+    R[, , j] = K$K[[j]][, model$data$basis.id]
   }
 
   wt = rep(1, d)
