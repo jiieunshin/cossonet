@@ -482,7 +482,7 @@ cv.nng = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, 
     te_n = length(te_id)
 
     for (k in 1:len) {
-      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h[tr_id]/2, tr_n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma))
+      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma))
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       # save_theta[[k]] <- theta.adj
 

@@ -27,7 +27,7 @@ cdcosso.glm = function (x, y, wt, lambda0, lambda_theta, gamma, obj, type, kpara
 
   cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
-  nbasis = as.integer(max(40, ceiling(12 * n^(2/9))))
+  nbasis = as.integer(max(50, ceiling(12 * n^(2/9))))
   basis.id = sort(sample(1:n, nbasis))
 
   K = make_anovaKernel(x, x, type = type, kparam, scale)
