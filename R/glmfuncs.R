@@ -157,36 +157,46 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    tr_R = array(NA, c(tr_n, n, d))
+    nbasis = max(40, ceiling(12 * tr_n^(2/9)))
+    basis.id = sort(sample(1:tr_n, nbasis))
+
+    tr_R = array(NA, c(tr_n, nbasis, d))
     for(j in 1:d){
-      tr_R[, , j] = K$K[[j]][tr_id, ]
+      tr_R[, , j] = K$K[[j]][tr_id, tr_id][, basis.id]
     }
 
     tr_Rtheta <- combine_kernel(tr_R, mscale)
 
-    te_R = array(NA, c(te_n, n, d))
+    tr_R2 = array(NA, c(nbasis, nbasis, d))
     for(j in 1:d){
-      te_R[, , j] = K$K[[j]][te_id, ]
+      tr_R2[, , j] = K$K[[j]][tr_id, tr_id][basis.id, basis.id]
+    }
+
+    tr_Rtheta2 <- combine_kernel(tr_R2, mscale)
+
+    te_R = array(NA, c(te_n, nbasis, d))
+    for(j in 1:d){
+      te_R[, , j] = K$K[[j]][te_id, tr_id][, basis.id]
     }
 
     te_Rtheta <- combine_kernel(te_R, mscale)
 
     #
-    zw = z[tr_id] * sqrt(w[tr_id])
+    zw = z[tr_id] * sqrt(w)[tr_id]
     Rw = tr_Rtheta * w[tr_id]
     sw = sqrt(w)[tr_id]
-    Rw2 = Rtheta * w
+    Rw2 = tr_Rtheta2 * w[tr_id][basis.id]
     for (k in 1:len){
 
       if(algo == "CD"){
-        c.init = as.vector(glmnet(tr_Rtheta, y[tr_id], family = obj$family, lambda = 1e-4)$beta)
+        c.init = as.vector(glmnet(tr_Rtheta2, y[basis.id], family = obj$family, lambda = cand.lambda[k])$beta)
 
-        cw = c.init / sqrt(w)
+        cw = c.init / sqrt(w)[basis.id]
 
-        fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, tr_n, n, cand.lambda[k], PACKAGE = "cdcosso")
+        fit = .Call("glm_c_step", zw, Rw, Rw2, cw, sw, tr_n, nbasis, n * cand.lambda[k], PACKAGE = "cdcosso")
         b.new = fit$b.new
         cw.new = fit$cw.new
-        c.new = cw.new * sqrt(w)
+        c.new = cw.new * sqrt(w)[basis.id]
         # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
         # cat("C calculate:", b.new, "\n")
       }
@@ -254,7 +264,7 @@ cv.sspline = function (K, y, mscale, cand.lambda, obj, type, kparam, algo, show)
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, n, n, optlambda, PACKAGE = "cdcosso")
+  fit = .Call("glm_c_step", zw, Rw, Rw, cw, sw, te_n, nbasis, n * optlambda, PACKAGE = "cdcosso")
   b.new = fit$b.new
   cw.new = fit$cw.new
   c.new = fit$cw.new * sqrt(w)
