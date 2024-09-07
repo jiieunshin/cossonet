@@ -443,6 +443,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 
 # model = sspline_cvfit
 # lambda0 = model$optlambda
+# mscale = wt
 cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj, algo)
 {
   cat("-- theta-step -- \n")
@@ -522,8 +523,6 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
 
   ylab = expression("GCV(" * lambda[theta] * ")")
 
-  xrange = log(lambda_theta)
-  # plot(xrange, measure, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab, ylim = range(measure), pch = 15, col = 'red')
 
   plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
        ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
