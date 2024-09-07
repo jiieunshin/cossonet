@@ -30,13 +30,15 @@ cdcosso.glm = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma
   cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
   if (missing(nbasis) & missing(basis.id)) {
-    nbasis = as.integer(max(40, ceiling(12 * n^(2/9))))
+    nbasis = max(40, ceiling(12 * n^(2/9)))
     basis.id = sort(sample(1:n, nbasis))
   }
   if (missing(nbasis) & !missing(basis.id))
     nbasis <- length(basis.id)
   if (!missing(nbasis) & missing(basis.id))
     basis.id <- sort(sample(1:n, nbasis))
+
+  nbasis = as.integer(nbasis)
 
   K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
