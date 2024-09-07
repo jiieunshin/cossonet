@@ -22,7 +22,7 @@
 
 # x = tr_x
 # y = tr_y
-# obj = gaussian()
+# obj = binomial()
 # gamma = 0.8
 # type = "spline"
 # one.std = TRUE

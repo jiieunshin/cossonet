@@ -469,7 +469,7 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
   measure <- matrix(NA, 5, len)
   fold = cvsplitID(n, 5, y, family = obj$family)
 
-  save_theta <- list()
+  # save_theta <- list()
   for(f in 1:5){
     tr_id = as.vector(fold[, -f])
     te_id = fold[, f]
@@ -483,7 +483,7 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
     for (k in 1:len) {
       theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h[tr_id]/2, tr_n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma))
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
-      save_theta[[k]] <- theta.adj
+      # save_theta[[k]] <- theta.adj
 
       testfhat = G[te_id, ] %*% theta.adj
       testmu = obj$linkinv(testfhat)
@@ -510,7 +510,7 @@ cv.nng = function(model, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gam
 
   sel_id = which(!is.nan(measure_se) & measure_se != Inf)
   measure_mean = measure_mean[sel_id]
-  measure_sd = measure_se[sel_id]
+  measure_se = measure_se[sel_id]
   lambda_theta = lambda_theta[sel_id]
 
   min_id = which.min(measure_mean)
