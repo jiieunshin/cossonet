@@ -178,6 +178,18 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
     te_Rtheta <- combine_kernel(te_R, mscale)
 
+    # initialize
+    EigRtheta2 = eigen(Rtheta2)
+    loop = 0
+    while (min(EigRtheta2$values) < 0 & loop < 10) {
+      loop = loop + 1
+      Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
+      EigRtheta2 = eigen(Rtheta2)
+    }
+    if (loop == 10)
+      EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
+    pseudoX = Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
+
     #
     zw = z[tr_id] * sqrt(w)[tr_id]
     Rw = tr_Rtheta * w[tr_id]
@@ -186,7 +198,8 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
     for (k in 1:len){
 
       if(algo == "CD"){
-        c.init = as.vector(glmnet(Rw, y[tr_id], family = obj$family, lambda = cand.lambda[k])$beta)
+
+        c.init = as.vector(glmnet(pseudoX, y[basis.id], family = obj$family, lambda = cand.lambda[k])$beta)
 
         # cw = c.init / sqrt(w)[basis.id]
 
@@ -252,7 +265,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  c.init = as.vector(glmnet(Rw, y, family = obj$family, lambda = optlambda)$beta)
+  c.init = as.vector(glmnet(pseudoX, y[basis.id], family = obj$family, lambda = optlambda)$beta)
 
   # cw = c.init / sqrt(w)[basis.id]
 
