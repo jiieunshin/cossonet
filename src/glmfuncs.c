@@ -12,9 +12,9 @@ void R_init_markovchain(DllInfo *dll) {
 
 
 // Define the sspline_cd fulention
-SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SEXP lambda0) {
-  int mc = INTEGER(m)[0];
-  int nc = INTEGER(n)[0];
+SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N, SEXP lambda0) {
+  int tr_nc = INTEGER(tr_n)[0];
+  int Nc = INTEGER(N)[0];
 
   SEXP result = PROTECT(allocVector(VECSXP, 2)); // Extra space for b_new
 
@@ -29,26 +29,26 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   // Define variables
   // double *cw_new = (double *)malloc(nc * sizeof(double));
   // double *c_new = (double *)malloc(nc * sizeof(double));
-  double *pow_Rc = (double *)malloc(nc * sizeof(double));
+  double *pow_Rc = (double *)malloc(Nc * sizeof(double));
   double cw_new;
 
   if (pow_Rc == NULL) {
     error("Memory allocation failed");
   }
 
-  for(int k = 0; k < nc; k++) {
+  for(int k = 0; k < Nc; k++) {
     // cw_new[k] = 0;
     // c_new[k] = 0;
     pow_Rc[k] = 0;
   }
 
   // calculate square term
-  for(int j = 0; j < nc; ++j) { // iterate by column
+  for(int j = 0; j < Nc; ++j) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < mc; ++k) { // iterate by row
-      add += Rw_c[j * mc + k] * Rw_c[j * mc + k];
+    for(int k = 0; k < tr_nc; ++k) { // iterate by row
+      add += Rw_c[j * tr_nc + k] * Rw_c[j * tr_nc + k];
     }
-    pow_Rc[j] = add;
+    pow_Rc[j] = 2 * add;
   }
 
   int iter = 0;
@@ -61,29 +61,29 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
     avg_diff = 0.0;
 
     // update cw
-    for (int j = 0; j < nc; ++j) { // iterate by column
+    for (int j = 0; j < Nc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for (int k = 0; k < mc; ++k) { // iterate by row
+      for (int k = 0; k < tr_nc; ++k) { // iterate by row
         double Rc1 = 0.0;
-        for (int l = 0; l < nc; ++l) {
+        for (int l = 0; l < Nc; ++l) {
           if (l != j) {
-            Rc1 += Rw_c[l * mc + k] * cw_c[l];
+            Rc1 += Rw_c[l * tr_nc + k] * cw_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc1) * Rw_c[j * mc + k];
+        V1 += (zw_c[k] - Rc1) * Rw_c[j * tr_nc + k];
       }
-      // V1 = 2 * V1;
+      V1 = 2 * V1;
 
       double V2 = 0.0;
-      for (int l = 0; l < nc; ++l) {
+      for (int l = 0; l < Nc; ++l) {
         if (l != j) {
-          V2 += Rw2_c[l * nc + j] * cw_c[l];
+          V2 += Rw2_c[l * Nc + j] * cw_c[l];
         }
       }
       V2 = lambda0_c * V2;
 
-      double V4 = lambda0_c * Rw2_c[j * nc + j];
+      double V4 = lambda0_c * Rw2_c[j * Nc + j];
 
       cw_new = (V1 - V2) / (pow_Rc[j] + V4);
 
@@ -101,7 +101,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
       cw_c[j] = cw_new;
     }
 
-    avg_diff /= nc; // Calculate the average difference
+    avg_diff /= Nc; // Calculate the average difference
 
     // Check for convergence based on average difference
     if (avg_diff <= 1e-4) {
@@ -114,10 +114,10 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
 
   // result
   double sum3 = 0.0, sum4 = 0.0;
-  for (int k = 0; k < mc; ++k) { // iterate by row
+  for (int k = 0; k < tr_nc; ++k) { // iterate by row
     double Rc = 0.0;
-    for (int l = 0; l < nc; ++l) { // iterate by col
-      Rc += Rw_c[l * mc + k] * cw_c[l];   // /////////// k와 l 순서 바꾸기
+    for (int l = 0; l < Nc; ++l) { // iterate by col
+      Rc += Rw_c[l * tr_nc + k] * cw_c[l];
     }
     sum3 += (zw_c[k] - Rc) * sw_c[k];
     sum4 += sw_c[k];
@@ -126,14 +126,14 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP m, SEXP n, SE
   double b_new = sum3 / sum4;
 
   // Set values in result SEXP
-  SET_VECTOR_ELT(result, 0, allocVector(REALSXP, nc));
+  SET_VECTOR_ELT(result, 0, allocVector(REALSXP, Nc));
   SET_VECTOR_ELT(result, 1, ScalarReal(b_new));
   // SET_VECTOR_ELT(result, 2, allocVector(REALSXP, nc));
   // SET_VECTOR_ELT(result, 2, zw);
   // SET_VECTOR_ELT(result, 3, sw);
 
   // Copy values to result SEXP
-  for (int i = 0; i < nc; ++i) {
+  for (int i = 0; i < Nc; ++i) {
     REAL(VECTOR_ELT(result, 0))[i] = cw_c[i];
     // REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
   }
