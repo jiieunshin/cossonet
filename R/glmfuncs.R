@@ -623,13 +623,13 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   d = length(mscale)
 
   # solve theta
-  G <- matrix(0, n, d)
+  Gw <- matrix(0, n, d)
   for (j in 1:d) {
-    G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
+    Gw[, j] = (model$R[, , j] * sqrt(model$w.new)) %*% model$c.new * (mscale[j]^(-2))
   }
 
-  Gw = G * sqrt(model$w.new)
-  uw = model$zw.new - model$b.new * sqrt(model$w.new)
+  # Gw = G * sqrt(model$w.new)
+  uw = model$zw.new - model$sw.new
 
   h = rep(0, d)
   for (j in 1:d) {
@@ -709,10 +709,10 @@ print(measure)
          angle = 90, code = 3, length = 0.1, col = "darkgray")
 
   theta.new = .Call("glm_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma))
-  # theta.new = save_theta[[id]]
+
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-  f.new = c(G %*% theta.adj)
+  f.new =  c(wsGram(model$R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
   mu.new = obj$linkinv(f.new)
 
   if(obj$family == "binomial") miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))

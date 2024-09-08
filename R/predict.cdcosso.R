@@ -17,15 +17,15 @@ predict.cdcosso = function(model, testx)
   if(family == "binomial") obj = binomial()
   if(family == "poisson") obj = poisson()
 
-  tr_n = length(model$data$basis.id)
+  nbasis = length(model$data$basis.id)
   te_n <- dim(testx)[1]
 
   if(class(testx)[1] == "data.frame") testx = matrix(unlist(testx), nrow = te_n)
-  testx = apply(testx, 2, rescale)
+  testx = pnorm(testx)
   K = make_anovaKernel(testx, model$data$x, model$data$kernel, model$data$kparam)
 
   d = K$numK
-  R = array(NA, c(te_n, tr_n, d))
+  R = array(NA, c(te_n, nbasis, d))
 
   for(j in 1:d){
     R[, , j] = K$K[[j]][, model$data$basis.id]
