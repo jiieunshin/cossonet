@@ -22,21 +22,22 @@ predict.cdcosso = function(model, testx)
 
   if(class(testx)[1] == "data.frame") testx = matrix(unlist(testx), nrow = te_n)
   testx = pnorm(testx)
-  K = make_anovaKernel(testx, model$data$x, model$data$kernel, model$data$kparam)
 
+  K = make_anovaKernel(testx, model$data$x[model$data$basis.id, ], model$data$kernel, model$data$kparam)
   d = K$numK
-  R = array(NA, c(te_n, nbasis, d))
 
+  R = array(NA, c(te_n, nbasis, d))
   for(j in 1:d){
-    R[, , j] = K$K[[j]][, model$data$basis.id]
+    R[, , j] = K$K[[j]]
   }
 
-  Rtheta <- wsGram(R, model$theta_step$theta.new/model$data$wt^2)
+  Rtheta <- combine_kernel(R, model$theta_step$theta.new/(model$data$wt^2))
 
   f.new = c(Rtheta %*% model$c_step$c.new + model$c_step$b.new)
 
   rm(K)
   rm(R)
+  rm(Rtheta)
 
   if(family != "Cox"){
     out = list(f.new = f.new, mu.new = obj$linkinv(f.new))
