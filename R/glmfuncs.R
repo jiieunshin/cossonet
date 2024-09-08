@@ -199,7 +199,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
       if(algo == "CD"){
 
-        c.init = as.vector(glmnet(pseudoX, y[basis.id], family = obj$family, lambda = cand.lambda[k])$beta)
+        c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k])$beta)
 
         # cw = c.init / sqrt(w)[basis.id]
 
@@ -265,7 +265,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  c.init = as.vector(glmnet(pseudoX, y[basis.id], family = obj$family, lambda = optlambda)$beta)
+  c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = optlambda)$beta)
 
   # cw = c.init / sqrt(w)[basis.id]
 
