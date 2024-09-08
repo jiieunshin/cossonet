@@ -55,9 +55,12 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   // double min_diff = 10;
   double diff = 0.0;
   double avg_diff;
+  double sum3;
+  double sum4;
+  double b_new = 0.0;
 
   // outer loop
-  for (iter = 0; iter < 20; ++iter) {
+  for (iter = 0; iter < 200; ++iter) {
     avg_diff = 0.0;
 
     // update cw
@@ -71,7 +74,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
             Rc1 += Rw_c[l * tr_nc + k] * cw_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc1) * Rw_c[j * tr_nc + k];
+        V1 += (zw_c[k] - Rc1 - b_new * sw_c[k]) * Rw_c[j * tr_nc + k];
       }
       // V1 = 2 * V1;
 
@@ -101,6 +104,21 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
       cw_c[j] = cw_new;
     }
 
+    // result
+    sum3 = 0.0;
+    sum4 = 0.0;
+    for (int k = 0; k < tr_nc; ++k) { // iterate by row
+      double Rc = 0.0;
+      for (int l = 0; l < Nc; ++l) { // iterate by col
+        Rc += Rw_c[l * tr_nc + k] * cw_c[l];
+      }
+      sum3 += (zw_c[k] - Rc) * sw_c[k];
+      sum4 += sw_c[k] * sw_c[k];
+    }
+
+    b_new = sum3 / sum4;
+
+
     avg_diff /= Nc; // Calculate the average difference
 
     // Check for convergence based on average difference
@@ -112,18 +130,6 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   Rprintf("min_diff: %f\n", avg_diff);
   Rprintf("iter: %d\n", iter);
 
-  // result
-  double sum3 = 0.0, sum4 = 0.0;
-  for (int k = 0; k < tr_nc; ++k) { // iterate by row
-    double Rc = 0.0;
-    for (int l = 0; l < Nc; ++l) { // iterate by col
-      Rc += Rw_c[l * tr_nc + k] * cw_c[l];
-    }
-    sum3 += (zw_c[k] - Rc) * sw_c[k];
-    sum4 += sw_c[k] * sw_c[k];
-  }
-
-  double b_new = sum3 / sum4;
 
   // Set values in result SEXP
   SET_VECTOR_ELT(result, 0, allocVector(REALSXP, Nc));
@@ -199,7 +205,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
-  for(iter = 0; iter < 20; ++iter) {
+  for(iter = 0; iter < 200; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
     for(int j = 0; j < dc; ++j) { // iterate by column
