@@ -624,7 +624,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   # solve theta
   Gw <- matrix(0, n, d)
   for (j in 1:d) {
-    Gw[, j] = (model$R[, , j] * sqrt(model$w.new)) %*% model$c.new * (mscale[j]^(-2))
+    Gw[, j] = ((model$R[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
 
   # Gw = G * sqrt(model$w.new)
@@ -632,7 +632,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
 
   h = rep(0, d)
   for (j in 1:d) {
-    h[j] = n * lambda0 * t(model$c.new) %*% model$R[basis.id, , j] %*% model$c.new
+    h[j] = n * lambda0 * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new)
   }
 
   init.theta = rep(1, d)
