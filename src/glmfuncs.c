@@ -48,7 +48,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
     for(int k = 0; k < tr_nc; ++k) { // iterate by row
       add += Rw_c[j * tr_nc + k] * Rw_c[j * tr_nc + k];
     }
-    pow_Rc[j] = 2 * add;
+    pow_Rc[j] = add;
   }
 
   int iter = 0;
@@ -73,7 +73,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
         }
         V1 += (zw_c[k] - Rc1) * Rw_c[j * tr_nc + k];
       }
-      V1 = 2 * V1;
+      // V1 = 2 * V1;
 
       double V2 = 0.0;
       for (int l = 0; l < Nc; ++l) {
