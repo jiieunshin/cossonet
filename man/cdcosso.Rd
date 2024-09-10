@@ -15,14 +15,14 @@ cdcosso(
   algo = c("CD", "QP"),
   kparam = 1,
   lambda0 = exp(seq(log(2^{
-     -8
+     -5
  }), log(2^{
-     2
+     5
  }), length.out = 20)),
   lambda_theta = exp(seq(log(2^{
-     -8
+     -5
  }), log(2^{
-     2
+     5
  }), length.out = 20)),
   gamma = 0.95,
   scale = TRUE
