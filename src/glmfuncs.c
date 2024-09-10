@@ -48,7 +48,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
     for(int k = 0; k < tr_nc; ++k) { // iterate by row
       add += Rw_c[j * tr_nc + k] * Rw_c[j * tr_nc + k];
     }
-    pow_Rc[j] = add;
+    pow_Rc[j] = 2 * add;
   }
 
   int iter = 0;
@@ -60,7 +60,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   double b_new = 0.0;
 
   // outer loop
-  for (iter = 0; iter < 40; ++iter) {
+  for (iter = 0; iter < 80; ++iter) {
     avg_diff = 0.0;
 
     // update cw
@@ -76,7 +76,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
         }
         V1 += (zw_c[k] - Rc1 - b_new * sw_c[k]) * Rw_c[j * tr_nc + k];
       }
-      // V1 = 2 * V1;
+      V1 = 2 * V1;
 
       double V2 = 0.0;
       for (int l = 0; l < Nc; ++l) {
@@ -95,7 +95,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
 
       if ((diff < 1e-6) | (diff > 10)) {
         cw_new = cw_c[j];
-        diff = fabs(cw_c[j] - cw_new) / fabs(cw_c[j] + 1);
+        diff = fabs(cw_c[j] - cw_new);
       }
 
       avg_diff += diff;
@@ -205,7 +205,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
-  for(iter = 0; iter < 20; ++iter) {
+  for(iter = 0; iter < 80; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
     for(int j = 0; j < dc; ++j) { // iterate by column
@@ -232,7 +232,7 @@ SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
       }
 
       // If convergence criteria are met, break the loop
-      diff[j] = fabs(theta_c[j] - theta_new) / fabs(theta_c[j] + 1);
+      diff[j] = fabs(theta_c[j] - theta_new);
 
       avg_diff += diff[j];
 
