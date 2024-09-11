@@ -234,7 +234,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
   # optimal lambda1
   measure_mean = colMeans(measure, na.rm = T)
-  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(te_n)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
 
   sel_id = which(!is.nan(measure_se) & measure_se != Inf)
   measure_mean = measure_mean[sel_id]
@@ -687,7 +687,7 @@ print(measure)
   }
 
   measure_mean = colMeans(measure, na.rm = T)
-  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(te_n)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
 
   sel_id = which(!is.nan(measure_se) & measure_se != Inf)
   measure_mean = measure_mean[sel_id]

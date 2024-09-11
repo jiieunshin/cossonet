@@ -41,8 +41,8 @@ cdcosso = function (x,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
                     kparam = 1,
-                    lambda0 = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20)),
-                    lambda_theta = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20)),
+                    lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
+                    lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20)),
                     gamma = 0.95, scale = TRUE)
 {
   n = nrow(x)
