@@ -21,7 +21,7 @@ cdcosso(
   lambda_theta = exp(seq(log(2^{
      -6
  }), log(2^{
-     5
+     2
  }), length.out = 20)),
   gamma = 0.95,
   scale = TRUE
