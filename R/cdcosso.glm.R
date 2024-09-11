@@ -17,12 +17,11 @@
 #' @param type Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
 #' @param scale Boolean for whether to scale the input data to range between 0 and 1.
-#' @param algo Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-cdcosso.glm = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo)
+cdcosso.glm = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale)
 {
   n = length(y)
   p = length(wt)
@@ -46,23 +45,22 @@ cdcosso.glm = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, algo, show = TRUE) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, show = TRUE) ## 초기값 설정. 수정할 함수
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
+  nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd
-  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, theta.new/wt^2, lambda0, obj, type, kparam, algo, show = TRUE)}) ## 초기값 설정. 수정할 함수
-  # nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj, algo)
+  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, theta.new/wt^2, lambda0, obj, type, kparam, show = TRUE)}) ## 초기값 설정. 수정할 함수
+  # nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj)
   par(mfrow = c(1,1))
 
   out = list(data = list(x = x, y = y, R = sspline_cvfit$R, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = sspline_cvfit,
              theta_step = nng_fit,
-             family = obj$family,
-             algorithm = algo)
+             family = obj$family)
 
   return(out)
 }

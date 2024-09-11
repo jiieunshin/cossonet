@@ -12,7 +12,6 @@
 #' @param nbasis The number of basis.
 #' @param basis.id The index of basis.
 #' @param effect Effect of the component to be analyzed, `effect = "main"` for main effect (default), and `effect = "interaction"` for interaction.
-#' @param algo Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
 #' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
 #' @param lambda0 A vector of tuning parameter to select optimal smoothing parameter.
 #' @param lambda_theta A vector of tuning parameter to select optimal tuning parameter.
@@ -41,7 +40,6 @@ cdcosso = function (x,
                     nbasis, basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
-                    algo = c("CD", "QP"),
                     kparam = 1,
                     lambda0 = exp(seq(log(2^{-6}), log(2^{5}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-6}), log(2^{5}), length.out = 20)),
@@ -67,9 +65,6 @@ cdcosso = function (x,
   else
     type = match.arg(kernel)
 
-  if(missing(algo))
-    algo = "CD"
-
   if(missing(effect))
     effect = 'main'
   else
@@ -93,8 +88,8 @@ cdcosso = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale, algo),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
+               glm = cdcosso.glm(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
+               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), wt, lambda0, lambda_theta, gamma, type, kparam, scale)
                # Negbin, svm 추???
   )
 

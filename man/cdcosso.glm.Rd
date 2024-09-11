@@ -16,8 +16,7 @@ cdcosso.glm(
   obj,
   type,
   kparam,
-  scale,
-  algo
+  scale
 )
 }
 \arguments{
@@ -44,8 +43,6 @@ cdcosso.glm(
 \item{kparam}{Kernel parameter values that is used in gaussian kernel and polynomial kernel.}
 
 \item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
-
-\item{algo}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
 }
 \value{
 A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.

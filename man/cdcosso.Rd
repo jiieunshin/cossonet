@@ -12,7 +12,6 @@ cdcosso(
   basis.id,
   kernel = c("linear", "gaussian", "poly", "spline"),
   effect = c("main", "interaction"),
-  algo = c("CD", "QP"),
   kparam = 1,
   lambda0 = exp(seq(log(2^{
      -6
@@ -42,8 +41,6 @@ cdcosso(
 \item{kernel}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
 \item{effect}{Effect of the component to be analyzed, \code{effect = "main"} for main effect (default), and \code{effect = "interaction"} for interaction.}
-
-\item{algo}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
 
 \item{kparam}{Kernel parameter values that is used in gaussian kernel and polynomial kernel.}
 

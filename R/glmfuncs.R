@@ -122,7 +122,7 @@
 # cand.lambda = lambda0
 # mscale = wt
 # obj = binomial()
-cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, algo, show)
+cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -197,18 +197,15 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
     for (k in 1:len){
 
-      if(algo == "CD"){
+      c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+      # cw = c.init / sqrt(w)[basis.id]
 
-        c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
-        # cw = c.init / sqrt(w)[basis.id]
-
-        fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, n * cand.lambda[k], PACKAGE = "cdcosso")
-        b.new = fit$b.new
-        c.new = fit$cw.new
-        # c.new = cw.new * sqrt(w)[basis.id]
-        # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
-        # cat("C calculate:", b.new, "\n")
-      }
+      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, n * cand.lambda[k], PACKAGE = "cdcosso")
+      b.new = fit$b.new
+      c.new = fit$cw.new
+      # c.new = cw.new * sqrt(w)[basis.id]
+      # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
+      # cat("C calculate:", b.new, "\n")
 
       # validation
       testfhat = c(b.new + te_Rtheta %*% c.new)
@@ -614,7 +611,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # model = sspline_cvfit
 # lambda0 = model$optlambda
 # mscale = wt
-cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj, algo)
+cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
