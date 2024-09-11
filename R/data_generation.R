@@ -124,7 +124,7 @@ data_generation = function(n, p, rho, SNR,
     x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     # x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
-
+    print(sd/sqrt(p-4))
     out = list(x = x, y = f)
   }
 
