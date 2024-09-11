@@ -23,10 +23,10 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "regression"){
-  f1 = function(t) t
-  f2 = function(t) (2 * t - 1)^2
-  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+  # f1 = function(t) t
+  # f2 = function(t) (2 * t - 1)^2
+  # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+  # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
 
     # f1 = function(t) 3 * t
     # f2 = function(t) pi * sin(pi * t)
@@ -114,11 +114,11 @@ data_generation = function(n, p, rho, SNR,
 
 
   if(response == "regression"){
-    f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
-    V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
+    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
+    # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
 
-    # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
-    # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
+    f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
+    V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
 
     sd = sqrt(V_sig / SNR)
     x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
