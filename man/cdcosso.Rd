@@ -14,7 +14,7 @@ cdcosso(
   effect = c("main", "interaction"),
   kparam = 1,
   lambda0 = exp(seq(log(2^{
-     -6
+     -11
  }), log(2^{
      2
  }), length.out = 20)),
