@@ -138,6 +138,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
     arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
            x1 = log(cand.lambda), y1 = measure_mean + measure_se,
            angle = 90, code = 3, length = 0.1, col = "darkgray")
+    abline(v = log(cand.lambda)[std_id], lty = 2, col = "darkgray")
   }
 
   rm(tr_R)
@@ -349,6 +350,7 @@ print(measure)
   arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
+  abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
 
   theta.new = .Call("glm_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma))
 
