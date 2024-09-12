@@ -45,14 +45,14 @@ cdcosso.glm = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, show = TRUE) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = TRUE,  show = TRUE) ## 초기값 설정. 수정할 함수
 
   # solve (b, c) - 1st
   nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd
-  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, theta.new/wt^2, lambda0, obj, type, kparam, show = TRUE)}) ## 초기값 설정. 수정할 함수
+  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = FALSE, show = FALSE)}) ## 초기값 설정. 수정할 함수
   # nng_fit = cv.nng(sspline_cvfit, y, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj)
   par(mfrow = c(1,1))
 
