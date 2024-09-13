@@ -23,17 +23,17 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "regression"){
-  f1 = function(t) t
+  f1 = function(t) t^2
   f2 = function(t) (2 * t - 1)^2
   f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
   }
 
   if(response == "count"){
-    f1 = function(t) t
-    f2 = function(t) (2 * t - 1)^2
-    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+  f1 = function(t) t^2
+  f2 = function(t) (2 * t - 1)^2
+  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
   }
 
   # f1 = function(t) 5 * sin(3*t)
@@ -66,15 +66,16 @@ data_generation = function(n, p, rho, SNR,
   }
 
 
-  # x = apply(rmvnorm(n, sigma = Sigma), 2, rescale)
+  x = apply(rmvnorm(n, sigma = Sigma), 2, rescale)
 
 
-  t = 1
-  x = matrix(runif(n * 4), n, 4)
-  U = runif(n)
-  for(j in 1:4){
-    x[, j] = (runif(1) + t * U[j])/(1 + t)
-  }
+  # t = 2
+  # x = matrix(0, n, 4)
+  # W = matrix(runif(n * 4), n, 4)
+  # U = runif(n)
+  # for(j in 1:4){
+  #   x[, j] = (W[, j] + t * U)/(1 + t)
+  # }
 
 
 
@@ -115,10 +116,10 @@ data_generation = function(n, p, rho, SNR,
     # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
 
     sd = sqrt(V_sig / SNR)
-    f = f - rnorm(n, 0, sd)
-    # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
+    # f = f + rnorm(n, 0, sd)
+    x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, 1), n, (p-4)), 2, rescale)
-    x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
+    # x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
     print(sd/sqrt(p-4))
     out = list(x = x, y = f)
@@ -128,13 +129,11 @@ data_generation = function(n, p, rho, SNR,
     f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
     V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    e = rnorm(n, 0, sd)
-    # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
-    x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
+    x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x = cbind(x, x_nois)
 
     f = f - 8
-    prob = exp(f + e)/(exp(f + e) + 1)
+    prob = exp(f)/(exp(f) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)
     # print(table(y))
@@ -145,13 +144,12 @@ data_generation = function(n, p, rho, SNR,
     f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
     V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    e = rnorm(n, 0, sd)
 
-    # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
-    x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
+    x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
+    # x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
 
-    mu = exp(f + e)
+    mu = exp(f)
     y = rpois(n, mu)
     out = list(x = x, f = f, y = y)
   }

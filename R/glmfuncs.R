@@ -79,7 +79,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
       # cw = c.init / sqrt(w)[basis.id]
 
-      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cdcosso")
+      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, n * cand.lambda[k], PACKAGE = "cdcosso")
       b.new = fit$b.new
       c.new = fit$cw.new
       # c.new = cw.new * sqrt(w)[basis.id]
@@ -296,7 +296,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
     te_n = length(te_id)
 
     for (k in 1:len) {
-      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma))
+      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma))
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       # save_theta[[k]] <- theta.adj
 
