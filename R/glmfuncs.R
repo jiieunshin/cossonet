@@ -160,7 +160,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   z = ff + (y - mu) / w
 
   zw = z * sqrt(w)
-  Rw = tr_Rtheta * w
+  Rw = Rtheta * w
   sw = sqrt(w)
 
   fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
