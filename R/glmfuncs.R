@@ -174,7 +174,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   rm(Rtheta2)
   rm(Rw)
 
-  out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new),
+  out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
              c.new = c.new, optlambda = optlambda, conv = TRUE)
 
@@ -312,7 +312,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, rep(0.5, te_n), obj)
+      measure[f, k] <- KL(testfhat, model$mu.new[te_id], obj)
     }
   }
 print(measure)
