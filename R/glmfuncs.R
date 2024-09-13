@@ -1,6 +1,6 @@
 # cand.lambda = lambda0
 # mscale = wt
-# obj = binomial()
+# obj = gaussian()
 cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
@@ -29,8 +29,8 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   # mu = obj$linkinv(ff)
   # w = obj$variance(mu)
   # z = ff + (y - mu) / w
-  #
-  #
+
+
   fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
   for(f in 1:5){
@@ -77,7 +77,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       ff = tr_Rtheta %*% c.init
       mu = obj$linkinv(ff)
       w = obj$variance(mu)
-      z = ff + (y - mu) / w
+      z = ff + (y[tr_id] - mu) / w
 
 
       zw = z * sqrt(w)
@@ -98,7 +98,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, mu[te_id], obj)
+      measure[f, k] <- KL(testfhat, te_Rtheta %*% c.new, obj)
 
     }
   }
@@ -280,7 +280,11 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
     Gw[, j] = ((model$R[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
 
-  # Gw = G * sqrt(model$w.new)
+  G <- matrix(0, n, d)
+  for (j in 1:d) {
+    G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
+  }
+
   uw = model$zw.new - model$sw.new
 
   h = rep(0, d)
@@ -321,7 +325,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, model$mu.new[te_id], obj)
+      measure[f, k] <- KL(testfhat, G[te_id, ] %*% init.theta, obj)
     }
   }
 print(measure)
