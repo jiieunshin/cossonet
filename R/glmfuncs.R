@@ -24,12 +24,12 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   Rtheta2 <- combine_kernel(R2, mscale)
 
   # initialize
-  f.init = rep(0.5, n)
-  ff = f.init
-  mu = obj$linkinv(ff)
-  w = obj$variance(mu)
-  z = ff + (y - mu) / w
-
+  # f.init = rep(0.5, n)
+  # ff = f.init
+  # mu = obj$linkinv(ff)
+  # w = obj$variance(mu)
+  # z = ff + (y - mu) / w
+  #
   #
   fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
@@ -69,15 +69,20 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
     pseudoX = Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
 
-    #
-    zw = z[tr_id] * sqrt(w)[tr_id]
-    Rw = tr_Rtheta * w[tr_id]
-    sw = sqrt(w)[tr_id]
-
     for (k in 1:len){
 
       c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
       # cw = c.init / sqrt(w)[basis.id]
+
+      ff = tr_Rtheta %*% c.init
+      mu = obj$linkinv(ff)
+      w = obj$variance(mu)
+      z = ff + (y - mu) / w
+
+
+      zw = z * sqrt(w)
+      Rw = tr_Rtheta * w
+      sw = sqrt(w)
 
       fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, n * cand.lambda[k], PACKAGE = "cdcosso")
       b.new = fit$b.new
@@ -146,13 +151,17 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   rm(tr_Rtheta)
   rm(te_Rtheta)
 
-  zw = z * sqrt(w)
-  Rw = Rtheta * w
-  sw = sqrt(w)
-
   c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
-
   # cw = c.init / sqrt(w)[basis.id]
+
+  ff = Rtheta %*% c.init
+  mu = obj$linkinv(ff)
+  w = obj$variance(mu)
+  z = ff + (y - mu) / w
+
+  zw = z * sqrt(w)
+  Rw = tr_Rtheta * w
+  sw = sqrt(w)
 
   fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
   b.new = fit$b.new
