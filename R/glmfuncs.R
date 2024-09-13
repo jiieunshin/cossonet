@@ -156,7 +156,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
   ff = Rtheta %*% c.init
   mu = obj$linkinv(ff)
-  w = obj$variance(mu)
+  w = as.vector(obj$variance(mu))
   z = ff + (y - mu) / w
 
   zw = z * sqrt(w)
