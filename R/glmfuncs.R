@@ -1,6 +1,6 @@
 # cand.lambda = lambda0
 # mscale = wt
-# obj = gaussian()
+# obj = binomial()
 cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
@@ -76,7 +76,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
       ff = tr_Rtheta %*% c.init
       mu = obj$linkinv(ff)
-      w = obj$variance(mu)
+      w = as.vector(obj$variance(mu))
       z = ff + (y[tr_id] - mu) / w
 
 
@@ -98,7 +98,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, te_Rtheta %*% c.new, obj)
+      measure[f, k] <- KL(testfhat, te_Rtheta %*% c.init, obj)
 
     }
   }

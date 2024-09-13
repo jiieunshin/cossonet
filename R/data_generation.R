@@ -23,7 +23,7 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "regression"){
-  f1 = function(t) t
+  f1 = function(t) t^3
   f2 = function(t) (2 * t - 1)^2
   f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
