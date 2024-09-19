@@ -16,6 +16,10 @@ data_generation = function(n, p, rho, SNR,
                            response = c("regression", "classification", "count", "survival", "interaction")){
 
   if(response == "classification"){
+    # f1 = function(t) t - .5
+    # f2 = function(t) (2 * t - 1)^2 - .4
+    # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) - .1
+    # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
   f1 = function(t) 3 * t
   f2 = function(t) pi * sin(pi * t)
   f3 = function(t) 8 * t^3
@@ -109,11 +113,8 @@ data_generation = function(n, p, rho, SNR,
 
 
   if(response == "regression"){
-    f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
-    V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
-
-    # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
-    # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
+    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
+    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
 
     sd = sqrt(V_sig / SNR)
     # f = f + rnorm(n, 0, sd)
@@ -126,6 +127,8 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "classification"){
+    # f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
+    # V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
     f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
     V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
     sd = sqrt(V_sig / SNR)
