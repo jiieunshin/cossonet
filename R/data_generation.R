@@ -160,38 +160,17 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == 'survival'){
-    # Sigma = matrix(1, 8, 8)
-    # for(j in 1:8){
-    #   for(k in 1:8){
-    #     Sigma[j, k] = rho^abs(j-k)
-    #   }
-    # }
-    #
-    # x_sig = rtmvnorm(n, mean = rep(0, 8), sigma = Sigma, lower = rep(-2, 8), upper = rep(2, 8))
-    # x_nois = rtmvnorm(n, mean = rep(0, p-8), sigma = diag(1, p-8, p-8), lower = rep(-2, p-8), upper = rep(2, p-8))
-    # x = cbind(x_sig, x_nois)
-    # x = apply(x, 2, rescale)
+    f1 = function(t) t
+    f2 = function(t) (2 * t - 1)^2
+    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
 
-    # Sigma = matrix(1, 5, 5)
-    # for(j in 1:5){
-    #   for(k in 1:5){
-    #     Sigma[j, k] = rho^abs(j-k)
-    #   }
-    # }
-    #
-    # x_sig = rtmvnorm(n, mean = rep(0, 5), sigma = Sigma, lower = rep(-2, 5), upper = rep(2, 5))
-    # x_nois = rtmvnorm(n, mean = rep(0, p-5), sigma = diag(1, p-5, p-5), lower = rep(-2, p-5), upper = rep(2, p-5))
-    # x = cbind(x_sig, x_nois)
-    # x = apply(x, 2, rescale)
-    #
-    # f6 = function(t) cos(2 * pi * t) + sin(pi * t)
+    f = f1(x[,1])/2 + f2(x[,2])/2 + f3(x[,3]) + f4(x[,4])
+    V_sig = var(f1(x[,1])/2) + var(f2(x[,2])/2) + var(f3(x[,3])) + var(f4(x[,4]) )
+    sd = sqrt(V_sig / SNR)
 
-    # f = 3 * (3 * x[, 1] - 2)^2 +  7 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 1 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 3)
-
-    # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + ifelse(x[, 5] < 0.5, 0, 1) + 2 * f6(x[, 2]) + 11 * (exp(x[, 4]) - 2)
-    # f = 3 * (3 * x[, 1] - 2)^2 + 8 * cos((3 * x[, 3] - 1.5) * pi / 5) + 9 * (exp(x[, 5]) - 2) + 1 * f6(x[, 2]) + 5 * f4(x[, 4])
-    # SNR = sqrt(var(f) / 4)
-    # f = f + rnorm(n, 0, SNR)
+    x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
+    x = cbind(x, x_nois)
 
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))

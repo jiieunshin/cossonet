@@ -15,7 +15,6 @@
 #' @param type Gamma value used in Stochastic Search Optimization.
 #' @param kparam Number of folds for cross-validation.
 #' @param scale Boolean for whether to scale the input data to range between 0 and 1.
-#' @param algo Logical value indicating whether to standardize explanatory variables.
 #'
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
@@ -31,7 +30,7 @@
 # lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
 # lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
 # wt = rep(1, ncol(x))
-cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale, algo)
+cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
 {
   n = length(time)
   p = length(wt)
@@ -43,18 +42,18 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
 
   par(mfrow = c(1,3))
   # solve c (1st)
-  getc_cvfit = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam, algo , show = TRUE)
+  getc_cvfit = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam , show = TRUE)
 
   # solve theta (1st)
-  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)
+  theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam)
 
   # solve c (2nd)
   theta.new = rescale_theta(theta_cvfit$theta.new)
   # print(theta.new)
-  getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, algo, show = TRUE)
+  getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, show = TRUE)
 
   # solve theta (2nd)
-  # theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam, algo)
+  # theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam)
 
   par(mfrow = c(1,1))
 
@@ -62,8 +61,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,
-             family = "Cox",
-             algorithm = algo)
+             family = "Cox")
 
   return(out)
 }

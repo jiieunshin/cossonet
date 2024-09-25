@@ -14,8 +14,7 @@ cdcosso.cox(
   gamma,
   type,
   kparam,
-  scale,
-  algo
+  scale
 )
 }
 \arguments{
@@ -38,8 +37,6 @@ cdcosso.cox(
 \item{kparam}{Number of folds for cross-validation.}
 
 \item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
-
-\item{algo}{Logical value indicating whether to standardize explanatory variables.}
 }
 \value{
 A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.

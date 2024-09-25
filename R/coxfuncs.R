@@ -11,7 +11,7 @@ RiskSet = function (time, status)
 
 # mscale = wt
 # cand.lambda = lambda0
-cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, show)
+cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, show)
 {
   d = K$numK
   n <- length(time)
@@ -30,7 +30,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
   measure <- rep(0, length(cand.lambda))
   gcv_list  <- rep(0, length(cand.lambda))
   for (k in 1:length(cand.lambda)){
-    if(algo == "CD"){
+
       EigRtheta = eigen(Rtheta)
       if (min(EigRtheta$value) < 0) {
         Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
@@ -53,29 +53,6 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
       # measure[k] = as.vector( num / den / n )
 
       measure[k] = fit$ACV
-
-      # gcv_list[k] = fit$GCV
-    }
-
-    if(algo == "QP"){
-      # c.init = as.vector(glmnet(Rtheta, cbind(time = time, status = status), family = 'cox',
-      #                           lambda = cand.lambda[k], alpha = 0)$beta)
-
-      EigRtheta = eigen(Rtheta)
-      if (min(EigRtheta$value) < 0) {
-        Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
-        EigRtheta = eigen(Rtheta)
-      }
-      pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
-      ssCox.en = glmnet(Rtheta, cbind(time = time, status = status),
-                        family = "cox", lambda = cand.lambda, alpha = 0,
-                        standardize = FALSE)
-      c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
-
-      fit = getc.QP(R, Rtheta, c.init, time, status, mscale, cand.lambda[k], RS)
-
-      measure[k] = fit$ACV
-    }
   }
 
   sel = measure != Inf & measure != -Inf & !is.nan(measure)
@@ -87,7 +64,7 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
                 ylim = range(measure[sel]), pch = 15, col = 'red')
   # if(show) plot(log(cand.lambda), gcv_list, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
 
-  if(algo == "CD"){
+
     EigRtheta = eigen(Rtheta)
     if (min(EigRtheta$value) < 0) {
       Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
@@ -103,72 +80,12 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, algo, sho
     fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, optlambda, RS)
     out = list(measure = measure, R = R, ACV_pen = fit$ACV_pen, f.new = c(Rtheta %*% fit$c.new),
                w.new = fit$w.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
-    }
-
-  if(algo == "QP"){
-    EigRtheta = eigen(Rtheta)
-    if (min(EigRtheta$value) < 0) {
-      Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
-      EigRtheta = eigen(Rtheta)
-    }
-    pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
-    ssCox.en = glmnet(pseudoX, cbind(time = time, status = status),
-                      family = "cox", lambda = optlambda, alpha = 0,
-                      standardize = FALSE)
-    c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
-
-    fit = getc.QP(R, Rtheta, c.init, time, status, mscale, optlambda, RS)
-    out = list(measure = measure, R = R, ACV_pen = fit$ACV_pen, f.new = c(Rtheta %*% fit$c.new),
-               c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
-  }
 
   rm(K)
   rm(Rtheta)
 
   return(out)
 }
-
-# Risk = RS
-# lambda0 = cand.lambda[1]
-# getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
-# {
-#   n = ncol(Rtheta)
-#
-#   c.old = c.init
-#   c.new = rep(0, n)
-#   for(i in 1:20){ # outer iteration
-#     GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
-#     err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
-#
-#     # while (loop < 15 & iter.diff > 1e-4) {
-#     if(err) break
-#     # 2 * n * lambda0 * Rtheta2
-#     Hess = GH$Hessian  - 2 * lambda0 * Rtheta
-#     Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
-#
-#     W = ginv(Hess)
-#     z = Hess %*% c.old - Grad
-#     for(j in 1:n){
-#       c.new[j] = W[j, ] %*% z
-#       loss = abs(c.old - c.new)
-#       conv1 = min(loss[loss > 0]) < 1e-20
-#       conv2 = abs(c.old[j] - c.new[j]) > 5
-#       conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
-#       # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
-#       if(conv1 | conv2 | conv3) break
-#       c.old[j] = c.new[j]  # if not convergence
-#     }
-#     if(conv1 | conv2 | conv3) break
-#   }
-#
-#   if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
-#   print(i)
-#   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
-#   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-#   ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
-#   return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
-#   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
-# }
 
 getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 {
@@ -213,22 +130,7 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
 
   if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
   print(i)
-  # zw = z * sqrt(w)
-  # Rw = Rtheta * w
-  # cw = c.init
-  # cw.new = temp = c.init / sqrt(w)
-  # sw = sqrt(w)
-  # fit = .Call("cox_c_step", zw, Rw, cw, sw, n, lambda0, PACKAGE = "cdcosso")
 
-  # b.new = fit$b.new
-  # c.new = fit$c.new
-  # cw.new = fit$cw.new
-
-  # z = (Hess %*% c.new - Grad) / lambda0
-  # loglik = t(z - Rtheta %*% c.new) %*% W %*% (z - Rtheta %*% c.new)
-  # den = (1 - sum(diag(Rtheta %*% ginv(Rtheta + Hess/lambda0))) / n)^2
-  # GCV = as.numeric(loglik / den / n)
-  # print(i)
   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
   ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
@@ -329,7 +231,7 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
 # model = getc_cvfit
 # lambda0 = getc_cvfit$optlambda
 # mscale = wt
-cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, type, kparam, algo){
+cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, type, kparam){
   n = length(time)
   d = length(mscale)
   IDmat = model$IDmat
@@ -342,28 +244,20 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
     G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
   }
 
-  # lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
-  if(algo == "QP") lambda_theta = exp(seq(log(1e-4), log(40), length.out = length(lambda_theta)))
   len = length(lambda_theta)
 
   measure <- rep(0, len)
   save_theta <- list()
   for (k in 1:len) {
-    if(algo == "CD"){
+
     fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new, model$ACV_pen,
                       0, lambda0, lambda_theta[k], gamma, RS)
 
     save_theta[[k]] <- fit$theta.new
 
     measure[k] <- fit$ACV
-    }
 
-    if(algo == "QP"){
-      fit = gettheta.QP(rep(1, d), model$c.new, G, time, status, lambda0, lambda_theta[k], RS, model$ACV_pen)
-      save_theta[[k]] <- fit$theta.new
 
-      measure[k] <- fit$ACV
-    }
   }
   # print(save_theta)
   # print
@@ -376,12 +270,7 @@ cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, g
   plot(xrange, measure[sel], main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood",
        ylim = range(measure[sel]), pch = 15, col = 'red')
 
-  if(algo == "CD"){
     out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
-  }
-  if(algo == "QP"){
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
-  }
 
   return(out)
 }
