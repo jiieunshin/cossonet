@@ -8,6 +8,8 @@
 #' @param x Explanation variable matrix or data frame.
 #' @param time Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).
 #' @param status Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
+#' @param nbasis The number of basis.
+#' @param basis.id The index of basis.
 #' @param wt Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
 #' @param lambda0 Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
 #' @param lambda_theta Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
@@ -30,7 +32,7 @@
 # lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
 # lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
 #  wt = rep(1, ncol(x))
-cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+cdcosso.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
 {
   n = length(time)
   p = length(wt)

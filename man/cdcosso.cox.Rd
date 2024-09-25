@@ -8,6 +8,8 @@ cdcosso.cox(
   x,
   time,
   status,
+  nbasis,
+  basis.id,
   wt,
   lambda0,
   lambda_theta,
@@ -23,6 +25,10 @@ cdcosso.cox(
 \item{time}{Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).}
 
 \item{status}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
+
+\item{nbasis}{The number of basis.}
+
+\item{basis.id}{The index of basis.}
 
 \item{wt}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
 
