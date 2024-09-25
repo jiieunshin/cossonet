@@ -11,75 +11,116 @@ RiskSet = function (time, status)
 
 # mscale = wt
 # cand.lambda = lambda0
-cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, show)
+cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
 {
   d = K$numK
-  n <- length(time)
+  n <- length(status)
   len = length(cand.lambda)
 
-  R = array(NA, c(n, n, d))
+  R = array(NA, c(n, nbasis, d))
   for(j in 1:d){
-    R[, , j] = K$K[[j]]
+    R[, , j] = K$K[[j]][, basis.id]
   }
 
   Rtheta <- combine_kernel(R, mscale)
 
-  f.init = rep(0.5, n)
-  RS = RiskSet(time, status)
-
-  measure <- rep(0, length(cand.lambda))
-  gcv_list  <- rep(0, length(cand.lambda))
-  for (k in 1:length(cand.lambda)){
-
-      EigRtheta = eigen(Rtheta)
-      if (min(EigRtheta$value) < 0) {
-        Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
-        EigRtheta = eigen(Rtheta)
-      }
-      pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
-      ssCox.en = glmnet(pseudoX, cbind(time = time, status = status),
-                        family = "cox", lambda = cand.lambda[k], alpha = 0,
-                        standardize = FALSE)
-      c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
-
-      # f.init = c(Rtheta %*% c.init)
-      fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, cand.lambda[k], RS)
-
-      # Rw = Rtheta * fit$c.new
-      # XX = fit$zw.new - Rw %*% fit$cw.new - fit$b.new * sqrt(fit$w.new)
-      # num = t(XX) %*% XX + 1
-      # S = Rw %*% ginv(t(Rw) %*% Rw) %*% t(Rw)
-      # den = (1 - sum(diag(S)) / n)^2 + 1
-      # measure[k] = as.vector( num / den / n )
-
-      measure[k] = fit$ACV
+  R2 = array(NA, c(nbasis, nbasis, d))
+  for(j in 1:d){
+    R2[, , j] = K$K[[j]][basis.id, basis.id]
   }
 
-  sel = measure != Inf & measure != -Inf & !is.nan(measure)
-  id = which.min(measure[sel])[1]
-  optlambda = cand.lambda[sel][id]
+  Rtheta2 <- combine_kernel(R2, mscale)
+
+  fold = cvsplitID(n, 5, status, family = "gaussian")
+  measure <- matrix(NA, 5, len)
+  for(f in 1:5){
+    tr_id = as.vector(fold[, -f])
+    te_id = fold[, f]
+
+    tr_id = tr_id[!is.na(tr_id)]
+    te_id = te_id[!is.na(te_id)]
+
+    tr_n = length(tr_id)
+    te_n = length(te_id)
+
+    tr_R = array(NA, c(tr_n, nbasis, d))
+    for(j in 1:d){
+      tr_R[, , j] = K$K[[j]][tr_id, basis.id]
+    }
+
+    tr_Rtheta <- combine_kernel(tr_R, mscale)
+
+    te_R = array(NA, c(te_n, nbasis, d))
+    for(j in 1:d){
+      te_R[, , j] = K$K[[j]][te_id, basis.id]
+    }
+
+    te_Rtheta <- combine_kernel(te_R, mscale)
+
+    # initialize
+    EigRtheta2 = eigen(Rtheta2)
+    loop = 0
+    while (min(EigRtheta2$values) < 0 & loop < 10) {
+      loop = loop + 1
+      Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
+      EigRtheta2 = eigen(Rtheta2)
+    }
+    if (loop == 10)
+      EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
+    pseudoX = Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
+
+    for (k in 1:len){
+      c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+
+      tr_RS = RiskSet(time[tr_id], status[tr_id])
+      fit = getc.cd(tr_R, tr_Rtheta, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
+
+      # calculate ACV for test data
+      te_RS = RiskSet(time[te_id], status[te_id])
+      test_GH = try(cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, cand.lambda[k], te_RS), silent = TRUE)
+
+      UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
+      ACV_pen = sum(status[te_id] == 1)/te_n^2 * (sum(diag(UHU))/(te_n - 1) - sum(UHU)/(te_n^2 - te_n))
+
+      measure[k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% fit$c.new) + ACV_pen
+    }
+  }
 
   # optimal lambda1
-  if(show) plot(log(cand.lambda[sel]), measure[sel], main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood",
-                ylim = range(measure[sel]), pch = 15, col = 'red')
+  measure_mean = colMeans(measure, na.rm = T)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
+
+  sel_id = which(!is.nan(measure_se) & measure_se != Inf)
+  measure_mean = measure_mean[sel_id]
+  measure_se = measure_se[sel_id]
+  cand.lambda = cand.lambda[sel_id]
+
+  min_id = which.min(measure_mean)
+
+  if(one.std){
+    cand_ids = which((measure_mean >= measure_mean[min_id]) &
+                       (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
+    cand_ids = cand_ids[cand_ids >= min_id]
+    std_id = max(cand_ids)
+    optlambda = cand.lambda[std_id]
+  } else{
+    optlambda = cand.lambda[min_id]
+  }
+
+  if(show) plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood",
+                ylim = range(measure), pch = 15, col = 'red')
   # if(show) plot(log(cand.lambda), gcv_list, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
 
+  rm(tr_R)
+  rm(te_R)
+  rm(tr_Rtheta)
+  rm(te_Rtheta)
 
-    EigRtheta = eigen(Rtheta)
-    if (min(EigRtheta$value) < 0) {
-      Rtheta = Rtheta + max(1e-07, 1.5 * abs(min(EigRtheta$value))) * diag(nrow(Rtheta))
-      EigRtheta = eigen(Rtheta)
-    }
-    pseudoX = Rtheta %*% EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values))
-    ssCox.en = glmnet(pseudoX, cbind(time = time, status = status),
-                      family = "cox", lambda = optlambda, alpha = 0,
-                      standardize = FALSE)
-    c.init = as.numeric(EigRtheta$vectors %*% diag(sqrt(1/EigRtheta$values)) %*% ssCox.en$beta[, 1])
+  c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
 
-    # f.init = c(Rtheta %*% c.init)
-    fit = getc.cd(R, Rtheta, mscale, f.init, c.init, time, status, optlambda, RS)
-    out = list(measure = measure, R = R, ACV_pen = fit$ACV_pen, f.new = c(Rtheta %*% fit$c.new),
-               w.new = fit$w.new, c.new = fit$c.new, optlambda = optlambda, conv = TRUE)
+  fit = getc.cd(R, Rtheta, mscale, c.init, time, status, optlambda, RiskSet(time, status))
+
+  out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new, c.new = fit$c.new, optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
@@ -87,15 +128,9 @@ cv.getc = function(K, time, status, mscale, cand.lambda, type, kparam, show)
   return(out)
 }
 
-getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
+getc.cd = function(R, Rtheta, mscale, c.init, time, status, lambda0, Risk)
 {
   n = ncol(Rtheta)
-  # wz = calculate_wz_for_c(c.init, Rtheta, time, status, Risk)
-  # w = wz$weight
-  # z = wz$z
-
-  # return(list(zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
-
   c.old = c.init
   c.new = rep(0, n)
   GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
@@ -129,12 +164,8 @@ getc.cd = function(R, Rtheta, mscale, f, c.init, time, status, lambda0, Risk)
   }
 
   if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
-  print(i)
 
-  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
-  ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-  ACV = PartialLik(time, status, Risk, Rtheta %*% c.new) + ACV_pen
-  return(list(z.new = z, w.new = W, c.new = c.new, ACV = ACV, ACV_pen = ACV_pen))
+  return(list(z.new = z, w.new = W, c.new = c.new))
   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 }
 

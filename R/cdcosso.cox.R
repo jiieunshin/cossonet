@@ -19,9 +19,9 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-# x = X
-# time = unlist(y[, "time"])
-# status = unlist(y[, "status"])
+# x = tr_x
+# time = unlist(tr_y[, "time"])
+# status = unlist(tr_y[, "status"])
 # type = "spline"
 # algo = "CD"
 # family = 'Cox'
@@ -29,12 +29,24 @@
 # kparam=1
 # lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
 # lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
-# wt = rep(1, ncol(x))
+#  wt = rep(1, ncol(x))
 cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
 {
   n = length(time)
   p = length(wt)
   # cat("fit COSSO  with n = ", n, "p =", p, "\n")
+
+  if (missing(nbasis) & missing(basis.id)) {
+    nbasis = max(40, ceiling(12 * n^(2/9)))
+    basis.id = sort(sample(1:n, nbasis))
+  }
+  if (missing(nbasis) & !missing(basis.id))
+    nbasis <- length(basis.id)
+  if (!missing(nbasis) & missing(basis.id))
+    basis.id <- sort(sample(1:n, nbasis))
+
+  nbasis = as.integer(nbasis)
+
 
   K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
@@ -42,7 +54,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
 
   par(mfrow = c(1,3))
   # solve c (1st)
-  getc_cvfit = cv.getc(K, time, status, rep(1, d)/wt^2, lambda0, type, kparam , show = TRUE)
+  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, rep(1, d)/wt^2, lambda0, type, kparam, one.std = TRUE, show = TRUE)
 
   # solve theta (1st)
   theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam)
@@ -50,7 +62,7 @@ cdcosso.cox = function (x, time, status, wt, lambda0, lambda_theta, gamma, type,
   # solve c (2nd)
   theta.new = rescale_theta(theta_cvfit$theta.new)
   # print(theta.new)
-  getc_cvfit = cv.getc(K, time, status, theta.new/wt^2, lambda0, type, kparam, show = TRUE)
+  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, theta.new/wt^2, lambda0, type, kparam, one.std = FALSE, show = TRUE)
 
   # solve theta (2nd)
   # theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam)
