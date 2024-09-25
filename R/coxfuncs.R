@@ -73,7 +73,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
 
       tr_RS = RiskSet(time[tr_id], status[tr_id])
-      fit = getc.cd(tr_R, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
+      fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
 
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
@@ -118,7 +118,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 
   c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
 
-  fit = getc.cd(R, Rtheta, mscale, c.init, time, status, optlambda, RiskSet(time, status))
+  fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RiskSet(time, status))
 
   out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new, c.new = fit$c.new, optlambda = optlambda)
 
@@ -134,13 +134,14 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 # status = status[tr_id]
 # lambda0 = cand.lambda[k]
 # Risk = tr_RS
-getc.cd = function(R, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0, Risk)
+
+getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0, Risk)
 {
   n = nrow(Rtheta)
   m = ncol(Rtheta)
   c.old = c.init
   c.new = rep(0, m)
-  GH = try(cosso::gradient.Hessian.C(c.old, Rtheta, Rtheta2, time, status, mscale, lambda0, Risk), silent = TRUE)
+  GH = try(cosso::gradient.Hessian.C(c.old, R, R2, time, status, mscale, lambda0, Risk), silent = TRUE)
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
   # while (loop < 15 & iter.diff > 1e-4) {
@@ -194,7 +195,9 @@ calculate_GH_for_C = function (initC, Rtheta1, Rtheta2, time, status, lambda0, r
     for (i in 1:n) Hess.FullNumer.unScale[, , i] = Rtheta1[i, ] %*% t(Rtheta1[i, ])
   }
   Grad.Term1 = - as.vector(t(status) %*% Rtheta1)
+  print(Grad.Term1)
   Grad.Term2 = matrix(NA, ncol = ncol(riskset), nrow = length(initC))
+  print(Grad.Term2)
   # Grad.Term3 = 2 * n * lambda0 * Rtheta2 %*% initC
   Grad.FullNumer = t(Rtheta1) %*% diag(as.numeric(exp(eta)))
   Grad.FullDenom = Hess.FullDenom = exp(eta)
