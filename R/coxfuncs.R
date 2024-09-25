@@ -77,12 +77,12 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
-      test_GH = try(cosso::gradient.Hessian.C(c.init, R, R, time, status, mscale, cand.lambda[k], te_RS), silent = TRUE)
+      test_GH = try(cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS), silent = TRUE)
 
       UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
       ACV_pen = sum(status[te_id] == 1)/te_n^2 * (sum(diag(UHU))/(te_n - 1) - sum(UHU)/(te_n^2 - te_n))
 
-      measure[k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% fit$c.new) + ACV_pen
+      measure[f, k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% fit$c.new) + ACV_pen
     }
   }
 
@@ -107,9 +107,17 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
     optlambda = cand.lambda[min_id]
   }
 
-  if(show) plot(log(cand.lambda), measure, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood",
-                ylim = range(measure), pch = 15, col = 'red')
-  # if(show) plot(log(cand.lambda), gcv_list, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = "partial likelihood", ylim = range(measure), pch = 15, col = 'red')
+
+  ylab = expression("GCV(" * lambda[0] * ")")
+
+  if(show){
+    plot(log(cand.lambda), measure_mean, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+         ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
+    arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
+           x1 = log(cand.lambda), y1 = measure_mean + measure_se,
+           angle = 90, code = 3, length = 0.1, col = "darkgray")
+    abline(v = log(cand.lambda)[std_id], lty = 2, col = "darkgray")
+  }
 
   rm(tr_R)
   rm(te_R)
@@ -503,3 +511,4 @@ gettheta.QP = function(init.theta, c.hat, G, time, status, lambda0, lambda_theta
   ACV = cosso::PartialLik(time, status, Risk, G %*% new.Theta) + ACV_pen
   return(list(theta.new = new.Theta, G = GH$G, H = GH$H, ACV = ACV))
 }
+
