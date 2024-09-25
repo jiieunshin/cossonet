@@ -148,16 +148,18 @@ getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0
   for(i in 1:15){ # outer iteration
     if(err) break
     # 2 * n * lambda0 * Rtheta2
-    Hess = GH$Hessian - 2 * lambda0 * Rtheta
-    Grad = GH$Gradient - 2 * lambda0 * Rtheta %*% c.old
+    Hess = GH$Hessian - 2 * lambda0 * Rtheta2
+    Grad = GH$Gradient - 2 * lambda0 * Rtheta2 %*% c.old
 
     W = ginv(Hess)
     z = (Hess %*% c.old - Grad) / lambda0
-    for(j in 1:n){
-      V1 = t(z - Rtheta[ ,-j] %*% c.old[-j]) %*% t(W) %*% Rtheta[, j]
-      V2 = (Rtheta[j, -j] %*% c.old[-j]) / lambda0
-      V3 = t(Rtheta[, j]) %*% (t(W) %*% Rtheta[, j])
-      V4 = Rtheta[j, j] / lambda0
+
+    for(j in 1:m){
+      WR = colSums(W * Rtheta2[, j])
+      V1 = sum(WR * (z - Rtheta2[ ,-j] %*% c.old[-j]))
+      V2 = as.vector((Rtheta2[-j, j] %*% c.old[-j]) / lambda0)
+      V3 = sum(WR * Rtheta2[ ,j])
+      V4 = Rtheta2[j, j] / lambda0
 
       c.new[j] = (V1 - V2) / (V3 + V4)
       loss = abs(c.old - c.new)
