@@ -49,7 +49,6 @@ cdcosso.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_t
 
   nbasis = as.integer(nbasis)
 
-
   K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
   # cat("kernel:", type, "and d =", d, "\n")

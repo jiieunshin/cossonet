@@ -73,7 +73,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
 
       tr_RS = RiskSet(time[tr_id], status[tr_id])
-      fit = getc.cd(tr_R, tr_Rtheta, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
+      fit = getc.cd(tr_R, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
 
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
@@ -128,12 +128,19 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   return(out)
 }
 
-getc.cd = function(R, Rtheta, mscale, c.init, time, status, lambda0, Risk)
+# R = tr_R
+# Rtheta = tr_Rtheta
+# time = time[tr_id]
+# status = status[tr_id]
+# lambda0 = cand.lambda[k]
+# Risk = tr_RS
+getc.cd = function(R, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0, Risk)
 {
-  n = ncol(Rtheta)
+  n = nrow(Rtheta)
+  m = ncol(Rtheta)
   c.old = c.init
-  c.new = rep(0, n)
-  GH = try(cosso::gradient.Hessian.C(c.old, R, R, time, status, mscale, lambda0, Risk), silent = TRUE)
+  c.new = rep(0, m)
+  GH = try(cosso::gradient.Hessian.C(c.old, Rtheta, Rtheta2, time, status, mscale, lambda0, Risk), silent = TRUE)
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
   # while (loop < 15 & iter.diff > 1e-4) {
@@ -169,12 +176,16 @@ getc.cd = function(R, Rtheta, mscale, c.init, time, status, lambda0, Risk)
   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 }
 
-calculate_GH_for_C = function (initC, Gramat1, Gramat2, time, status, mscale, lambda0, riskset, Hess.FullNumer.unScale)
+# initC = c.old
+# Rtheta1 = Rtheta
+# Rtheta2 = Rtheta2
+# riskset = Risk
+
+calculate_GH_for_C = function (initC, Rtheta1, Rtheta2, time, status, lambda0, riskset, Hess.FullNumer.unScale)
 {
-  n = length(time)
+  n = nrow(Rtheta1)
+  m = ncol(Rtheta2)
   tie.size = as.numeric(table(time[status == 1]))
-  Rtheta1 = wsGram(Gramat1, mscale)
-  Rtheta2 = wsGram(Gramat2, mscale)
   if (min(eigen(Rtheta2)$value) < 0)
     Rtheta2 = Rtheta2 + 1e-08 * diag(nrow(Rtheta2))
   eta = Rtheta1 %*% initC
@@ -182,7 +193,7 @@ calculate_GH_for_C = function (initC, Gramat1, Gramat2, time, status, mscale, la
     Hess.FullNumer.unScale = array(NA, dim = c(length(initC), length(initC), n))
     for (i in 1:n) Hess.FullNumer.unScale[, , i] = Rtheta1[i, ] %*% t(Rtheta1[i, ])
   }
-  Grad.Term1 = -t(Rtheta1) %*% status
+  Grad.Term1 = - as.vector(t(status) %*% Rtheta1)
   Grad.Term2 = matrix(NA, ncol = ncol(riskset), nrow = length(initC))
   # Grad.Term3 = 2 * n * lambda0 * Rtheta2 %*% initC
   Grad.FullNumer = t(Rtheta1) %*% diag(as.numeric(exp(eta)))
