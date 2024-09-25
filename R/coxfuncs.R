@@ -123,16 +123,27 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   rm(te_R)
   rm(tr_Rtheta)
   rm(te_Rtheta)
+  rm(test_GH)
+  rm(te_RS)
+  rm(tr_RS)
 
   c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
 
   fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RiskSet(time, status))
 
-  out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new, c.new = fit$c.new, optlambda = optlambda)
+  GH = try(cosso::gradient.Hessian.C(fit$c.new, R, R2, time, status, mscale, optlambda, RiskSet(time, status)), silent = TRUE)
+
+  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
+  ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+
+  out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new,
+             c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
-
+  rm(Rtheta2)
+  rm(GH)
+  rm(UHU)
   return(out)
 }
 
@@ -283,63 +294,99 @@ calculate_wz_for_c = function(c.init, R, time, status, RS){
   return(list(z = z, gradient = Grad.Term, weight = weight))
 }
 
+
 # model = getc_cvfit
 # lambda0 = getc_cvfit$optlambda
 # mscale = wt
-cv.gettheta = function (model, x, time, status, mscale, lambda0, lambda_theta, gamma, type, kparam){
+cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma){
   n = length(time)
   d = length(mscale)
-  IDmat = model$IDmat
 
-  RS = RiskSet(time, status)
+  # RS = RiskSet(time, status)
 
   # solve theta
-  G <- matrix(0, nrow(model$R[, ,1]), d)
+  G <- matrix(0, n, d)
   for (j in 1:d) {
-    G[, j] = model$R[, , j] %*% model$c.new * (mscale[j]^(-2))
+    G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
   }
 
+
+  init.theta = rep(1, d)
   len = length(lambda_theta)
+  measure = matrix(NA, 5, len)
+  fold = cvsplitID(n, 5, time, family = "gaussian")
 
-  measure <- rep(0, len)
-  save_theta <- list()
-  for (k in 1:len) {
+  for(f in 1:5){
+    tr_id = as.vector(fold[, -f])
+    te_id = fold[, f]
 
-    fit = gettheta.cd(rep(1, d), model$f.new, G, time, status, 0, model$c.new, model$ACV_pen,
-                      0, lambda0, lambda_theta[k], gamma, RS)
+    tr_id = tr_id[!is.na(tr_id)]
+    te_id = te_id[!is.na(te_id)]
 
-    save_theta[[k]] <- fit$theta.new
+    tr_n = length(tr_id)
+    te_n = length(te_id)
 
-    measure[k] <- fit$ACV
+    for (k in 1:len) {
+      fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
+                        lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
 
+      # save_theta[[k]] = fit$theta.new
 
+      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% fit$theta.new) + model$ACV_pen
+      measure[f, k] = ACV
+
+    }
   }
-  # print(save_theta)
-  # print
-  sel = measure != Inf & measure != -Inf & !is.nan(measure)
-  id = which.min(measure[sel])[1]
-  optlambda = lambda_theta[sel][id]
 
-  # plotting error bar
-  xrange = log(lambda_theta[sel])
-  plot(xrange, measure[sel], main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = "partial likelihood",
-       ylim = range(measure[sel]), pch = 15, col = 'red')
+  measure_mean = colMeans(measure, na.rm = T)
+  measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
 
-    out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = save_theta[[id]])
+  sel_id = which(!is.nan(measure_se) & measure_se != Inf)
+  measure_mean = measure_mean[sel_id]
+  measure_se = measure_se[sel_id]
+  lambda_theta = lambda_theta[sel_id]
+
+  min_id = which.min(measure_mean)
+  cand_ids = which((measure_mean >= measure_mean[min_id]) &
+                     (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
+  cand_ids = cand_ids[cand_ids >= min_id]
+  std_id = max(cand_ids)
+  optlambda = lambda_theta[std_id]
+
+  ylab = expression("GCV(" * lambda[theta] * ")")
+
+
+  plot(log(lambda_theta), measure_mean, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
+       ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
+  arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
+         x1 = log(lambda_theta), y1 = measure_mean + measure_se,
+         angle = 90, code = 3, length = 0.1, col = "darkgray")
+  abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
+
+  fit = gettheta.cd(rep(1, d), model$f.new, G, G[basis.id, ], time, status, model$c.new,
+                    lambda0, optlambda, gamma, RiskSet(time, status))
+
+  theta.adj = ifelse(fit$theta.new <= 1e-6, 0, fit$theta.new)
+
+  out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.adj)
 
   return(out)
 }
 
 
+# G1 = G[tr_id, ]
+# G2 = G[basis.id,]
+# time = time[tr_id]
+# status = status[tr_id]
 # init.theta = rep(1, d)
-# f.init = model$f.new
+# f.init = model$f.new[tr_id]
 # chat = model$c.new
 # ACV_pen = model$ACV_pen
 # lambda_theta = lambda_theta[k]
-# Risk = RS
-gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen, const, lambda0, lambda_theta, gamma, Risk){
-  n = nrow(G)
-  d = ncol(G)
+# Risk = RiskSet(time, status)
+gettheta.cd = function(init.theta, f.init, G1, G2, time, status, chat, lambda0, lambda_theta, gamma, Risk){
+  n = nrow(G1)
+  d = ncol(G1)
   r = lambda_theta * gamma
 
   # wz = calculate_wz_for_theta(theta.old, G, time, status, Risk)
@@ -347,14 +394,14 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
   # z = wz$z
 
   Hess.FullNumer.unScale = array(NA, dim = c(length(init.theta), length(init.theta), n))
-  for (i in 1:n) Hess.FullNumer.unScale[, , i] = G[i, ] %*% t(G[i, ])
+  for (i in 1:n) Hess.FullNumer.unScale[, , i] = G1[i, ] %*% t(G1[i, ])
 
   theta.old = init.theta
   theta.new = rep(0, d)
   conv2 = conv3 = TRUE
   for(i in 1:20){
     loss = rep(1, d)
-    GH = GH.theta(theta.old, chat, G, G, lambda0, time, status, Risk, Hess.FullNumer.unScale)
+    GH = GH.theta(theta.old, chat, G1, G2, lambda0, time, status, Risk, Hess.FullNumer.unScale)
     err = sum(is.nan(GH$Gradient)) > 0
     if (err) break
     Dmat = GH$H / 2
@@ -400,9 +447,7 @@ gettheta.cd = function(init.theta, f.init, G, time, status, bhat, chat, ACV_pen,
   # print(theta.new)
   if(i == 1 & (conv2)) theta.old = rep(0, d)
 
-  ACV = cosso::PartialLik(time, status, Risk, G %*% theta.new) + ACV_pen
-
-  return(list(theta.new = theta.old, ACV = ACV))
+  return(list(theta.new = theta.old))
 
   # return(list(Gw = Gw, zw.new = z * sqrt(w), uw.new = uw, w.new = w, theta.new = theta.new))
 }
@@ -413,8 +458,8 @@ soft_threshold = function(a, b){
 
 # initTheta = init.theta
 # initC = chat
-# G1 = G
-# G2 = G
+# G1 = G[tr_id,]
+# G2 = G[basis.id,]
 # riskset = RS
 GH.theta = function (initTheta, initC, G1, G2, lambda0, time, status, riskset, Hess.FullNumer.unScale)
 {
