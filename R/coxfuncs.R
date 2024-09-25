@@ -116,7 +116,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
     arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
            x1 = log(cand.lambda), y1 = measure_mean + measure_se,
            angle = 90, code = 3, length = 0.1, col = "darkgray")
-    abline(v = log(cand.lambda)[std_id], lty = 2, col = "darkgray")
+    abline(v = log(optlambda), lty = 2, col = "darkgray")
   }
 
   rm(tr_R)
