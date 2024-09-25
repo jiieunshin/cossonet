@@ -129,14 +129,15 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 
   c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
 
-  fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RiskSet(time, status))
+  RS = RiskSet(time, status)
+  fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RS)
 
-  GH = try(cosso::gradient.Hessian.C(fit$c.new, R, R2, time, status, mscale, optlambda, RiskSet(time, status)), silent = TRUE)
+  GH = try(cosso::gradient.Hessian.C(fit$c.new, R, R2, time, status, mscale, optlambda, RS), silent = TRUE)
 
   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
 
-  out = list(measure = measure, R = R, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new,
+  out = list(measure = measure, R = R, RS = RS, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new,
              c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
 
   rm(K)
