@@ -33,19 +33,21 @@ predict.cdcosso = function(model, testx)
 
   Rtheta <- combine_kernel(R, model$theta_step$theta.new/(model$data$wt^2))
 
-  f.new = c(Rtheta %*% model$c_step$c.new + model$c_step$b.new)
-
-  rm(K)
-  rm(R)
-  rm(Rtheta)
-
   if(family != "Cox"){
+    f.new = c(Rtheta %*% model$c_step$c.new + model$c_step$b.new)
+
     out = list(f.new = f.new, mu.new = obj$linkinv(f.new))
   }
 
   if(family == "Cox"){
-    out = list(K.new = Rtheta, f.new = f.new)
+    f.new = c(Rtheta %*% model$c_step$c.new)
+
+    out = list(f.new = f.new)
   }
+
+  rm(K)
+  rm(R)
+  rm(Rtheta)
 
   return(out)
 }

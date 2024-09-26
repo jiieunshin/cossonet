@@ -117,7 +117,8 @@ data_generation = function(n, p, rho, SNR,
     V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
 
     sd = sqrt(V_sig / SNR)
-    # f = f + rnorm(n, 0, sd)
+    e = rnorm(n, 0, sd)
+    f = f + e
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
@@ -136,8 +137,8 @@ data_generation = function(n, p, rho, SNR,
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
-
-    f = f - 9
+    e = rnorm(n, 0, sd)
+    f = f - 9 + e
     prob = exp(f)/(exp(f) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)
@@ -149,6 +150,9 @@ data_generation = function(n, p, rho, SNR,
     f = f1(x[,1])/2 + f2(x[,2])/2 + f3(x[,3]) + f4(x[,4])
     V_sig = var(f1(x[,1])/2) + var(f2(x[,2])/2) + var(f3(x[,3])) + var(f4(x[,4]) )
     sd = sqrt(V_sig / SNR)
+
+    e = rnorm(n, 0, sd)
+    f = f + e
 
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
@@ -165,13 +169,16 @@ data_generation = function(n, p, rho, SNR,
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
 
-    f = f1(x[,1])/2 + f2(x[,2])/2 + f3(x[,3]) + f4(x[,4])
-    V_sig = var(f1(x[,1])/2) + var(f2(x[,2])/2) + var(f3(x[,3])) + var(f4(x[,4]) )
+    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
+    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
+
     sd = sqrt(V_sig / SNR)
+
+    e = rnorm(n, 0, sd)
+    f = f + e
 
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
-
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
