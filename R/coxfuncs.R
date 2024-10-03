@@ -79,8 +79,8 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       te_RS = RiskSet(time[te_id], status[te_id])
 
       test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
-                      te_Rtheta, Rtheta2, time[te_id], status[te_id], mscale, cand.lambda[k], as.integer(te_RS),
-                      as.numeric(table(time[te_id][status[te_id] == 1])),
+                      te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
+                      as.integer(table(time[te_id][status[te_id] == 1])),
                       PACKAGE = "cdcosso")
 
       UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
@@ -137,7 +137,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RS)
 
   GH =  .Call("gradient_Hessian_C", fit$c.new, as.integer(n), as.integer(nbasis), as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
-              R, R2, time, status, mscale, optlambda, as.integer(RS), as.numeric(table(time[status == 1])),
+              R, R2, time, as.integer(status), mscale, optlambda, as.integer(RS), as.integer(table(time[status == 1])),
               PACKAGE = "cdcosso")
 
   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
@@ -167,9 +167,9 @@ getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0
   m = ncol(Rtheta)
   c.old = c.init
   c.new = rep(0, m)
-  GH = .Call("gradient_Hessian_C", c.old, as.integer(n), as.integer(m), as.integer(ncol(Risk)), exp(Rtheta %*% c.old),
-             Rtheta, Rtheta2, time, status, mscale, lambda0, as.integer(Risk),
-             as.numeric(table(time[status == 1])),
+  GH = .Call("gradient_Hessian_C", c.old, as.integer(n), as.integer(m), as.integer(ncol(Risk)), as.numeric(exp(Rtheta %*% c.old)),
+             as.numeric(Rtheta), Rtheta2, as.numeric(time), as.integer(status), mscale, lambda0, as.integer(Risk),
+             as.integer(table(time[status == 1])),
              PACKAGE = "cdcosso")
 
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0

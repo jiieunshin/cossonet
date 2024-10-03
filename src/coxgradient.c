@@ -23,15 +23,15 @@ SEXP gradient_Hessian_C(SEXP initC, SEXP n, SEXP m, SEXP nc_rs, SEXP eta, SEXP R
   double *r1 = REAL(Rtheta1); // Rtheta1 is mc x nc (column-major)
   double *r2 = REAL(Rtheta2); // Rtheta2 is mc x mc (column-major)
   double *init_c = REAL(initC); // initC is mc
-  double *tie_size_c = REAL(tie_size); // tie_size is n_riskset
-  int *riskset_c = REAL(riskset); // riskset is nc x n_riskset (column-major)
+  int *tie_size_c = INTEGER(tie_size); // tie_size is n_riskset
+  int *riskset_c = INTEGER(riskset); // riskset is nc x n_riskset (column-major)
   double *eta_c = REAL(eta); // eta is nc
 
   // Grad.Term1 = -t(Rtheta1) %*% status / n
   SEXP Grad_Term1_SEXP = PROTECT(allocVector(REALSXP, mc));
   double *Grad_Term1 = REAL(Grad_Term1_SEXP);
 
-  double *status_ptr = REAL(status); // status is nc
+  int *status_ptr = INTEGER(status); // status is nc
 
   for (int j = 0; j < mc; j++) {
     Grad_Term1[j] = 0.0;
