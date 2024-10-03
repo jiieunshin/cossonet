@@ -59,6 +59,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 
     # initialize
     loop = 0
+    EigRtheta2 = eigen(Rtheta2)
     while (min(eigen(Rtheta2)$values) < 0 & loop < 10) {
       loop = loop + 1
       Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
@@ -77,7 +78,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
 
-      test_GH = .Call("gradient.Hessian.C", fit$c.new, tr_n, nbasis, as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
+      test_GH = .Call("gradient_Hessian_C", fit$c.new, tr_n, nbasis, as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
                       te_Rtheta, Rtheta2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS,
                       as.numeric(table(time[te_id][status[te_id] == 1])),
                       PACKAGE = "cdcosso")
@@ -135,7 +136,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   RS = RiskSet(time, status)
   fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RS)
 
-  GH =  .Call("gradient.Hessian.C", fit$c.new, n, nbasis, as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
+  GH =  .Call("gradient_Hessian_C", fit$c.new, n, nbasis, as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
               R, R2, time, status, mscale, optlambda, RS, as.numeric(table(time[status == 1])),
               PACKAGE = "cdcosso")
 
