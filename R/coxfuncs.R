@@ -167,7 +167,9 @@ getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0
   m = ncol(Rtheta)
   c.old = c.init
   c.new = rep(0, m)
-  GH = .Call("gradient.Hessian.C", c.old, R, R2, time, status, mscale, lambda0, Risk, as.numeric(table(time[status == 1])),
+  GH = .Call("gradient_Hessian_C", c.old, n, m, as.integer(ncol(Risk)), exp(Rtheta %*% c.old),
+             Rtheta, Rtheta2, time, status, mscale, lambda0, Risk,
+             as.numeric(table(time[status == 1])),
              PACKAGE = "cdcosso")
 
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
