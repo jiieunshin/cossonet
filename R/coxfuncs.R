@@ -78,8 +78,8 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
 
-      test_GH = .Call("gradient_Hessian_C", fit$c.new, tr_n, nbasis, as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
-                      te_Rtheta, Rtheta2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS,
+      test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
+                      te_Rtheta, Rtheta2, time[te_id], status[te_id], mscale, cand.lambda[k], as.integer(te_RS),
                       as.numeric(table(time[te_id][status[te_id] == 1])),
                       PACKAGE = "cdcosso")
 
@@ -136,8 +136,8 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   RS = RiskSet(time, status)
   fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RS)
 
-  GH =  .Call("gradient_Hessian_C", fit$c.new, n, nbasis, as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
-              R, R2, time, status, mscale, optlambda, RS, as.numeric(table(time[status == 1])),
+  GH =  .Call("gradient_Hessian_C", fit$c.new, as.integer(n), as.integer(nbasis), as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
+              R, R2, time, status, mscale, optlambda, as.integer(RS), as.numeric(table(time[status == 1])),
               PACKAGE = "cdcosso")
 
   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
@@ -167,8 +167,8 @@ getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0
   m = ncol(Rtheta)
   c.old = c.init
   c.new = rep(0, m)
-  GH = .Call("gradient_Hessian_C", c.old, n, m, as.integer(ncol(Risk)), exp(Rtheta %*% c.old),
-             Rtheta, Rtheta2, time, status, mscale, lambda0, Risk,
+  GH = .Call("gradient_Hessian_C", c.old, as.integer(n), as.integer(m), as.integer(ncol(Risk)), exp(Rtheta %*% c.old),
+             Rtheta, Rtheta2, time, status, mscale, lambda0, as.integer(Risk),
              as.numeric(table(time[status == 1])),
              PACKAGE = "cdcosso")
 

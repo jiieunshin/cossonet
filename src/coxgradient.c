@@ -24,7 +24,7 @@ SEXP gradient_Hessian_C(SEXP initC, SEXP n, SEXP m, SEXP nc_rs, SEXP eta, SEXP R
   double *r2 = REAL(Rtheta2); // Rtheta2 is mc x mc (column-major)
   double *init_c = REAL(initC); // initC is mc
   double *tie_size_c = REAL(tie_size); // tie_size is n_riskset
-  int *riskset_c = INTEGER(riskset); // riskset is nc x n_riskset (column-major)
+  int *riskset_c = REAL(riskset); // riskset is nc x n_riskset (column-major)
   double *eta_c = REAL(eta); // eta is nc
 
   // Grad.Term1 = -t(Rtheta1) %*% status / n
