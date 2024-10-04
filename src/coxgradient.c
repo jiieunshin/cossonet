@@ -31,12 +31,15 @@ SEXP gradient_Hessian_C(SEXP initC, SEXP n, SEXP m, SEXP nc_rs, SEXP eta, SEXP R
   SEXP Grad_Term1_SEXP = PROTECT(allocVector(REALSXP, mc));
   double *Grad_Term1 = REAL(Grad_Term1_SEXP);
 
-  int *status_ptr = INTEGER(status); // status is nc
-
   for (int j = 0; j < mc; j++) {
     Grad_Term1[j] = 0.0;
-    for (int i = 0; i < nc; i++) {
-      Grad_Term1[j] -= r1[j + i * mc] * status_ptr[i] / (double) nc; // Rtheta1[j, i] * status[i] / n
+  }
+
+  int *status_ptr = INTEGER(status); // status is nc
+
+  for (int j = 0; j < mc; j++) {   // col
+    for (int i = 0; i < nc; i++) {     // row
+      Grad_Term1[j] -= r1[i + j * nc] * status_ptr[i] / (double) nc; // Rtheta1[j, i] * status[i] / n
     }
   }
 
@@ -52,9 +55,9 @@ SEXP gradient_Hessian_C(SEXP initC, SEXP n, SEXP m, SEXP nc_rs, SEXP eta, SEXP R
   }
 
   // Compute Grad.FullNumer = t(Rtheta1) %*% diag(exp(eta))
-  for (int j = 0; j < nc; j++) { // columns
-    for (int i = 0; i < mc; i++) { // rows
-      grad_fullnumer[i + j * mc] = r1[i + j * mc] * exp_eta[j];
+  for (int j = 0; j < mc; j++) { // columns
+    for (int i = 0; i < nc; i++) { // rows
+      grad_fullnumer[i + j * nc] = r1[i + j * nc] * exp_eta[i];
     }
   }
 

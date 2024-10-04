@@ -160,6 +160,8 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 # status = status[tr_id]
 # lambda0 = cand.lambda[k]
 # Risk = tr_RS
+# getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
+
 
 getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0, Risk)
 {
@@ -171,7 +173,8 @@ getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0
              as.numeric(Rtheta), Rtheta2, as.numeric(time), as.integer(status), mscale, lambda0, as.integer(Risk),
              as.integer(table(time[status == 1])),
              PACKAGE = "cdcosso")
-
+print(GH)
+print(cosso::gradient.Hessian.C(c.old, R, R2, time,status, mscale, lambda0, Risk))
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
   # while (loop < 15 & iter.diff > 1e-4) {
