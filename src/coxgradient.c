@@ -137,15 +137,18 @@ SEXP gradient_Hessian_C(SEXP initC, SEXP n, SEXP m, SEXP nc_rs, SEXP eta, SEXP R
     temp_hessian_numer[i] = 0.0;
   }
 
+
+  // for k = 0
+  int k = 0;
   // Compute initial temp_Hessian_numer and tempSum_exp_eta for k=0
   double tempSum_exp_eta = 0.0;
-  for (int i = 0; i < nc; i++) { // for k=0
-    int idx = riskset_c[i + 0 * nc] - 1; // 1-based to 0-based
+  for (int i = 0; i < nc; i++) {
+    int idx = riskset_c[i + k * nc] - 1; // 1-based to 0-based
     if (idx >= 0 && idx < nc) {
       tempSum_exp_eta += exp_eta[idx];
       // Accumulate Hess.FullNumer into temp_Hessian_numer
-      for (int a = 0; a < mc; a++) {
-        for (int b = 0; b < mc; b++) {
+      for (int a = 0; a < mc; a++) {    // row
+        for (int b = 0; b < mc; b++) {  // col
           temp_hessian_numer[a + b * mc] += hess_fullnumer[a + b * mc + idx * mc * mc];
         }
       }
@@ -157,23 +160,34 @@ SEXP gradient_Hessian_C(SEXP initC, SEXP n, SEXP m, SEXP nc_rs, SEXP eta, SEXP R
   SEXP temp_Gradient_numer = PROTECT(allocVector(REALSXP, mc));
   double *temp_gradient_numer = REAL(temp_Gradient_numer);
 
-  // 초기화
-  for (int i = 0; i < mc; i++) {
+  // Initialize temp_hessian_numer to zero
+  for (int i = 0; i < mc * mc; i++) {
     temp_gradient_numer[i] = 0.0;
   }
+
+  // 초기화
+  for (int i = 0; i < mc; i++) {
+    for (int j = 0; j < nc; j++) {
+      int idx = riskset_c[j + k * nc] - 1;
+      if (idx >= 0 && idx < nc) {
+        temp_gradient_numer[i] += grad_fullnumer[i + idx * nc];
+      }
+    }
+  }
+
 
   SEXP Grad_Term2_SEXP = PROTECT(allocMatrix(REALSXP, mc, n_riskset));
   double *grad_term2 = REAL(Grad_Term2_SEXP);
 
   // Grad.Term2[, 0] = tie.size[0] * temp.Gradient.numer / tempSum_exp_eta
-  for (int j = 0; j < mc; j++) {
-    grad_term2[j + 0 * mc] = (tie_size_c[0] * temp_gradient_numer[j]) / tempSum_exp_eta;
+  for (int i = 0; i < mc; i++) {
+    grad_term2[i + k * mc] = (tie_size_c[k] * temp_gradient_numer[i]) / tempSum_exp_eta;
   }
 
   // Hess.Term1[, , 0] = temp_Hessian_numer / tempSum_exp_eta
   for (int a = 0; a < mc; a++) {
     for (int b = 0; b < mc; b++) {
-      hess_term1[a + b * mc + 0 * mc * mc] = temp_hessian_numer[a + b * mc] / tempSum_exp_eta;
+      hess_term1[a + b * mc + k * mc * mc] = temp_hessian_numer[a + b * mc] / tempSum_exp_eta;
     }
   }
 
@@ -181,12 +195,13 @@ SEXP gradient_Hessian_C(SEXP initC, SEXP n, SEXP m, SEXP nc_rs, SEXP eta, SEXP R
   if (tie_size_c[0] > 0) {
     for (int a = 0; a < mc; a++) {
       for (int b = 0; b < mc; b++) {
-        hess_term2[a + b * mc + 0 * mc * mc] = (grad_term2[a + 0 * mc] * grad_term2[b + 0 * mc]) / tie_size_c[0];
+        hess_term2[a + b * mc + k * mc * mc] = (grad_term2[a + k * mc] * grad_term2[b + k * mc]) / tie_size_c[k];
       }
     }
   }
 
-  // Loop for k=1 to n_riskset-1
+
+  // Loop for k = 1 to n_riskset-1
   for (int k = 1; k < n_riskset; k++) {
     // Identify excludeID: riskset[, k-1] not in riskset[, k]
     // Implement via a boolean array to mark inclusion
