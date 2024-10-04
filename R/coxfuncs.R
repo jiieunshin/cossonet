@@ -321,9 +321,11 @@ gettheta.cd = function(init.theta, f.init, G1, G2, time, status, chat, lambda0, 
   theta.old = init.theta
   theta.new = rep(0, d)
   conv2 = conv3 = TRUE
+
+  GH = GH.theta(theta.old, chat, G1, G2, lambda0, time, status, Risk, Hess.FullNumer.unScale)
+
   for(i in 1:20){
     loss = rep(1, d)
-    GH = GH.theta(theta.old, chat, G1, G2, lambda0, time, status, Risk, Hess.FullNumer.unScale)
     err = sum(is.nan(GH$Gradient)) > 0
     if (err) break
     Dmat = GH$H / 2
@@ -420,71 +422,5 @@ GH.theta = function (initTheta, initC, G1, G2, lambda0, time, status, riskset, H
   Grad.Term2 = apply(Grad.Term2, 1, sum)/n
   Gradient = Grad.Term1 + Grad.Term2 + Grad.Term3
   Hessian = apply(Hess.Term1, c(1, 2), sum)/n - apply(Hess.Term2, c(1, 2), sum)/n
-  return(list(Gradient = Gradient, Hessian = Hessian))
-}
-
-##################
-
-function (initC, Gramat1, Gramat2, time, status, mscale, lambda0,
-          riskset, Hess.FullNumer.unScale)
-{
-  n = length(time)
-  tie.size = as.numeric(table(time[status == 1]))
-  Rtheta1 = wsGram(Gramat1, mscale)
-  Rtheta2 = wsGram(Gramat2, mscale)
-  if (min(eigen(Rtheta2)$value) < 0)
-    Rtheta2 = Rtheta2 + 1e-08 * diag(nrow(Rtheta2))
-  eta = Rtheta1 %*% initC
-  if (missing(Hess.FullNumer.unScale)) {
-    Hess.FullNumer.unScale = array(NA, dim = c(length(initC),
-                                               length(initC), n))
-    for (i in 1:n) Hess.FullNumer.unScale[, , i] = Rtheta1[i,
-    ] %*% t(Rtheta1[i, ])
-  }
-  Grad.Term1 = -t(Rtheta1) %*% status/n
-  Grad.Term2 = matrix(NA, ncol = ncol(riskset), nrow = length(initC))
-  Grad.Term3 = 2 * lambda0 * Rtheta2 %*% initC
-  Grad.FullNumer = t(Rtheta1) %*% diag(as.numeric(exp(eta)))
-  Grad.FullDenom = Hess.FullDenom = exp(eta)
-  Hess.FullNumer = Hess.FullNumer.unScale * array(rep(exp(eta),
-                                                      each = length(initC)^2), dim = c(length(initC), length(initC),
-                                                                                       n))
-  Hess.Term1 = Hess.Term2 = array(NA, dim = c(length(initC),
-                                              length(initC), ncol(riskset)))
-  k = 1
-  tempSum.exp.eta = sum(exp(eta[riskset[, k]]), na.rm = TRUE)
-  temp.Gradient.numer = apply(Grad.FullNumer[, riskset[, k]],
-                              1, sum, na.rm = TRUE)
-  temp.Hessian.numer = apply(Hess.FullNumer[, , riskset[, k]],
-                             c(1, 2), sum, na.rm = TRUE)
-  Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
-  Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
-  Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*% t(Grad.Term2[,
-                                                                       k])
-  for (k in 2:ncol(riskset)) {
-    excludeID = riskset[, k - 1][!riskset[, k - 1] %in% riskset[,
-                                                                k]]
-    tempSum.exp.eta = tempSum.exp.eta - sum(exp(eta[excludeID]))
-    if (length(excludeID) > 1) {
-      temp.Gradient.numer = temp.Gradient.numer - apply(Grad.FullNumer[,
-                                                                       excludeID], 1, sum)
-      temp.Hessian.numer = temp.Hessian.numer - apply(Hess.FullNumer[,
-                                                                     , excludeID], c(1, 2), sum)
-    }
-    else {
-      temp.Gradient.numer = temp.Gradient.numer - Grad.FullNumer[,
-                                                                 excludeID]
-      temp.Hessian.numer = temp.Hessian.numer - Hess.FullNumer[,
-                                                               , excludeID]
-    }
-    Grad.Term2[, k] = tie.size[k] * temp.Gradient.numer/tempSum.exp.eta
-    Hess.Term1[, , k] = temp.Hessian.numer/tempSum.exp.eta
-    Hess.Term2[, , k] = 1/tie.size[k] * Grad.Term2[, k] %*%
-      t(Grad.Term2[, k])
-  }
-  Grad.Term2 = apply(Grad.Term2, 1, sum)/n
-  Gradient = Grad.Term1 + Grad.Term2 + Grad.Term3
-  Hessian = apply(Hess.Term1, c(1, 2), sum)/n - apply(Hess.Term2,
-                                                      c(1, 2), sum)/n + 2 * lambda0 * Rtheta2
   return(list(Gradient = Gradient, Hessian = Hessian))
 }
