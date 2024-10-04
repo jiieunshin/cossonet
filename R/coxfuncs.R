@@ -78,10 +78,12 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
 
-      test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
-                      te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
-                      as.integer(table(time[te_id][status[te_id] == 1])),
-                      PACKAGE = "cdcosso")
+      test_GH = cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
+
+#       test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
+#                       te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
+#                       as.integer(table(time[te_id][status[te_id] == 1])),
+#                       PACKAGE = "cdcosso")
 
       UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
       ACV_pen = sum(status[te_id] == 1)/te_n^2 * (sum(diag(UHU))/(te_n - 1) - sum(UHU)/(te_n^2 - te_n))
@@ -136,9 +138,11 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   RS = RiskSet(time, status)
   fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RS)
 
-  GH =  .Call("gradient_Hessian_C", fit$c.new, as.integer(n), as.integer(nbasis), as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
-              R, R2, time, as.integer(status), mscale, optlambda, as.integer(RS), as.integer(table(time[status == 1])),
-              PACKAGE = "cdcosso")
+  GH = cosso::gradient.Hessian.C(fit$c.new, R, R2, time, status, mscale, optlambda, RS)
+
+  # GH =  .Call("gradient_Hessian_C", fit$c.new, as.integer(n), as.integer(nbasis), as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
+  #             R, R2, time, as.integer(status), mscale, optlambda, as.integer(RS), as.integer(table(time[status == 1])),
+  #             PACKAGE = "cdcosso")
 
   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
@@ -162,19 +166,19 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 # Risk = tr_RS
 # getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
 
-
 getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0, Risk)
 {
   n = nrow(Rtheta)
   m = ncol(Rtheta)
   c.old = c.init
   c.new = rep(0, m)
-  GH = .Call("gradient_Hessian_C", c.old, as.integer(n), as.integer(m), as.integer(ncol(Risk)), as.numeric(exp(Rtheta %*% c.old)),
-             as.numeric(Rtheta), Rtheta2, as.numeric(time), as.integer(status), mscale, lambda0, as.integer(Risk),
-             as.integer(table(time[status == 1])),
-             PACKAGE = "cdcosso")
-print(GH)
-print(cosso::gradient.Hessian.C(c.old, R, R2, time,status, mscale, lambda0, Risk))
+  # GH = .Call("gradient_Hessian_C", c.old, as.integer(n), as.integer(m), as.integer(ncol(Risk)), as.numeric(exp(Rtheta %*% c.old)),
+  #            as.numeric(Rtheta), Rtheta2, as.numeric(time), as.integer(status), mscale, lambda0, as.integer(Risk),
+  #            as.integer(table(time[status == 1])),
+  #            PACKAGE = "cdcosso")
+
+  GH = cosso::gradient.Hessian.C(c.old, R, R2, time, status, mscale, lambda0, Risk)
+
   err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
   # while (loop < 15 & iter.diff > 1e-4) {
