@@ -260,7 +260,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
 
     }
   }
-
+  print(measure)
   measure_mean = colMeans(measure, na.rm = T)
   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
 
