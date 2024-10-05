@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 // Define the sspline_cd fulention
-SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, SEXP w, SEXP lambda0, SEXP gamma) {
+SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, SEXP w, SEXP lambda0) {
   int nc = INTEGER(n)[0];
   int mc = INTEGER(m)[0];
 
@@ -94,10 +94,10 @@ SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, S
 
 
   // Set values in result SEXP
-  SET_VECTOR_ELT(result, 0, allocVector(REALSXP,nc));
+  SET_VECTOR_ELT(result, 0, allocVector(REALSXP, mc));
 
   // Copy values to result SEXP
-  for (int i = 0; i < nc; ++i) {
+  for (int i = 0; i < mc; ++i) {
     REAL(VECTOR_ELT(result, 0))[i] = cold_c[i];
   }
 
