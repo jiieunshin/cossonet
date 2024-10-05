@@ -38,7 +38,7 @@ SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, S
     for(int k = 0; k < nc; ++k) { // iterate by row
       add += w_c[k] * R1_c[j * nc + k] * R1_c[j * nc + k];
     }
-    pow_Rc[j] = add;
+    pow_Rc[j] = add / nc;
   }
 
   int iter = 0;
@@ -62,10 +62,11 @@ SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, S
         }
         V1 += (z_c[k] - Rc1) * R1_c[j * nc + k] * w_c[k];
       }
+      V1 = V1 / nc;
 
       double V4 = 2 * lambda0_c * R2_c[j * mc + j];
 
-      cw_new = V1 / (pow_Rc[j] + nc * V4);
+      cw_new = V1 / (pow_Rc[j] + V4);
 
       // If convergence criteria are met, break the loop
       diff = fabs(cold_c[j] - cw_new) / fabs(cold_c[j] + 1);
@@ -114,45 +115,39 @@ SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, S
 }
 
 
-SEXP cox_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r1, SEXP r2) {
+SEXP cox_theta_step(SEXP theta_init, SEXP S, SEXP n, SEXP d, SEXP z, SEXP w, SEXP lambda_theta, SEXP gamma) {
   // Convert R vectors to C arrays
   int nc = INTEGER(n)[0]; // Extract the value of n
   int dc = INTEGER(d)[0]; // Extract the value of d
-  double *Gw_c = REAL(Gw);
-  double *uw_c = REAL(uw);
-  double *h_c = REAL(h);
-  double *theta_c = REAL(theta);
-  double r1_c = REAL(r1)[0];
-  double r2_c = REAL(r2)[0];
-
-  // SEXP out = PROTECT(allocVector(VECSXP, 3));
-
-  // Define variables
-  // double *theta_new = (double *)malloc(dc * sizeof(double));
-  double *pow_theta = (double *)malloc(dc * sizeof(double));
+  double *S_c = REAL(S);
+  double *z_c = REAL(z);
+  double *w_c = REAL(w);
+  double *theta_c = REAL(theta_init);
+  double lambda_theta_c = REAL(lambda_theta)[0];
+  double gamma_c = REAL(gamma)[0];
+  double *pow_S = (double *)malloc(dc * sizeof(double));
   double theta_new;
 
   // 메모리 할당 실패 시 처리 방법
-  if (pow_theta == NULL) {
+  if (pow_S == NULL) {
     error("Memory allocation failed for pow_theta");
   }
 
   for (int k = 0; k < dc; ++k){
-    // theta_new[k] = 0;
-    pow_theta[k] = 0;
+    pow_S[k] = 0;
   }
 
-  for(int j = 0; j < dc; j++) { // iterate by column
+  // calculate square term
+  for(int j = 0; j < dc; ++j) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < nc; k++) { // iterate by row
-      add += Gw_c[j * nc + k] * Gw_c[j * nc + k];
+    for(int k = 0; k < nc; ++k) { // iterate by row
+      add += w_c[k] * S_c[j * nc + k] * S_c[j * nc + k];
     }
-    pow_theta[j] = add;
+    pow_S[j] = add;
   }
 
   // outer iteration
   int iter = 0;
-  // double min_diff = 10.0;
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
@@ -162,22 +157,19 @@ SEXP cox_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
     for(int j = 0; j < dc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for(int k = 0; k < nc; ++k) { // iterate by row
-        double GT = 0.0;
-        for(int l = 0; l < dc; ++l) { // iterate by column except j
-          if(l != j) {
-            GT += Gw_c[l * nc + k] * theta_c[l];
+      for (int k = 0; k < nc; ++k) { // iterate by row
+        double SS = 0.0;
+        for (int l = 0; l < dc; ++l) {
+          if (l != j) {
+            SS += S_c[l * nc + k] * theta_c[l];
           }
         }
-        V1 += (uw_c[k] - GT) * Gw_c[j * nc + k];
+        V1 += (z_c[k] - SS) * S_c[j * nc + k] * w_c[k];
       }
-      V1 = V1 - h_c[j];
-      // V1 = 2 * V1;
+      V1 = V1 / nc;
 
-
-      if(V1 > 0 && r1_c < fabs(V1)) {
-        theta_new = (V1 - r1_c) / (pow_theta[j] + r2_c);
-        // theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
+      if(V1 > 0 && (gamma_c * lambda_theta_c) < fabs(V1)) {
+        theta_new = (V1 - gamma_c * lambda_theta_c) / (pow_S[j] + 2 * (1-gamma_c) * lambda_theta_c);
       } else {
         theta_new = 0;
       }
@@ -209,23 +201,13 @@ SEXP cox_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
     }
   }
 
-  // print
-  // Rprintf("\n iter: %d \n", iter);
-  // for (int k = 0; k < dc; ++k){
-  //   Rprintf("theta_new: %g \n", theta_c[k]);
-  // }
-  // Rprintf("\n max_diff: %d \n", max_diff);
-
-  // Rprintf("min_diff: %f\n", avg_diff);
-  // Rprintf("iter: %d\n", iter);
-
   // result
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, dc));
   for(int j = 0; j < dc; ++j) {
     REAL(theta_new_r)[j] = theta_c[j];
   }
 
-  free(pow_theta);
+  free(pow_S);
 
   UNPROTECT(1);
 

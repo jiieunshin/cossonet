@@ -263,8 +263,18 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     te_n = length(te_id)
 
     for (k in 1:len) {
-      fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
-                        lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
+
+      response <- survival::Surv(time = time[tr_id], event = status[tr_id])
+      theta.init = as.vector(glmnet(G[tr_id,], response, family = "cox", lambda = lambda_theta[k], alpha = 1, standardize = FALSE)$beta)
+      eta = exp(G[tr_id,] %*% theta.init)
+      coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
+      w <- - attributes(coxgrad_results)$diag_hessian
+      z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G[tr_id,] %*% t(G[basis.id, ]) %*% model$c.new
+      fit <- .Call("cox_theta_step", theta.init, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
+
+
+      # fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
+      #                   lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
 
       # save_theta[[k]] = fit$theta.new
 
@@ -299,8 +309,16 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
   abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
 
-  fit = gettheta.cd(rep(1, d), model$f.new, G, G[basis.id, ], time, status, model$c.new,
-                    lambda0, optlambda, gamma, RiskSet(time, status))
+  # fit = gettheta.cd(rep(1, d), model$f.new, G, G[basis.id, ], time, status, model$c.new,
+  #                   lambda0, optlambda, gamma, RiskSet(time, status))
+
+  response <- survival::Surv(time = time, event = status)
+  theta.init = as.vector(glmnet(G, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
+  eta = exp(G %*% theta.init)
+  coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
+  w <- - attributes(coxgrad_results)$diag_hessian
+  z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
+  fit <- .Call("cox_theta_step", theta.init, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
 
   theta.adj = ifelse(fit$theta.new <= 1e-6, 0, fit$theta.new)
 
