@@ -76,6 +76,7 @@ SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, S
       }
 
       avg_diff += diff;
+      Rprintf("cold_c[j]: %f\n", cold_c[j]);
 
       // Update cw with the new value
       cold_c[j] = cw_new;
