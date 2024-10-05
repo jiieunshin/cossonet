@@ -4,114 +4,84 @@
 #include <stdio.h>
 
 // Define the sspline_cd fulention
-SEXP cox_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N, SEXP lambda0) {
-  int tr_nc = INTEGER(tr_n)[0];
-  int Nc = INTEGER(N)[0];
+SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, SEXP w, SEXP lambda0, SEXP gamma) {
+  int nc = INTEGER(n)[0];
+  int mc = INTEGER(m)[0];
 
   SEXP result = PROTECT(allocVector(VECSXP, 2)); // Extra space for b_new
 
   // Convert R vectors to C arrays
-  double *zw_c = REAL(zw);
-  double *Rw_c = REAL(Rw);
-  double *Rw2_c = REAL(Rw2);
-  double *cw_c = REAL(cw);
-  double *sw_c = REAL(sw);
+  double *z_c = REAL(z);
+  double *w_c = REAL(w);
+  double *R1_c = REAL(Rtheta);
+  double *R2_c = REAL(Rtheta2);
+  double *cold_c = REAL(cinit);
   double lambda0_c = REAL(lambda0)[0];
 
   // Define variables
   // double *cw_new = (double *)malloc(nc * sizeof(double));
   // double *c_new = (double *)malloc(nc * sizeof(double));
-  double *pow_Rc = (double *)malloc(Nc * sizeof(double));
+  double *pow_Rc = (double *)malloc(mc * sizeof(double));
   double cw_new;
 
   if (pow_Rc == NULL) {
     error("Memory allocation failed");
   }
 
-  for(int k = 0; k < Nc; k++) {
-    // cw_new[k] = 0;
-    // c_new[k] = 0;
+  for(int k = 0; k < mc; k++) {
     pow_Rc[k] = 0;
   }
 
   // calculate square term
-  for(int j = 0; j < Nc; ++j) { // iterate by column
+  for(int j = 0; j < mc; ++j) { // iterate by column
     double add = 0.0;
-    for(int k = 0; k < tr_nc; ++k) { // iterate by row
-      add += Rw_c[j * tr_nc + k] * Rw_c[j * tr_nc + k];
+    for(int k = 0; k < nc; ++k) { // iterate by row
+      add += w_c[k] * R1_c[j * nc + k] * R1_c[j * nc + k];
     }
-    pow_Rc[j] = 2 * add;
+    pow_Rc[j] = add;
   }
 
   int iter = 0;
-  // double min_diff = 10;
   double diff = 0.0;
   double avg_diff;
-  double sum3;
-  double sum4;
-  double b_new = 0.0;
 
   // outer loop
   for (iter = 0; iter < 80; ++iter) {
     avg_diff = 0.0;
 
     // update cw
-    for (int j = 0; j < Nc; ++j) { // iterate by column
+    for (int j = 0; j < mc; ++j) { // iterate by column
 
       double V1 = 0.0;
-      for (int k = 0; k < tr_nc; ++k) { // iterate by row
+      for (int k = 0; k < nc; ++k) { // iterate by row
         double Rc1 = 0.0;
-        for (int l = 0; l < Nc; ++l) {
+        for (int l = 0; l < mc; ++l) {
           if (l != j) {
-            Rc1 += Rw_c[l * tr_nc + k] * cw_c[l];
+            Rc1 += R1_c[l * nc + k] * cold_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc1 - b_new * sw_c[k]) * Rw_c[j * tr_nc + k];
+        V1 += (z_c[k] - Rc1) * R1_c[j * nc + k] * w_c[k];
       }
-      V1 = 2 * V1;
 
-      double V2 = 0.0;
-      for (int l = 0; l < Nc; ++l) {
-        if (l != j) {
-          V2 += Rw2_c[l * Nc + j] * cw_c[l];
-        }
-      }
-      V2 = lambda0_c * V2;
+      double V4 = 2 * lambda0_c * R2_c[j * mc + j];
 
-      double V4 = lambda0_c * Rw2_c[j * Nc + j];
-
-      cw_new = (V1 - V2) / (pow_Rc[j] + V4);
+      cw_new = V1 / (pow_Rc[j] + nc * V4);
 
       // If convergence criteria are met, break the loop
-      diff = fabs(cw_c[j] - cw_new) / fabs(cw_c[j] + 1);
+      diff = fabs(cold_c[j] - cw_new) / fabs(cold_c[j] + 1);
 
       if ((diff < 1e-6) | (diff > 10)) {
-        cw_new = cw_c[j];
-        diff = fabs(cw_c[j] - cw_new);
+        cw_new = cold_c[j];
+        diff = fabs(cold_c[j] - cw_new);
       }
 
       avg_diff += diff;
 
       // Update cw with the new value
-      cw_c[j] = cw_new;
+      cold_c[j] = cw_new;
     }
 
-    // result
-    sum3 = 0.0;
-    sum4 = 0.0;
-    for (int k = 0; k < tr_nc; ++k) { // iterate by row
-      double Rc = 0.0;
-      for (int l = 0; l < Nc; ++l) { // iterate by col
-        Rc += Rw_c[l * tr_nc + k] * cw_c[l];
-      }
-      sum3 += (zw_c[k] - Rc) * sw_c[k];
-      sum4 += sw_c[k] * sw_c[k];
-    }
-
-    b_new = sum3 / sum4;
-
-
-    avg_diff /= Nc; // Calculate the average difference
+    avg_diff /= nc; // Calculate the average difference
 
     // Check for convergence based on average difference
     if (avg_diff <= 1e-4) {
@@ -124,31 +94,20 @@ SEXP cox_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
 
 
   // Set values in result SEXP
-  SET_VECTOR_ELT(result, 0, allocVector(REALSXP, Nc));
-  SET_VECTOR_ELT(result, 1, ScalarReal(b_new));
-  // SET_VECTOR_ELT(result, 2, allocVector(REALSXP, nc));
-  // SET_VECTOR_ELT(result, 2, zw);
-  // SET_VECTOR_ELT(result, 3, sw);
+  SET_VECTOR_ELT(result, 0, allocVector(REALSXP,nc));
 
   // Copy values to result SEXP
-  for (int i = 0; i < Nc; ++i) {
-    REAL(VECTOR_ELT(result, 0))[i] = cw_c[i];
-    // REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
+  for (int i = 0; i < nc; ++i) {
+    REAL(VECTOR_ELT(result, 0))[i] = cold_c[i];
   }
 
   // Set names for the list elements
-  SEXP name_ssp = PROTECT(allocVector(STRSXP, 2));
-  SET_STRING_ELT(name_ssp, 0, mkChar("cw.new"));
-  SET_STRING_ELT(name_ssp, 1, mkChar("b.new"));
-  // SET_STRING_ELT(name_ssp, 2, mkChar("c.new"));
-  // SET_STRING_ELT(name_ssp, 2, mkChar("zw.new"));
-  // SET_STRING_ELT(name_ssp, 3, mkChar("sw.new"));
+  SEXP name_ssp = PROTECT(allocVector(STRSXP, 1));
+  SET_STRING_ELT(name_ssp, 0, mkChar("c.new"));
   setAttrib(result, R_NamesSymbol, name_ssp);
 
   // Free dynamically allocated memory
-  // free(cw_new);
   free(pow_Rc);
-  // free(c_new);
 
   UNPROTECT(2); // Unprotect result
   return result;

@@ -70,10 +70,15 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
     pseudoX = Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
 
     for (k in 1:len){
-      c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+      c.init = as.vector(glmnet(Rtheta, cbind(time, status), family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+      eta = exp(Rtheta %*% c.init)
+      coxgrad_results <- coxgrad(eta, survival::Surv(time, status), mscale, std.weights = FALSE, diag.hessian = TRUE)
+      w <- - attributes(coxgrad_results)$diag_hessian
+      z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+      fit <- .Call("cox_c_step", Rtheta, Rtheta2, n, nbasis, z, w, cand.lambda[k], gamma)
 
       tr_RS = RiskSet(time[tr_id], status[tr_id])
-      fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
+      # fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
 
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
