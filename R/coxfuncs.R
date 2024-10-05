@@ -73,9 +73,9 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       response <- survival::Surv(time = time[tr_id], event = status[tr_id])
       c.init = as.vector(glmnet(tr_Rtheta, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
       eta = exp(tr_Rtheta %*% c.init)
-      coxgrad_results <- coxgrad(eta[tr_id], response, rep(1, nbasis), std.weights = FALSE, diag.hessian = TRUE)
+      coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
       w <- - attributes(coxgrad_results)$diag_hessian
-      z <- (eta[tr_id] - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+      z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
       fit <- .Call("cox_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
 
       # fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
@@ -141,7 +141,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   response <- survival::Surv(time = time, event = status)
   c.init = as.vector(glmnet(Rtheta, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
   eta = exp(Rtheta %*% c.init)
-  coxgrad_results <- coxgrad(eta, response, rep(1, nbasis), std.weights = FALSE, diag.hessian = TRUE)
+  coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w <- - attributes(coxgrad_results)$diag_hessian
   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
   fit <- .Call("cox_c_step", c.init, Rtheta, Rtheta2, as.integer(n), as.integer(nbasis), z, w, optlambda)

@@ -29,8 +29,8 @@
 # family = 'Cox'
 # gamma = 0.95
 # kparam=1
-# lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
-# lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20))
+# lambda0 = exp(seq(log(2^{-10}), log(2^{-2}), length.out = 20))
+# lambda_theta = exp(seq(log(2^{-10}), log(2^{-2}), length.out = 20))
 # wt = rep(1, ncol(x))
 cdcosso.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
 {
