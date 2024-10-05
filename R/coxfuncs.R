@@ -180,11 +180,11 @@ getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0
 
   # while (loop < 15 & iter.diff > 1e-4) {
   for(i in 1:15){ # outer iteration
-    if(err) break
     # 2 * n * lambda0 * Rtheta2
     GH = cosso::gradient.Hessian.C(c.old, R, R2, time, status, mscale, lambda0, Risk)
 
     err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+    if(err) break
 
     Hess = GH$Hessian - 2 * lambda0 * Rtheta2
     Grad = GH$Gradient - 2 * lambda0 * Rtheta2 %*% c.old
