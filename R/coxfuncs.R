@@ -177,14 +177,15 @@ getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0
   #            as.integer(table(time[status == 1])),
   #            PACKAGE = "cdcosso")
 
-  GH = cosso::gradient.Hessian.C(c.old, R, R2, time, status, mscale, lambda0, Risk)
-
-  err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
 
   # while (loop < 15 & iter.diff > 1e-4) {
   for(i in 1:15){ # outer iteration
     if(err) break
     # 2 * n * lambda0 * Rtheta2
+    GH = cosso::gradient.Hessian.C(c.old, R, R2, time, status, mscale, lambda0, Risk)
+
+    err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+
     Hess = GH$Hessian - 2 * lambda0 * Rtheta2
     Grad = GH$Gradient - 2 * lambda0 * Rtheta2 %*% c.old
 
@@ -322,9 +323,9 @@ gettheta.cd = function(init.theta, f.init, G1, G2, time, status, chat, lambda0, 
   theta.new = rep(0, d)
   conv2 = conv3 = TRUE
 
-  GH = GH.theta(theta.old, chat, G1, G2, lambda0, time, status, Risk, Hess.FullNumer.unScale)
-
   for(i in 1:20){
+    GH = GH.theta(theta.old, chat, G1, G2, lambda0, time, status, Risk, Hess.FullNumer.unScale)
+
     loss = rep(1, d)
     err = sum(is.nan(GH$Gradient)) > 0
     if (err) break
