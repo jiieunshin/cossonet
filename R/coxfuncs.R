@@ -270,7 +270,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
       w <- - attributes(coxgrad_results)$diag_hessian
       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G[tr_id,] %*% t(G[basis.id, ]) %*% model$c.new
-      fit <- .Call("cox_theta_step", theta.init, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
+      theta.new <- .Call("cox_theta_step", theta.init, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
 
 
       # fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
@@ -278,7 +278,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
 
       # save_theta[[k]] = fit$theta.new
 
-      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% fit$theta.new) + model$ACV_pen
+      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% theta.new) + model$ACV_pen
       measure[f, k] = ACV
 
     }
@@ -318,9 +318,9 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w <- - attributes(coxgrad_results)$diag_hessian
   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
-  fit <- .Call("cox_theta_step", theta.init, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
+  theta.new <- .Call("cox_theta_step", theta.init, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
 
-  theta.adj = ifelse(fit$theta.new <= 1e-6, 0, fit$theta.new)
+  theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.adj)
 
