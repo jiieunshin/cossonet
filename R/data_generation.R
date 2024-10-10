@@ -41,10 +41,10 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "survival"){
-    f1 = function(t) t
-    f2 = function(t) (2 * t - 1)^2
-    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+    f1 = function(t) 3 * t
+    f2 = function(t) pi * sin(pi * t)
+    f3 = function(t) 8 * t^3
+    f4 = function(t) 4/ (exp(1) - 1) * exp(t)
   }
 
   # f1 = function(t) 5 * sin(3*t)
@@ -64,43 +64,26 @@ data_generation = function(n, p, rho, SNR,
 
   if(p <= 5) stop("dimension size should be larger than 5.")
 
-  Sigma = matrix(rho, 4, 4)
-  diag(Sigma) = 1
+  # Sigma = matrix(rho, 4, 4)
+  # diag(Sigma) = 1
 
-  Sigma = matrix(1, 4, 4)
-  for(j in 1:4){
-    for(k in 1:4){
-      Sigma[j, k] = rho^abs(j-k)
-    }
-  }
+  # Sigma = matrix(1, 4, 4)
+  # for(j in 1:4){
+  #   for(k in 1:4){
+  #     Sigma[j, k] = rho^abs(j-k)
+  #   }
+  # }
 
 
   # x = apply(rmvnorm(n, sigma = Sigma), 2, rescale)
 
-
   t = 2
-  x = matrix(0, n, 4)
-  W = matrix(runif(n * 4), n, 4)
+  x = matrix(0, n, 3)
+  W = matrix(runif(n * 3), n, 3)
   U = runif(n)
-  for(j in 1:4){
+  for(j in 1:3){
     x[, j] = (W[, j] + t * U)/(1 + t)
   }
-
-  # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
-  # # + 3 * f5(x[,5])
-  # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
-  # sd = sqrt(V_sig / SNR)
-
-  # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
-  # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
-  # # + var(f5(x[,5]))
-  # sd = sqrt(var(f) / SNR)
-  # # print(sd)
-  #
-  # # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
-  # x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
-  #
-  # x = cbind(x, x_nois)
 
   # Set the outer margins
   # par(oma = c(0, 0, 0, 0))
@@ -167,27 +150,36 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == 'survival'){
-    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4])
-    # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
-    f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
-    V_sig = var(2 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
+    # x = apply(rtmvnorm(n, mean = rep(0, 3),
+    #              sigma = Sigma,
+    #              lower = rep(-2, length = 3),
+    #              upper = rep( 2, length = 3)
+    #           ),
+    #     2, rescale)
+
+    x = cbind(x, rbinom(n, 1, .7))
+
+    f = 3 * x[, 1] + 4 * sin(2 * pi * x[, 2]) + 5 * (x[, 3] - 0.4)^2 + x[, 4]
+    V_sig = var(f)
+    # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
+    # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
 
     sd = sqrt(V_sig / SNR)
 
-    e = rnorm(n, 0, sd)
-    f = f + e
+    # e = rnorm(n, 0, sd)
+    # f = f
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
-    y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
 
-    # 14.003
-    # mean(tr_y[,"status"])
+
+    y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
 
     out = list(x = x, f = f, y = y)
   }
   return(out)
 }
 
+# library(tmvtnorm)
