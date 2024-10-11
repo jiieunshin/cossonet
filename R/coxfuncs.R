@@ -81,6 +81,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       sw = sqrt(w)
 
       fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n / cand.lambda[k], PACKAGE = "cdcosso")
+      c.new = fit$cw.new
       # fit <- .Call("glm_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
 
       # fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
@@ -88,7 +89,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
 
-      test_GH = cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
+      test_GH = cosso::gradient.Hessian.C(c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
 
 #       test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
 #                       te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
@@ -98,7 +99,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
       ACV_pen = sum(status[te_id] == 1)/te_n^2 * (sum(diag(UHU))/(te_n - 1) - sum(UHU)/(te_n^2 - te_n))
 
-      measure[f, k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% fit$c.new) + ACV_pen
+      measure[f, k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% c.new) + ACV_pen
     }
   }
 
@@ -143,6 +144,8 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   rm(te_RS)
   # rm(tr_RS)
 
+  RS = RiskSet(time, status)
+
   response <- survival::Surv(time = time, event = status)
   c.init = as.vector(glmnet(Rtheta, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
   eta = exp(Rtheta %*% c.init)
@@ -156,28 +159,14 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   sw = sqrt(w)
 
   fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n / optlambda, PACKAGE = "cdcosso")
+  c.new = fit$cw.new
 
-  # c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
-  RS = RiskSet(time, status)
-  # fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RS)
-
-  GH = cosso::gradient.Hessian.C(fit$c.new, R, R2, time, status, mscale, optlambda, RS)
-
-  # GH =  .Call("gradient_Hessian_C", fit$c.new, as.integer(n), as.integer(nbasis), as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
-  #             R, R2, time, as.integer(status), mscale, optlambda, as.integer(RS), as.integer(table(time[status == 1])),
-  #             PACKAGE = "cdcosso")
-
-  UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
-  ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-
-  out = list(measure = measure, R = R, RS = RS, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new,
-             c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
+  out = list(measure = measure, R = R, RS = RS, f.new = c(fit$b.new + Rtheta %*% c.new), zw.new = zw, w.new = w, sw.new = sw,
+             c.new = c.new, ACV_pen = ACV_pen, optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
   rm(Rtheta2)
-  rm(GH)
-  rm(UHU)
   return(out)
 }
 
@@ -402,10 +391,6 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 #   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 # }
 
-
-# model = getc_cvfit
-# lambda0 = getc_cvfit$optlambda
-# mscale = wt
 cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma){
   n = length(time)
   d = length(mscale)
@@ -417,7 +402,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   for (j in 1:d) {
     G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
   }
-
 
   init.theta = rep(1, d)
   len = length(lambda_theta)
@@ -444,13 +428,15 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G[tr_id,] %*% t(G[basis.id, ]) %*% model$c.new
       theta.new <- .Call("cox_theta_step", theta.init, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
 
+      # theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma))
+      theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
+#
+#       fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
+#                         lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
+#       theta.adj = ifelse(fit$theta.new <= 1e-6, 0, fit$theta.new)
 
-      # fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
-      #                   lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
 
-      # save_theta[[k]] = fit$theta.new
-
-      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% theta.new) + model$ACV_pen
+      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% theta.adj) + model$ACV_pen
       measure[f, k] = ACV
 
     }
@@ -491,13 +477,110 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   w <- - attributes(coxgrad_results)$diag_hessian
   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
   theta.new <- .Call("cox_theta_step", theta.init, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
-
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
+
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.adj)
 
   return(out)
 }
+
+
+# model = getc_cvfit
+# lambda0 = getc_cvfit$optlambda
+# mscale = wt
+# cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma){
+#   n = length(time)
+#   d = length(mscale)
+#
+#   # RS = RiskSet(time, status)
+#
+#   # solve theta
+#   G <- matrix(0, n, d)
+#   for (j in 1:d) {
+#     G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
+#   }
+#
+#
+#   init.theta = rep(1, d)
+#   len = length(lambda_theta)
+#   measure = matrix(NA, 5, len)
+#   fold = cvsplitID(n, 5, time, family = "gaussian")
+#
+#   for(f in 1:5){
+#     tr_id = as.vector(fold[, -f])
+#     te_id = fold[, f]
+#
+#     tr_id = tr_id[!is.na(tr_id)]
+#     te_id = te_id[!is.na(te_id)]
+#
+#     tr_n = length(tr_id)
+#     te_n = length(te_id)
+#
+#     for (k in 1:len) {
+#
+#       response <- survival::Surv(time = time[tr_id], event = status[tr_id])
+#       theta.init = as.vector(glmnet(G[tr_id,], response, family = "cox", lambda = lambda_theta[k], alpha = 1, standardize = FALSE)$beta)
+#       eta = exp(G[tr_id,] %*% theta.init)
+#       coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
+#       w <- - attributes(coxgrad_results)$diag_hessian
+#       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G[tr_id,] %*% t(G[basis.id, ]) %*% model$c.new
+#       theta.new <- .Call("cox_theta_step", theta.init, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
+#
+#
+#       # fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
+#       #                   lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
+#
+#       # save_theta[[k]] = fit$theta.new
+#
+#       ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% theta.new) + model$ACV_pen
+#       measure[f, k] = ACV
+#
+#     }
+#   }
+#   print(measure)
+#   measure_mean = colMeans(measure, na.rm = T)
+#   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
+#
+#   sel_id = which(!is.nan(measure_se) & measure_se != Inf)
+#   measure_mean = measure_mean[sel_id]
+#   measure_se = measure_se[sel_id]
+#   lambda_theta = lambda_theta[sel_id]
+#
+#   min_id = which.min(measure_mean)
+#   cand_ids = which((measure_mean >= measure_mean[min_id]) &
+#                      (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
+#   cand_ids = cand_ids[cand_ids >= min_id]
+#   std_id = max(cand_ids)
+#   optlambda = lambda_theta[std_id]
+#
+#   ylab = expression("GCV(" * lambda[theta] * ")")
+#
+#
+#   plot(log(lambda_theta), measure_mean, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
+#        ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
+#   arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
+#          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
+#          angle = 90, code = 3, length = 0.1, col = "darkgray")
+#   abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
+#
+#   # fit = gettheta.cd(rep(1, d), model$f.new, G, G[basis.id, ], time, status, model$c.new,
+#   #                   lambda0, optlambda, gamma, RiskSet(time, status))
+#
+#   response <- survival::Surv(time = time, event = status)
+#   theta.init = as.vector(glmnet(G, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
+#   eta = exp(G %*% theta.init)
+#   coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
+#   w <- - attributes(coxgrad_results)$diag_hessian
+#   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
+#   theta.new <- .Call("cox_theta_step", theta.init, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
+#
+#   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
+#
+#   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.adj)
+#
+#   return(out)
+# }
 
 
 # G1 = G[tr_id, ]
@@ -526,8 +609,9 @@ gettheta.cd = function(init.theta, f.init, G1, G2, time, status, chat, lambda0, 
   theta.new = rep(0, d)
   conv2 = conv3 = TRUE
 
+  GH = GH.theta(theta.old, chat, G1, G2, lambda0, time, status, Risk, Hess.FullNumer.unScale)
+
   for(i in 1:20){
-    GH = GH.theta(theta.old, chat, G1, G2, lambda0, time, status, Risk, Hess.FullNumer.unScale)
 
     loss = rep(1, d)
     err = sum(is.nan(GH$Gradient)) > 0
