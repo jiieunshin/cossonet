@@ -159,8 +159,8 @@ data_generation = function(n, p, rho, SNR,
 
     x = cbind(x, rbinom(n, 1, .5))
 
-    f = 2 * x[, 1] + 4 * sin(2 * pi * x[, 2]) + 5 * (x[, 3] - 0.4)^2 + x[, 4]
-    V_sig = var(2 * x[, 1]) + var(4 * sin(2 * pi * x[, 2])) + var(5 * (x[, 3] - 0.4)^2) + var(x[, 4])
+    f = 3 * x[, 1] + 4 * sin(2 * pi * x[, 2]) + 5 * (x[, 3] - 0.4)^2 + x[, 4]
+    V_sig = var(3 * x[, 1]) + var(4 * sin(2 * pi * x[, 2])) + var(5 * (x[, 3] - 0.4)^2) + var(x[, 4])
     # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
     # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
 
