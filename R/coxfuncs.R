@@ -69,7 +69,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 
     for (k in 1:len){
       response <- survival::Surv(time = time[tr_id], event = status[tr_id])
-      c.init = as.vector(glmnet(tr_Rtheta, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+      c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
       eta = exp(tr_Rtheta %*% c.init)
       coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
       w <- - attributes(coxgrad_results)$diag_hessian
@@ -429,7 +429,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       theta.new <- .Call("cox_theta_step", theta.init, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
 
       # theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma))
-      # theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
+      theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
       # fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
       #                   lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
