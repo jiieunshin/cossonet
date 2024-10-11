@@ -157,17 +157,17 @@ data_generation = function(n, p, rho, SNR,
     #           ),
     #     2, rescale)
 
-    x = cbind(x, rbinom(n, 1, .7))
+    x = cbind(x, rbinom(n, 1, .5))
 
     f = 3 * x[, 1] + 4 * sin(2 * pi * x[, 2]) + 5 * (x[, 3] - 0.4)^2 + x[, 4]
-    V_sig = var(f)
+    V_sig = var(3 * x[, 1]) + var(4 * sin(2 * pi * x[, 2])) + var(5 * (x[, 3] - 0.4)^2) + var(x[, 4])
     # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
     # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
 
     sd = sqrt(V_sig / SNR)
 
-    # e = rnorm(n, 0, sd)
-    # f = f
+    e = rnorm(n, 0, sd)
+    f = f + e
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
