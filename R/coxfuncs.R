@@ -9,8 +9,6 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-# mscale = wt
-# cand.lambda = lambda0
 cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
 {
   d = K$numK
@@ -76,7 +74,14 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
       w <- - attributes(coxgrad_results)$diag_hessian
       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
-      fit <- .Call("cox_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
+
+
+      zw = z * sqrt(w)
+      Rw = tr_Rtheta * w
+      sw = sqrt(w)
+
+      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n / cand.lambda[k], PACKAGE = "cdcosso")
+      # fit <- .Call("glm_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
 
       # fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
 
@@ -144,8 +149,13 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w <- - attributes(coxgrad_results)$diag_hessian
   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
-  fit <- .Call("cox_c_step", c.init, Rtheta, Rtheta2, as.integer(n), as.integer(nbasis), z, w, optlambda)
+  # fit <- .Call("cox_c_step", c.init, Rtheta, Rtheta2, as.integer(n), as.integer(nbasis), z, w, optlambda)
 
+  zw = z * sqrt(w)
+  Rw = Rtheta * w
+  sw = sqrt(w)
+
+  fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n / optlambda, PACKAGE = "cdcosso")
 
   # c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
   RS = RiskSet(time, status)
@@ -171,6 +181,168 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   return(out)
 }
 
+# mscale = wt
+# cand.lambda = lambda0
+# cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
+# {
+#   d = K$numK
+#   n <- length(status)
+#   len = length(cand.lambda)
+#
+#   R = array(NA, c(n, nbasis, d))
+#   for(j in 1:d){
+#     R[, , j] = K$K[[j]][, basis.id]
+#   }
+#
+#   Rtheta <- combine_kernel(R, mscale)
+#
+#   R2 = array(NA, c(nbasis, nbasis, d))
+#   for(j in 1:d){
+#     R2[, , j] = K$K[[j]][basis.id, basis.id]
+#   }
+#
+#   Rtheta2 <- combine_kernel(R2, mscale)
+#
+#   fold = cvsplitID(n, 5, status, family = "gaussian")
+#   measure <- matrix(NA, 5, len)
+#   for(f in 1:5){
+#     tr_id = as.vector(fold[, -f])
+#     te_id = fold[, f]
+#
+#     tr_id = tr_id[!is.na(tr_id)]
+#     te_id = te_id[!is.na(te_id)]
+#
+#     tr_n = length(tr_id)
+#     te_n = length(te_id)
+#
+#     tr_R = array(NA, c(tr_n, nbasis, d))
+#     for(j in 1:d){
+#       tr_R[, , j] = K$K[[j]][tr_id, basis.id]
+#     }
+#
+#     tr_Rtheta <- combine_kernel(tr_R, mscale)
+#
+#     te_R = array(NA, c(te_n, nbasis, d))
+#     for(j in 1:d){
+#       te_R[, , j] = K$K[[j]][te_id, basis.id]
+#     }
+#
+#     te_Rtheta <- combine_kernel(te_R, mscale)
+#
+#     # initialize
+#     loop = 0
+#     EigRtheta2 = eigen(Rtheta2)
+#     while (min(eigen(Rtheta2)$values) < 0 & loop < 10) {
+#       loop = loop + 1
+#       Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
+#       EigRtheta2 = eigen(Rtheta2)
+#     }
+#     if (loop == 10)
+#       EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
+#     pseudoX = tr_Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
+#
+#     for (k in 1:len){
+#       response <- survival::Surv(time = time[tr_id], event = status[tr_id])
+#       c.init = as.vector(glmnet(tr_Rtheta, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+#       eta = exp(tr_Rtheta %*% c.init)
+#       coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
+#       w <- - attributes(coxgrad_results)$diag_hessian
+#       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+#       fit <- .Call("cox_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
+#
+#       # fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
+#
+#       # calculate ACV for test data
+#       te_RS = RiskSet(time[te_id], status[te_id])
+#
+#       test_GH = cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
+#
+# #       test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
+# #                       te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
+# #                       as.integer(table(time[te_id][status[te_id] == 1])),
+# #                       PACKAGE = "cdcosso")
+#
+#       UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
+#       ACV_pen = sum(status[te_id] == 1)/te_n^2 * (sum(diag(UHU))/(te_n - 1) - sum(UHU)/(te_n^2 - te_n))
+#
+#       measure[f, k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% fit$c.new) + ACV_pen
+#     }
+#   }
+#
+#   # optimal lambda1
+#   measure_mean = colMeans(measure, na.rm = T)
+#   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
+#
+#   sel_id = which(!is.nan(measure_se) & measure_se != Inf)
+#   measure_mean = measure_mean[sel_id]
+#   measure_se = measure_se[sel_id]
+#   cand.lambda = cand.lambda[sel_id]
+#
+#   min_id = which.min(measure_mean)
+#
+#   if(one.std){
+#     cand_ids = which((measure_mean >= measure_mean[min_id]) &
+#                        (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
+#     cand_ids = cand_ids[cand_ids >= min_id]
+#     std_id = max(cand_ids)
+#     optlambda = cand.lambda[std_id]
+#   } else{
+#     optlambda = cand.lambda[min_id]
+#   }
+#
+#
+#   ylab = expression("GCV(" * lambda[0] * ")")
+#
+#   if(show){
+#     plot(log(cand.lambda), measure_mean, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+#          ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
+#     arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
+#            x1 = log(cand.lambda), y1 = measure_mean + measure_se,
+#            angle = 90, code = 3, length = 0.1, col = "darkgray")
+#     abline(v = log(optlambda), lty = 2, col = "darkgray")
+#   }
+#
+#   rm(tr_R)
+#   rm(te_R)
+#   rm(tr_Rtheta)
+#   rm(te_Rtheta)
+#   rm(test_GH)
+#   rm(te_RS)
+#   # rm(tr_RS)
+#
+#   response <- survival::Surv(time = time, event = status)
+#   c.init = as.vector(glmnet(Rtheta, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
+#   eta = exp(Rtheta %*% c.init)
+#   coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
+#   w <- - attributes(coxgrad_results)$diag_hessian
+#   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+#   fit <- .Call("cox_c_step", c.init, Rtheta, Rtheta2, as.integer(n), as.integer(nbasis), z, w, optlambda)
+#
+#
+#   # c.init = as.vector(glmnet(pseudoX, cbind(time, status), family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
+#   RS = RiskSet(time, status)
+#   # fit = getc.cd(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, optlambda, RS)
+#
+#   GH = cosso::gradient.Hessian.C(fit$c.new, R, R2, time, status, mscale, optlambda, RS)
+#
+#   # GH =  .Call("gradient_Hessian_C", fit$c.new, as.integer(n), as.integer(nbasis), as.integer(ncol(RS)), exp(Rtheta %*% fit$c.new),
+#   #             R, R2, time, as.integer(status), mscale, optlambda, as.integer(RS), as.integer(table(time[status == 1])),
+#   #             PACKAGE = "cdcosso")
+#
+#   UHU = Rtheta %*% My_solve(GH$H, t(Rtheta))
+#   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+#
+#   out = list(measure = measure, R = R, RS = RS, f.new = c(Rtheta %*% fit$c.new), w.new = fit$w.new,
+#              c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
+#
+#   rm(K)
+#   rm(Rtheta)
+#   rm(Rtheta2)
+#   rm(GH)
+#   rm(UHU)
+#   return(out)
+# }
+
 # R = tr_R
 # Rtheta = tr_Rtheta
 # time = time[tr_id]
@@ -179,56 +351,56 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 # Risk = tr_RS
 # getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
 
-getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0, Risk)
-{
-  n = nrow(Rtheta)
-  m = ncol(Rtheta)
-  c.old = c.init
-  c.new = rep(0, m)
-  # GH = .Call("gradient_Hessian_C", c.old, as.integer(n), as.integer(m), as.integer(ncol(Risk)), as.numeric(exp(Rtheta %*% c.old)),
-  #            as.numeric(Rtheta), Rtheta2, as.numeric(time), as.integer(status), mscale, lambda0, as.integer(Risk),
-  #            as.integer(table(time[status == 1])),
-  #            PACKAGE = "cdcosso")
-
-
-  # while (loop < 15 & iter.diff > 1e-4) {
-  for(i in 1:15){ # outer iteration
-    # 2 * n * lambda0 * Rtheta2
-    GH = cosso::gradient.Hessian.C(c.old, R, R2, time, status, mscale, lambda0, Risk)
-
-    err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
-    if(err) break
-
-    Hess = GH$Hessian - 2 * lambda0 * Rtheta2
-    Grad = GH$Gradient - 2 * lambda0 * Rtheta2 %*% c.old
-
-    W = ginv(Hess)
-    z = (Hess %*% c.old - Grad) / lambda0
-
-    for(j in 1:m){
-      WR = colSums(W * Rtheta2[, j])
-      V1 = sum(WR * (z - Rtheta2[ ,-j] %*% c.old[-j]))
-      V2 = as.vector((Rtheta2[-j, j] %*% c.old[-j]) / lambda0)
-      V3 = sum(WR * Rtheta2[ ,j])
-      V4 = Rtheta2[j, j] / lambda0
-
-      c.new[j] = (V1 - V2) / (V3 + V4)
-      loss = abs(c.old - c.new)
-      conv1 = min(loss[loss > 0]) < 1e-20
-      conv2 = abs(c.old[j] - c.new[j]) > 5
-      conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
-      # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
-      if(conv1 | conv2 | conv3) break
-      c.old[j] = c.new[j]  # if not convergence
-    }
-    if(conv1 | conv2 | conv3) break
-  }
-
-  if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
-
-  return(list(z.new = z, w.new = W, c.new = c.new))
-  # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
-}
+# getc.cd = function(R, R2, Rtheta, Rtheta2, mscale, c.init, time, status, lambda0, Risk)
+# {
+#   n = nrow(Rtheta)
+#   m = ncol(Rtheta)
+#   c.old = c.init
+#   c.new = rep(0, m)
+#   # GH = .Call("gradient_Hessian_C", c.old, as.integer(n), as.integer(m), as.integer(ncol(Risk)), as.numeric(exp(Rtheta %*% c.old)),
+#   #            as.numeric(Rtheta), Rtheta2, as.numeric(time), as.integer(status), mscale, lambda0, as.integer(Risk),
+#   #            as.integer(table(time[status == 1])),
+#   #            PACKAGE = "cdcosso")
+#
+#
+#   # while (loop < 15 & iter.diff > 1e-4) {
+#   for(i in 1:15){ # outer iteration
+#     # 2 * n * lambda0 * Rtheta2
+#     GH = cosso::gradient.Hessian.C(c.old, R, R2, time, status, mscale, lambda0, Risk)
+#
+#     err = (class(GH) == "try-error") | sum(is.nan(GH$Gradient)) > 0
+#     if(err) break
+#
+#     Hess = GH$Hessian - 2 * lambda0 * Rtheta2
+#     Grad = GH$Gradient - 2 * lambda0 * Rtheta2 %*% c.old
+#
+#     W = ginv(Hess)
+#     z = (Hess %*% c.old - Grad) / lambda0
+#
+#     for(j in 1:m){
+#       WR = colSums(W * Rtheta2[, j])
+#       V1 = sum(WR * (z - Rtheta2[ ,-j] %*% c.old[-j]))
+#       V2 = as.vector((Rtheta2[-j, j] %*% c.old[-j]) / lambda0)
+#       V3 = sum(WR * Rtheta2[ ,j])
+#       V4 = Rtheta2[j, j] / lambda0
+#
+#       c.new[j] = (V1 - V2) / (V3 + V4)
+#       loss = abs(c.old - c.new)
+#       conv1 = min(loss[loss > 0]) < 1e-20
+#       conv2 = abs(c.old[j] - c.new[j]) > 5
+#       conv3 = sum(exp(Rtheta %*% c.new) == Inf) > 0
+#       # cat("i = ", i, "j = ", j, "loss =", max(loss),  "\n")
+#       if(conv1 | conv2 | conv3) break
+#       c.old[j] = c.new[j]  # if not convergence
+#     }
+#     if(conv1 | conv2 | conv3) break
+#   }
+#
+#   if(i == 1 & (conv1 | conv2 | conv3)) c.new = c.init
+#
+#   return(list(z.new = z, w.new = W, c.new = c.new))
+#   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
+# }
 
 
 # model = getc_cvfit
