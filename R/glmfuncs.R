@@ -30,6 +30,40 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   # w = obj$variance(mu)
   # z = ff + (y - mu) / w
 
+  # measure = c()
+  # for (k in 1:len){
+  #
+  #   EigRtheta2 = eigen(Rtheta2)
+  #   loop = 0
+  #   while (min(EigRtheta2$values) < 0 & loop < 10) {
+  #     loop = loop + 1
+  #     Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
+  #     EigRtheta2 = eigen(Rtheta2)
+  #   }
+  #   if (loop == 10)
+  #     EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
+  #   pseudoX = Rtheta
+  #
+  #   c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+  #
+  #   ff = Rtheta2 %*% c.init
+  #   mu = obj$linkinv(ff)
+  #   w = as.vector(obj$variance(mu))
+  #   z = ff + (y[basis.id] - mu) / w
+  #
+  #
+  #   zw = z * sqrt(w)
+  #   Rw = tr_Rtheta * w
+  #   sw = sqrt(w)
+  #
+  #
+  #
+  #   # validation
+  #   fhat = c(Rtheta2 %*% c.new)
+  #   measure[k] <- KL(fhat, Rtheta2 %*% c.new, obj)
+  #
+  # }
+
 
   fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
@@ -98,7 +132,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, te_Rtheta %*% c.init, obj)
+      measure[f, k] <- KL(testfhat, te_Rtheta %*% c.new, obj)
 
     }
   }
@@ -143,7 +177,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
     arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
            x1 = log(cand.lambda), y1 = measure_mean + measure_se,
            angle = 90, code = 3, length = 0.1, col = "darkgray")
-    abline(v = log(cand.lambda)[std_id], lty = 2, col = "darkgray")
+    abline(v = log(cand.lambda)[min_id], lty = 2, col = "darkgray")
   }
 
   rm(tr_R)
@@ -325,7 +359,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, G[te_id, ] %*% init.theta, obj)
+      measure[f, k] <- KL(testfhat, G[te_id, ] %*% theta.adj, obj)
     }
   }
 print(measure)
