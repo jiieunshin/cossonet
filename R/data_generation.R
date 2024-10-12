@@ -157,7 +157,7 @@ data_generation = function(n, p, rho, SNR,
     #           ),
     #     2, rescale)
 
-    x = cbind(x, rbinom(n, 1, .5))
+    x = cbind(x, rbinom(n, 1, .7))
 
     f = 3 * x[, 1] + 4 * sin(2 * pi * x[, 2]) + 5 * (x[, 3] - 0.4)^2 + x[, 4]
     V_sig = var(3 * x[, 1]) + var(4 * sin(2 * pi * x[, 2])) + var(5 * (x[, 3] - 0.4)^2) + var(x[, 4])
