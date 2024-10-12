@@ -402,13 +402,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
   }
 
-  uw = model$zw.new - model$sw.new
-
-  h = rep(0, d)
-  for (j in 1:d) {
-    h[j] = n * lambda0 * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new)
-  }
-
   init.theta = rep(1, d)
   len = length(lambda_theta)
   measure = matrix(NA, 5, len)
@@ -440,8 +433,14 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       #                   lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
       # theta.adj = ifelse(fit$theta.new <= 1e-6, 0, fit$theta.new)
 
+      te_R = array(NA, c(te_n, nbasis, d))
+      for(j in 1:d){
+        te_R[, , j] = K$K[[j]][te_id, basis.id]
+      }
+
+      fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
 print(theta.adj)
-      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% theta.adj) + model$ACV_pen
+      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), fhat) + model$ACV_pen
       measure[f, k] = ACV
 
     }
