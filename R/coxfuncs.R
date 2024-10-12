@@ -162,7 +162,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   c.new = fit$cw.new
 
   out = list(measure = measure, R = R, RS = RS, f.new = c(fit$b.new + Rtheta %*% c.new), zw.new = zw, w.new = w, sw.new = sw,
-             c.new = c.new, ACV_pen = ACV_pen, optlambda = optlambda)
+             b.new = fit$b.new, c.new = c.new, ACV_pen = ACV_pen, optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
@@ -439,7 +439,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       }
 
       fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
-print(theta.adj)
+
       ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), fhat) + model$ACV_pen
       measure[f, k] = ACV
 
