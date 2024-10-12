@@ -397,12 +397,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
 
   # RS = RiskSet(time, status)
 
-  # solve theta
-  Gw <- matrix(0, n, d)
-  for (j in 1:d) {
-    Gw[, j] = ((model$R[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
-  }
-
   G <- matrix(0, n, d)
   for (j in 1:d) {
     G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
@@ -433,13 +427,11 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     for (k in 1:len) {
 
       response <- survival::Surv(time = time[tr_id], event = status[tr_id])
-      # theta.init = as.vector(glmnet(G[tr_id,], response, family = "cox", lambda = lambda_theta[k], alpha = 1, standardize = FALSE)$beta)
-      theta.init = rep(1, d)
-      eta = exp(G[tr_id,] %*% theta.init)
+      eta = exp(G[tr_id,] %*% init.theta)
       coxgrad_results <- coxgrad(eta, response, rep(1, tr_n), std.weights = FALSE, diag.hessian = TRUE)
       w <- - attributes(coxgrad_results)$diag_hessian
       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G[tr_id,] %*% t(G[basis.id, ]) %*% model$c.new
-      theta.new <- .Call("cox_theta_step", theta.init, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
+      theta.new <- .Call("cox_theta_step", init.theta, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
 
       # theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma))
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
@@ -448,7 +440,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       #                   lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
       # theta.adj = ifelse(fit$theta.new <= 1e-6, 0, fit$theta.new)
 
-
+print(theta.adj)
       ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), G[te_id, ] %*% theta.adj) + model$ACV_pen
       measure[f, k] = ACV
 
@@ -484,13 +476,11 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   #                   lambda0, optlambda, gamma, RiskSet(time, status))
 
   response <- survival::Surv(time = time, event = status)
-  # theta.init = as.vector(glmnet(G, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
-  theta.init = rep(1, d)
-  eta = exp(G %*% theta.init)
+  eta = exp(G %*% init.theta)
   coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w <- - attributes(coxgrad_results)$diag_hessian
   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
-  theta.new <- .Call("cox_theta_step", theta.init, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
+  theta.new <- .Call("cox_theta_step", init.theta, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
 
