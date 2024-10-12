@@ -81,7 +81,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       sw = sqrt(w)
 
       fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n / cand.lambda[k], PACKAGE = "cdcosso")
-      c.new = fit$cw.new
+
       # fit <- .Call("glm_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
 
       # fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
@@ -89,7 +89,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
 
-      test_GH = cosso::gradient.Hessian.C(c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
+      test_GH = cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
 
 #       test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
 #                       te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
@@ -99,7 +99,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
       ACV_pen = sum(status[te_id] == 1)/te_n^2 * (sum(diag(UHU))/(te_n - 1) - sum(UHU)/(te_n^2 - te_n))
 
-      measure[f, k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% c.new) + ACV_pen
+      measure[f, k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% fit$c.new) + ACV_pen
     }
   }
 
@@ -159,10 +159,9 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   sw = sqrt(w)
 
   fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n / optlambda, PACKAGE = "cdcosso")
-  c.new = fit$cw.new
 
-  out = list(measure = measure, R = R, RS = RS, f.new = c(fit$b.new + Rtheta %*% c.new), zw.new = zw, w.new = w, sw.new = sw,
-             b.new = fit$b.new, c.new = c.new, ACV_pen = ACV_pen, optlambda = optlambda)
+  out = list(measure = measure, R = R, RS = RS, f.new = c(fit$b.new + Rtheta %*% fit$c.new), zw.new = zw, w.new = w, sw.new = sw,
+             b.new = fit$b.new, c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
