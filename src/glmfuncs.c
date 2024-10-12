@@ -60,7 +60,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   double b_new = 0.0;
 
   // outer loop
-  for (iter = 0; iter < 200; ++iter) {
+  for (iter = 0; iter < 80; ++iter) {
     avg_diff = 0.0;
 
     // update cw
