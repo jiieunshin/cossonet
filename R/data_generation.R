@@ -78,10 +78,11 @@ data_generation = function(n, p, rho, SNR,
   # x = apply(rmvnorm(n, sigma = Sigma), 2, rescale)
 
   t = 2
-  x = matrix(0, n, 3)
-  W = matrix(runif(n * 3), n, 3)
+  pp = ifelse(response == "survival", 4, 4)
+  x = matrix(0, n, pp)
+  W = matrix(runif(n * pp), n, pp)
   U = runif(n)
-  for(j in 1:3){
+  for(j in 1:pp){
     x[, j] = (W[, j] + t * U)/(1 + t)
   }
 
@@ -150,19 +151,10 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == 'survival'){
-    # x = apply(rtmvnorm(n, mean = rep(0, 3),
-    #              sigma = Sigma,
-    #              lower = rep(-2, length = 3),
-    #              upper = rep( 2, length = 3)
-    #           ),
-    #     2, rescale)
+    # x = cbind(x, )
 
-    x = cbind(x, rbinom(n, 1, .7))
-
-    f = 3 * x[, 1] + 4 * sin(2 * pi * x[, 2]) + 5 * (x[, 3] - 0.4)^2 + x[, 4]
-    V_sig = var(3 * x[, 1]) + var(4 * sin(2 * pi * x[, 2])) + var(5 * (x[, 3] - 0.4)^2) + 0.7 * 0.3 /n
-    # f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
-    # V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
+    f = 1 * x[, 1] + 3 * sin(2 * pi * x[, 2]) + 2 * (x[, 3] - 0.4)^2 + ifelse(x[, 4] < 0.5, 0, 1)
+    V_sig = var(1 * x[, 1]) + var(3 * sin(pi * x[, 2])) + var(2 * (x[, 3] - 0.4)^2) + 0.5 * 0.5 /n
 print(V_sig)
     sd = sqrt(V_sig / SNR)
 
