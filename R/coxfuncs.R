@@ -80,7 +80,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       Rw = tr_Rtheta * w
       sw = sqrt(w)
 
-      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cdcosso")
+      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n / cand.lambda[k], PACKAGE = "cdcosso")
 
       # fit <- .Call("glm_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
 
@@ -158,7 +158,7 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
+  fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n / optlambda, PACKAGE = "cdcosso")
 
   out = list(measure = measure, R = R, RS = RS, f.new = c(fit$b.new + Rtheta %*% fit$c.new), zw.new = zw, w.new = w, sw.new = sw,
              b.new = fit$b.new, c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
@@ -411,8 +411,8 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
 
   h = rep(0, d)
   for (j in 1:d) {
-    # h[j] = n * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new) / lambda0
-    h[j] = n * lambda0 * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new)
+    h[j] = n * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new) / lambda0
+    # h[j] = n * lambda0 * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new)
   }
 
   init.theta = rep(1, d)
