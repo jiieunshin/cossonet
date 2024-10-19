@@ -154,7 +154,7 @@ data_generation = function(n, p, rho, SNR,
     # x = cbind(x, )
 
     f = 1 * x[, 1] + 3 * sin(2 * pi * x[, 2]) + 2 * (x[, 3] - 0.4)^2 + ifelse(x[, 4] < 0.5, 0, 1)
-    V_sig = var(1 * x[, 1]) + var(3 * sin(pi * x[, 2])) + var(2 * (x[, 3] - 0.4)^2) + 0.5 * 0.5 /n
+    V_sig = var(1 * x[, 1]) + var(3 * sin(2 * pi * x[, 2])) + var(2 * (x[, 3] - 0.4)^2) + 0.5 * 0.5 /n
 print(V_sig)
     sd = sqrt(V_sig / SNR)
 
