@@ -151,7 +151,7 @@ SEXP cox_theta_step(SEXP theta_init, SEXP S, SEXP n, SEXP d, SEXP z, SEXP w, SEX
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
-  for(iter = 0; iter < 200; ++iter) {
+  for(iter = 0; iter < 50; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
     for(int j = 0; j < dc; ++j) { // iterate by column
