@@ -153,7 +153,7 @@ data_generation = function(n, p, rho, SNR,
   if(response == 'survival'){
     # x = cbind(x, )
 
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
+    f = 1 * f1(x[,1]) + 2 *  f2(x[,2]) + 4 * f3(x[,3]) + 5* f4(x[,4])
     V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
 
     # f = 1 * x[, 1] + 3 * sin(2 * pi * x[, 2]) + 2 * (x[, 3] - 0.4)^2 + ifelse(x[, 4] < 0.7, 0, 1)
