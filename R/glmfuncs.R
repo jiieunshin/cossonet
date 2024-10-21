@@ -120,7 +120,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
       fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cdcosso")
       b.new = fit$b.new
-      c.new = fit$cw.new
+      c.new = fit$c.new
       # c.new = cw.new * sqrt(w)[basis.id]
       # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
       # cat("C calculate:", b.new, "\n")
@@ -199,7 +199,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
   fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
   b.new = fit$b.new
-  c.new = fit$cw.new
+  c.new = fit$c.new
 
   f.new = c(b.new + Rtheta %*% c.new)
   mu.new = obj$linkinv(f.new)

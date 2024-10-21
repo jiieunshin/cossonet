@@ -47,12 +47,6 @@ data_generation = function(n, p, rho, SNR,
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
   }
 
-  # f1 = function(t) 5 * sin(3*t)
-  # f2 = function(t) -4 * t^4 + 9.33 * t^3 + 5 * t^2 - 8.33 * t
-  # f3 = function(t)  t * (1-t^2) * exp(3 * t) - 4
-  # f4 = function(t) 3 * t
-  # f5 = function(t) 4 * sin(-5 * log(sqrt(t+3)))
-
   if(missing(response))
     type = "classification"
   response = match.arg(response)
@@ -100,8 +94,8 @@ data_generation = function(n, p, rho, SNR,
 
 
   if(response == "regression"){
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
+    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
+    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
 
     sd = sqrt(V_sig / SNR)
     e = rnorm(n, 0, sd)
@@ -153,8 +147,8 @@ data_generation = function(n, p, rho, SNR,
   if(response == 'survival'){
     # x = cbind(x, )
 
-    f = 1 * f1(x[,1]) + 2 *  f2(x[,2]) + 4 * f3(x[,3]) + 5* f4(x[,4])
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
+    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
+    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
 
     # f = 1 * x[, 1] + 3 * sin(2 * pi * x[, 2]) + 2 * (x[, 3] - 0.4)^2 + ifelse(x[, 4] < 0.7, 0, 1)
     # V_sig = var(1 * x[, 1]) + var(3 * sin(2 * pi * x[, 2])) + var(2 * (x[, 3] - 0.4)^2) + 0.7 * 0.3 /n
