@@ -36,8 +36,8 @@ data_generation = function(n, p, rho, SNR,
   if(response == "count"){
   f1 = function(t) t
   f2 = function(t) (2 * t - 1)^2
-  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) + .2
-  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 + .5
+  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) + .4
+  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 + .6
   }
 
   if(response == "survival"){
@@ -84,12 +84,11 @@ data_generation = function(n, p, rho, SNR,
   # par(oma = c(0, 0, 0, 0))
   # Set the inner margin
   # par(mar = c(4, 4, 3, 1))
-  # par(mfrow = c(1,5))
-  # plot(x[,1], f1(x[,1]), cex = .6, pch = 16, xlab = 'x1', ylab = 'f1')
-  # plot(x[,2], f2(x[,2]), cex = .6, pch = 16, xlab = 'x2', ylab = 'f2')
-  # plot(x[,3], f3(x[,3]), cex = .6, pch = 16, xlab = 'x3', ylab = 'f3')
-  # plot(x[,4], f4(x[,4]), cex = .6, pch = 16, xlab = 'x4', ylab = 'f4')
-  # plot(x[,5], f5(x[,5]), cex = .6, pch = 16, xlab = 'x5', ylab = 'f5')
+  # par(mfrow = c(1,4))
+  # curve(f1, 0, 1)
+  # curve(f2, 0, 1)
+  # curve(f3, 0, 1)
+  # curve(f4, 0, 1)
   # par(mfrow = c(1,1))
 
 
@@ -128,8 +127,9 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "count"){
-    f = f1(x[,1])/2 + f2(x[,2])/2 + f3(x[,3]) + f4(x[,4])
-    V_sig = var(f1(x[,1])/2) + var(f2(x[,2])/2) + var(f3(x[,3])) + var(f4(x[,4]) )
+    f = f1(x[,1])/6 + f2(x[,2])/4 + f3(x[,3]) + f4(x[,4])
+    V_sig = var(f1(x[,1])/6) + var(f2(x[,2])/4) + var(f3(x[,3])) + var(f4(x[,4]))
+
     sd = sqrt(V_sig / SNR)
 
     e = rnorm(n, 0, sd)
