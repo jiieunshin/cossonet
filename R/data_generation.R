@@ -77,7 +77,7 @@ data_generation = function(n, p, rho, SNR,
 
   # x = apply(rmvnorm(n, sigma = Sigma), 2, rescale)
 
-  t = 1
+  t = 2
   pp = 4
   x = matrix(0, n, pp)
   W = matrix(runif(n * pp), n, pp)
