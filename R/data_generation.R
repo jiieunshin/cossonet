@@ -42,15 +42,15 @@ data_generation = function(n, p, rho, SNR,
 
     f1 = function(t) t
     f2 = function(t) (2 * t - 1)^2
-    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) + .5
-    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 + .5
+    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
   }
 
   if(response == "survival"){
     f1 = function(t) t
-    f2 = function(t) (2 * t - 1)^2
+    f2 = function(t) - (2 * t - 1)^2
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+    f4 = function(t) - 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
   }
 
   if(missing(response))
@@ -77,7 +77,7 @@ data_generation = function(n, p, rho, SNR,
 
   # x = apply(rmvnorm(n, sigma = Sigma), 2, rescale)
 
-  t = 2
+  t = 1
   pp = 4
   x = matrix(0, n, pp)
   W = matrix(runif(n * pp), n, pp)
@@ -96,9 +96,14 @@ data_generation = function(n, p, rho, SNR,
   # curve(f3, 0, 1)
   # curve(f4, 0, 1)
   # par(mfrow = c(1,1))
-
+  # f = function(t) t/2 - (2 * t - 1)^2 + (sin(2 * pi * t) / (2 - sin(2 * pi * t))) - (0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3) + 1.5
+  # curve(f, 0, 1)
 
   if(response == "regression"){
+    # f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
+    # V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
+
+
     f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
     V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
 
@@ -135,8 +140,12 @@ data_generation = function(n, p, rho, SNR,
   if(response == "count"){
     f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
     V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
+    if(min(f) < 0) f = f - min(f)
     # f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
     # V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
+
+    # f = x[,1]/2 - (2 * x[,2] - 1)^2 + (sin(2 * pi * x[,3]) / (2 - sin(2 * pi * x[,3]))) - (0.1*sin(2 * pi * x[,4]) + 0.2*cos(2 * pi * x[,4]) + 0.3*sin(2 * pi * x[,4])^2 + 0.4*cos(2 * pi * x[,4])^3 + 0.5*sin(2 * pi * x[,4])^3) + 1.5
+    # V_sig = var(f)
 
     sd = sqrt(V_sig / SNR)
     print(sd)
@@ -147,9 +156,13 @@ data_generation = function(n, p, rho, SNR,
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
 
-    mu = exp(f)
-    mu = (mu - min(mu)) / (max(mu) - min(mu))
-    y = rpois(n, mu * 10)
+    # f2 = 2 * (log(f) / max(log(f)))
+    f2 = 2 * f / max(f)
+    # f2 = (exp(f) / (1 + exp(f)) + 1)
+    # f2 = (f - min(f)) / (min(f) - max(f)) * 2
+    plot(f2)
+    mu = exp(f2)
+    y = rpois(n, mu)
     out = list(x = x, f = f, y = y)
   }
 
