@@ -27,7 +27,7 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "regression"){
-  f1 = function(t) t
+  f1 = function(t) t - .5
   f2 = function(t) (2 * t - 1)^2
   f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
   f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
@@ -39,14 +39,14 @@ data_generation = function(n, p, rho, SNR,
   # f3 = function(t) sin(2 * pi * t) + 1
   # f4 = function(t) exp(t)
 
-    f1 = function(t) t + 1
+    f1 = function(t) t
     f2 = function(t) (2 * t - 1)^2
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) + .5
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 + .5
   }
 
   if(response == "survival"){
-    f1 = function(t) t
+    f1 = function(t) t - .5
     f2 = function(t) (2 * t - 1)^2
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
@@ -99,33 +99,26 @@ data_generation = function(n, p, rho, SNR,
   # curve(f, 0, 1)
 
   if(response == "regression"){
-    # f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
-    # V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
-
-
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
-
+    V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    e = rnorm(n, 0, sd)
-    f = f + e
+
+    f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
+
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
-    print(sd/sqrt(p-4))
+
     out = list(x = x, y = f)
   }
 
   if(response == "classification"){
-    f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4])
     V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
-
     sd = sqrt(V_sig / SNR)
+    f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) - 9 + rnorm(n, 0, sd)
+
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
-    e = rnorm(n, 0, sd)
-    f = f - 9 + e
     prob = exp(f)/(exp(f) + 1)
     y = rbinom(n, 1, prob)
     # plot(prob)
@@ -134,19 +127,24 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "count"){
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
-    # if(min(f) < 0) f = f - min(f)
-    # f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 6 * f4(x[,4])
-    # V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(6 * f4(x[,4]))
+    # V_sig = var( f1(x[,1])) + var(f2(x[,2])) + var( 3 * f3(x[,3])) + var( 5 * f4(x[,4]))
+    # sd = sqrt(V_sig / SNR)
+    # f = f1(x[,1]) + f2(x[,2]) +  3 * f3(x[,3]) +  5 * f4(x[,4]) + rnorm(n, 0, sd) - 8
 
-    # f = x[,1]/2 - (2 * x[,2] - 1)^2 + (sin(2 * pi * x[,3]) / (2 - sin(2 * pi * x[,3]))) - (0.1*sin(2 * pi * x[,4]) + 0.2*cos(2 * pi * x[,4]) + 0.3*sin(2 * pi * x[,4])^2 + 0.4*cos(2 * pi * x[,4])^3 + 0.5*sin(2 * pi * x[,4])^3) + 1.5
-    # V_sig = var(f)
-plot(f)
+
+    V_sig = var(2 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
+    f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
+
+
+    # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
+    # sd = sqrt(V_sig / SNR)
+    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
+
+    plot(f)
     print(sd)
-    e = rnorm(n, 0, sd)
-    f = f + e
+    # e = rnorm(n, 0, sd)
+    # f = f + e
 
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
@@ -163,18 +161,17 @@ plot(f)
   }
 
   if(response == 'survival'){
-    # x = cbind(x, )
 
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4])
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(4 * f3(x[,3])) + var(5 * f4(x[,4]))
-
-    # f = 1 * x[, 1] + 3 * sin(2 * pi * x[, 2]) + 2 * (x[, 3] - 0.4)^2 + ifelse(x[, 4] < 0.7, 0, 1)
-    # V_sig = var(1 * x[, 1]) + var(3 * sin(2 * pi * x[, 2])) + var(2 * (x[, 3] - 0.4)^2) + 0.7 * 0.3 /n
-    print(V_sig)
+    V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
+    f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    e = rnorm(n, 0, sd)
-    f = f + e
+    # V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(3 * f3(x[,3])) + var(4 * f4(x[,4]))
+    # f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 3 * f3(x[,3]) + 4 * f4(x[,4]) + rnorm(n, 0, sd)
+    # sd = sqrt(V_sig / SNR)
+
+    # e = rnorm(n, 0, sd)
+    # f = f + e
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
