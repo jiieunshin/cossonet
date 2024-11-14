@@ -288,3 +288,8 @@ KL = function(f, mu, obj){
 
   return(mean(-(mu * f) + B))
 }
+
+
+# SKL = function(f, fhat){
+#   return(mean(f * log(f / fhat)))
+# }
