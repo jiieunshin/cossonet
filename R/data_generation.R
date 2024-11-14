@@ -132,9 +132,9 @@ data_generation = function(n, p, rho, SNR,
     # f = f1(x[,1]) + f2(x[,2]) +  3 * f3(x[,3]) +  5 * f4(x[,4]) + rnorm(n, 0, sd) - 8
 
 
-    V_sig = var(2 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
+    V_sig = var(3 * f1(x[,1])) + var(2 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = 2 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
+    f = 3 * f1(x[,1]) + 2 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
 
     # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
@@ -151,7 +151,7 @@ data_generation = function(n, p, rho, SNR,
     x = cbind(x, x_nois)
 
     # f2 = 2 * (log(f) / max(log(f)))
-    f2 = f / 8
+    f2 = f / 4
     # f2 = (exp(f) / (1 + exp(f)) + 1)
     # f2 = (f - min(f)) / (min(f) - max(f)) * 2
     plot(f2)
