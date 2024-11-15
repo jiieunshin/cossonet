@@ -8,6 +8,7 @@ cdcosso.glm(
   x,
   y,
   f,
+  cv,
   wt,
   nbasis,
   basis.id,
@@ -26,6 +27,8 @@ cdcosso.glm(
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
 
 \item{f}{true function.}
+
+\item{cv}{measure for cross-validation}
 
 \item{wt}{A weight vector for components.}
 

@@ -9,6 +9,7 @@ cdcosso(
   y,
   f = NULL,
   family = c("gaussian", "binomial", "poisson", "Cox"),
+  cv = c("mse", "KL"),
   nbasis,
   basis.id,
   kernel = c("linear", "gaussian", "poly", "spline"),
@@ -36,6 +37,8 @@ cdcosso(
 \item{f}{true function.}
 
 \item{family}{A character string representing one of the built-in families. The value depends on the type of response variable, \code{family='gaussian'} for continuous, \code{family='binomial'} forj binary class, \code{family='poisson'} for non-negative count , and \code{family='Cox'} for survival.}
+
+\item{cv}{measure for cross-validation}
 
 \item{nbasis}{The number of basis.}
 

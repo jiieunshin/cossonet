@@ -9,6 +9,7 @@
 #' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
 #' @param f true function.
 #' @param family A character string representing one of the built-in families. The value depends on the type of response variable, `family='gaussian'` for continuous, `family='binomial'` forj binary class, `family='poisson'` for non-negative count , and `family='Cox'` for survival.
+#' @param cv measure for cross-validation
 #' @param kernel Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param nbasis The number of basis.
 #' @param basis.id The index of basis.
@@ -39,6 +40,7 @@ cdcosso = function (x,
                     y,
                     f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
+                    cv = c("mse", "KL"),
                     nbasis, basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
@@ -74,6 +76,9 @@ cdcosso = function (x,
 
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
+  if(missing(cv))
+    cv = 'mse'
+
   # if(missing(lambda0))
   #   lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
   #
@@ -90,7 +95,7 @@ cdcosso = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, f, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
+               glm = cdcosso.glm(x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
                Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
                # Negbin, svm 추???
   )

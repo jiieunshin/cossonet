@@ -1,7 +1,7 @@
 # cand.lambda = lambda0
 # mscale = wt
 # obj = binomial()
-cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
+cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -125,15 +125,21 @@ cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, ob
       # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
       # cat("C calculate:", b.new, "\n")
 
-      # validation
       testfhat = c(b.new + te_Rtheta %*% c.new)
+
+      if(cv == "mse"){
       testmu = obj$linkinv(testfhat)
 
       if(obj$family == "gaussian") measure[fid, k] <- mean((testfhat - y[te_id])^2)
       if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       if(obj$family == "poisson") measure[fid, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
       # measure[fid, k] <- KL(testfhat, mu, obj)
-      # measure[f, k] <- SKL(te_Rtheta %*% c.new, testfhat)
+      }
+
+      if(cv == "KL"){
+        mu = obj$linkinv(f)
+        measure[fid, k] <- KL(testfhat, mu, obj)
+      }
 
     }
   }
@@ -302,7 +308,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # model = sspline_cvfit
 # lambda0 = model$optlambda
 # mscale = wt
-cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
+cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -355,15 +361,21 @@ cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lamb
 
       testfhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
 
-      # testfhat = G[te_id, ] %*% theta.adj
-      testmu = obj$linkinv(testfhat)
-      if(obj$family == "gaussian") measure[fid, k] <- mean((testfhat - y[te_id])^2)
-      if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-      if(obj$family == "poisson") measure[fid, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      # measure[fid, k] <- KL(testfhat, mu, obj)
+      if(cv == "mse"){
+        testmu = obj$linkinv(testfhat)
+        if(obj$family == "gaussian") measure[fid, k] <- mean((testfhat - y[te_id])^2)
+        if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
+        if(obj$family == "poisson") measure[fid, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
+      }
+
+      if(cv == "KL"){
+        mu = obj$linkinv(f)
+        measure[fid, k] <- KL(testfhat, mu, obj)
+      }
+
     }
   }
-print(measure)
+
   # plotting error bar
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"
@@ -410,7 +422,6 @@ print(measure)
   if(obj$family == "binomial") miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
   if(obj$family == "gaussian") miss <- mean((y[te_id] - f.new)^2)
   if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, te_n)))
-
   cat("training error:", miss, "\n")
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
