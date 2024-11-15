@@ -7,6 +7,7 @@
 cdcosso(
   x,
   y,
+  f = NULL,
   family = c("gaussian", "binomial", "poisson", "Cox"),
   nbasis,
   basis.id,
@@ -31,6 +32,8 @@ cdcosso(
 \item{x}{Input matrix with $n$ observations and $p$ dimension.}
 
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
+
+\item{f}{true function.}
 
 \item{family}{A character string representing one of the built-in families. The value depends on the type of response variable, \code{family='gaussian'} for continuous, \code{family='binomial'} forj binary class, \code{family='poisson'} for non-negative count , and \code{family='Cox'} for survival.}
 

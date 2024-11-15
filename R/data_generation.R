@@ -103,9 +103,9 @@ data_generation = function(n, p, rho, SNR,
     # sd = sqrt(V_sig / SNR)
     # f = 3 * f1(x[,1]) + 2 * f2(x[,2]) + 4 * f3(x[,3]) + 5 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
+    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
+    f = 1 * f1(x[,1]) + 1* f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
@@ -132,7 +132,7 @@ data_generation = function(n, p, rho, SNR,
   if(response == "count"){
     V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var( f3(x[,3])) + var(f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + rnorm(n, 0, sd)
+    f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) + rnorm(n, 0, sd) + 1
 
     # V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
     # sd = sqrt(V_sig / SNR)

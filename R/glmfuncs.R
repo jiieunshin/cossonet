@@ -1,7 +1,7 @@
 # cand.lambda = lambda0
 # mscale = wt
 # obj = binomial()
-cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
+cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -67,9 +67,9 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
   fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
-  for(f in 1:5){
-    tr_id = as.vector(fold[, -f])
-    te_id = fold[, f]
+  for(fid in 1:5){
+    tr_id = as.vector(fold[, -fid])
+    te_id = fold[, fid]
 
     tr_id = tr_id[!is.na(tr_id)]
     te_id = te_id[!is.na(te_id)]
@@ -127,12 +127,12 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 
       # validation
       testfhat = c(b.new + te_Rtheta %*% c.new)
-      testmu = obj$linkinv(testfhat)
+      mu = obj$linkinv(f)
 
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, testmu, obj)
+      measure[fid, k] <- KL(testfhat, mu, obj)
       # measure[f, k] <- SKL(te_Rtheta %*% c.new, testfhat)
 
     }
@@ -302,7 +302,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # model = sspline_cvfit
 # lambda0 = model$optlambda
 # mscale = wt
-cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
+cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -333,9 +333,9 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   fold = cvsplitID(n, 5, y, family = obj$family)
 
   # save_theta <- list()
-  for(f in 1:5){
-    tr_id = as.vector(fold[, -f])
-    te_id = fold[, f]
+  for(fid in 1:5){
+    tr_id = as.vector(fold[, -fid])
+    te_id = fold[, fid]
 
     tr_id = tr_id[!is.na(tr_id)]
     te_id = te_id[!is.na(te_id)]
@@ -356,11 +356,11 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       testfhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
 
       # testfhat = G[te_id, ] %*% theta.adj
-      testmu = obj$linkinv(testfhat)
+      mu = obj$linkinv(f)
       # if(obj$family == "gaussian") measure[f, k] <- mean((testfhat - y[te_id])^2)
       # if(obj$family == "binomial") measure[f, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
       # if(obj$family == "poisson") measure[f, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
-      measure[f, k] <- KL(testfhat, testmu, obj)
+      measure[fid, k] <- KL(testfhat, mu, obj)
     }
   }
 print(measure)

@@ -7,6 +7,7 @@
 cdcosso.glm(
   x,
   y,
+  f,
   wt,
   nbasis,
   basis.id,
@@ -23,6 +24,8 @@ cdcosso.glm(
 \item{x}{Input matrix with $n$ observations and $p$ dimension.}
 
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
+
+\item{f}{true function.}
 
 \item{wt}{A weight vector for components.}
 

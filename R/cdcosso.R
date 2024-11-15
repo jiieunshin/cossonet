@@ -7,6 +7,7 @@
 #'
 #' @param x Input matrix with $n$ observations and $p$ dimension.
 #' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
+#' @param f true function.
 #' @param family A character string representing one of the built-in families. The value depends on the type of response variable, `family='gaussian'` for continuous, `family='binomial'` forj binary class, `family='poisson'` for non-negative count , and `family='Cox'` for survival.
 #' @param kernel Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param nbasis The number of basis.
@@ -36,6 +37,7 @@
 # lambda_theta = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20))
 cdcosso = function (x,
                     y,
+                    f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
                     nbasis, basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
@@ -88,7 +90,7 @@ cdcosso = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
+               glm = cdcosso.glm(x, y, f, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
                Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
                # Negbin, svm 추???
   )
