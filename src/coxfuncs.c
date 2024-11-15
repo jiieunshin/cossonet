@@ -46,7 +46,7 @@ SEXP cox_c_step(SEXP cinit, SEXP Rtheta, SEXP Rtheta2, SEXP n, SEXP m, SEXP z, S
   double avg_diff;
 
   // outer loop
-  for (iter = 0; iter < 20; ++iter) {
+  for (iter = 0; iter < 200; ++iter) {
     avg_diff = 0.0;
 
     // update cw
