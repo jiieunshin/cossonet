@@ -156,7 +156,7 @@ data_generation = function(n, p, rho, SNR,
     sd = sqrt(V_sig / SNR)
     f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
+    x_nois = matrix(runif(n * (p - pp), 0, 1), n, (p - pp))
     x = cbind(x, x_nois)
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))

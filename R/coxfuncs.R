@@ -88,18 +88,19 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
 
       # calculate ACV for test data
       te_RS = RiskSet(time[te_id], status[te_id])
-
+      tr_RS = RiskSet(time[tr_id], status[tr_id])
       test_GH = cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
+      train_GH = cosso::gradient.Hessian.C(fit$c.new, tr_R, R2, time[tr_id], status[tr_id], mscale, cand.lambda[k], tr_RS)
 
 #       test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
 #                       te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
 #                       as.integer(table(time[te_id][status[te_id] == 1])),
 #                       PACKAGE = "cdcosso")
 
-      UHU = te_Rtheta %*% My_solve(test_GH$H, t(te_Rtheta))
-      ACV_pen = sum(status[te_id] == 1)/te_n^2 * (sum(diag(UHU))/(te_n - 1) - sum(UHU)/(te_n^2 - te_n))
+      UHU = tr_Rtheta %*% My_solve(train_GH$H, t(tr_Rtheta))
+      ACV_pen = sum(status[tr_id] == 1)/tr_n^2 * (sum(diag(UHU))/(tr_n - 1) - sum(UHU)/(tr_n^2 - tr_n))
 
-      measure[f, k] = PartialLik(time[te_id], status[te_id], te_RS, te_Rtheta %*% fit$c.new) + ACV_pen
+      measure[f, k] = PartialLik(time[tr_id], status[tr_id], tr_RS, tr_Rtheta %*% fit$c.new) + ACV_pen
     }
   }
 
@@ -451,9 +452,15 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
         te_R[, , j] = K$K[[j]][te_id, basis.id]
       }
 
-      fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+      tr_R = array(NA, c(tr_n, nbasis, d))
+      for(j in 1:d){
+        tr_R[, , j] = K$K[[j]][tr_id, basis.id]
+      }
 
-      ACV = cosso::PartialLik(time[te_id], status[te_id], RiskSet(time[te_id], status[te_id]), fhat) + model$ACV_pen
+      # fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+      fhat = c(wsGram(tr_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+
+      ACV = cosso::PartialLik(time[tr_id], status[tr_id], RiskSet(time[tr_id], status[tr_id]), fhat) + model$ACV_pen
       measure[f, k] = ACV
 
     }
