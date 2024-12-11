@@ -9,7 +9,7 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
+cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
 {
   d = K$numK
   n <- length(status)
@@ -100,7 +100,9 @@ cv.getc.subset = function(K, time, status, nbasis, basis.id, mscale, cand.lambda
       UHU = tr_Rtheta %*% My_solve(train_GH$H, t(tr_Rtheta))
       ACV_pen = sum(status[tr_id] == 1)/tr_n^2 * (sum(diag(UHU))/(tr_n - 1) - sum(UHU)/(tr_n^2 - tr_n))
 
-      measure[f, k] = PartialLik(time[tr_id], status[tr_id], tr_RS, tr_Rtheta %*% fit$c.new) + ACV_pen
+      if(cv == "mse") measure[f, k] = mse(f, te_Rtheta, fit$c.new)
+      if(cv == "ACV") measure[f, k] = PartialLik(time[tr_id], status[tr_id], tr_RS, tr_Rtheta %*% fit$c.new) + ACV_pen
+
     }
   }
 

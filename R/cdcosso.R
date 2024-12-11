@@ -96,8 +96,7 @@ cdcosso = function (x,
   # fitting
   out = switch(objnm,
                glm = cdcosso.glm(x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
-               # Negbin, svm 추???
+               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
   )
 
   attr(out, "class") = "cdcosso"

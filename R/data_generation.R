@@ -98,9 +98,9 @@ data_generation = function(n, p, rho, SNR,
     sd = sqrt(V_sig / SNR)
     f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    # V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
+    # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
     # sd = sqrt(V_sig / SNR)
-    # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
 
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
@@ -137,7 +137,7 @@ data_generation = function(n, p, rho, SNR,
     plot(f)
 
     # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
-    x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
+    x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
 
     # f2 = 2 * (log(f) / max(log(f)))
