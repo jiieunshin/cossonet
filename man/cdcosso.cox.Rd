@@ -8,6 +8,8 @@ cdcosso.cox(
   x,
   time,
   status,
+  f,
+  cv,
   nbasis,
   basis.id,
   wt,
@@ -25,6 +27,10 @@ cdcosso.cox(
 \item{time}{Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).}
 
 \item{status}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
+
+\item{f}{true function.}
+
+\item{cv}{measure for cross-validation}
 
 \item{nbasis}{The number of basis.}
 

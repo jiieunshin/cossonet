@@ -9,7 +9,7 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
+cv.getc.subset = function(K, time, status, f, cv, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
 {
   d = K$numK
   n <- length(status)
@@ -31,9 +31,9 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
 
   fold = cvsplitID(n, 5, status, family = "gaussian")
   measure <- matrix(NA, 5, len)
-  for(f in 1:5){
-    tr_id = as.vector(fold[, -f])
-    te_id = fold[, f]
+  for(fid in 1:5){
+    tr_id = as.vector(fold[, -fid])
+    te_id = fold[, fid]
 
     tr_id = tr_id[!is.na(tr_id)]
     te_id = te_id[!is.na(te_id)]
@@ -87,21 +87,27 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
       # fit = getc.cd(tr_R, R2, tr_Rtheta, Rtheta2, mscale, c.init, time[tr_id], status[tr_id], cand.lambda[k], tr_RS)
 
       # calculate ACV for test data
-      te_RS = RiskSet(time[te_id], status[te_id])
-      tr_RS = RiskSet(time[tr_id], status[tr_id])
-      test_GH = cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
-      train_GH = cosso::gradient.Hessian.C(fit$c.new, tr_R, R2, time[tr_id], status[tr_id], mscale, cand.lambda[k], tr_RS)
-
 #       test_GH = .Call("gradient_Hessian_C", fit$c.new, as.integer(tr_n), as.integer(nbasis), as.integer(ncol(te_RS)), exp(te_Rtheta %*% fit$c.new),
 #                       te_Rtheta, Rtheta2, time[te_id], as.integer(status[te_id]), mscale, cand.lambda[k], as.integer(te_RS),
 #                       as.integer(table(time[te_id][status[te_id] == 1])),
 #                       PACKAGE = "cdcosso")
 
-      UHU = tr_Rtheta %*% My_solve(train_GH$H, t(tr_Rtheta))
-      ACV_pen = sum(status[tr_id] == 1)/tr_n^2 * (sum(diag(UHU))/(tr_n - 1) - sum(UHU)/(tr_n^2 - tr_n))
 
-      if(cv == "mse") measure[f, k] = mse(f, te_Rtheta, fit$c.new)
-      if(cv == "ACV") measure[f, k] = PartialLik(time[tr_id], status[tr_id], tr_RS, tr_Rtheta %*% fit$c.new) + ACV_pen
+      if(cv == "mse"){
+        fhat = c(fit$b.new + te_Rtheta %*% fit$c.new)
+        measure[fid, k] = mean((f[te_id] - fhat)^2)
+      }
+
+      if(cv == "ACV"){
+        te_RS = RiskSet(time[te_id], status[te_id])
+        tr_RS = RiskSet(time[tr_id], status[tr_id])
+        test_GH = cosso::gradient.Hessian.C(fit$c.new, te_R, R2, time[te_id], status[te_id], mscale, cand.lambda[k], te_RS)
+        train_GH = cosso::gradient.Hessian.C(fit$c.new, tr_R, R2, time[tr_id], status[tr_id], mscale, cand.lambda[k], tr_RS)
+
+        UHU = tr_Rtheta %*% My_solve(train_GH$H, t(tr_Rtheta))
+        ACV_pen = sum(status[tr_id] == 1)/tr_n^2 * (sum(diag(UHU))/(tr_n - 1) - sum(UHU)/(tr_n^2 - tr_n))
+        measure[fid, k] = PartialLik(time[tr_id], status[tr_id], tr_RS, tr_Rtheta %*% fit$c.new) + ACV_pen
+      }
 
     }
   }
@@ -393,7 +399,7 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
 #   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 # }
 
-cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma){
+cv.gettheta.subset = function (model, K, time, status, f, cv, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma){
   n = length(time)
   d = length(mscale)
 
@@ -423,9 +429,9 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   measure = matrix(NA, 5, len)
   fold = cvsplitID(n, 5, time, family = "gaussian")
 
-  for(f in 1:5){
-    tr_id = as.vector(fold[, -f])
-    te_id = fold[, f]
+  for(fid in 1:5){
+    tr_id = as.vector(fold[, -fid])
+    te_id = fold[, fid]
 
     tr_id = tr_id[!is.na(tr_id)]
     te_id = te_id[!is.na(te_id)]
@@ -462,8 +468,12 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       # fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
       fhat = c(wsGram(tr_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
 
-      ACV = cosso::PartialLik(time[tr_id], status[tr_id], RiskSet(time[tr_id], status[tr_id]), fhat) + model$ACV_pen
-      measure[f, k] = ACV
+      if(cv == "mse") measure[fid, k] = mean((f[te_id] - fhat)^2)
+
+      if(cv == "mse") {
+        ACV = cosso::PartialLik(time[tr_id], status[tr_id], RiskSet(time[tr_id], status[tr_id]), fhat) + model$ACV_pen
+        measure[fid, k] = ACV
+      }
 
     }
   }

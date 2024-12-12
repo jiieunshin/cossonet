@@ -132,7 +132,7 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
 
       if(obj$family == "gaussian") measure[fid, k] <- mean((testfhat - y[te_id])^2)
       if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-      if(obj$family == "poisson") measure[fid, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
+      if(obj$family == "poisson") measure[fid, k] <- mean((f[te_id] - testmu)^2)
       # measure[fid, k] <- KL(testfhat, mu, obj)
       }
 
@@ -365,7 +365,7 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
         testmu = obj$linkinv(testfhat)
         if(obj$family == "gaussian") measure[fid, k] <- mean((testfhat - y[te_id])^2)
         if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-        if(obj$family == "poisson") measure[fid, k] <- mean(poisson()$dev.resids(y[te_id], testmu, rep(1, te_n)))
+        if(obj$family == "poisson") measure[fid, k] <-mean((f[te_id] - testmu)^2)
       }
 
       if(cv == "KL"){
@@ -421,7 +421,7 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
 
   if(obj$family == "binomial") miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
   if(obj$family == "gaussian") miss <- mean((y[te_id] - f.new)^2)
-  if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, te_n)))
+  if(obj$family == "poisson") miss <- mean((f - mu.new)^2)
   cat("training error:", miss, "\n")
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)

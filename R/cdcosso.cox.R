@@ -8,6 +8,7 @@
 #' @param x Explanation variable matrix or data frame.
 #' @param time Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).
 #' @param status Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
+#' @param f true function.
 #' @param cv measure for cross-validation
 #' @param nbasis The number of basis.
 #' @param basis.id The index of basis.
@@ -33,7 +34,7 @@
 # lambda0 = exp(seq(log(2^{-4}), log(2^{6}), length.out = 20))
 # lambda_theta = exp(seq(log(2^{-6}), log(2^{-4}), length.out = 20))
 # wt = rep(1, ncol(x))
-cdcosso.cox = function (x, time, status, cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+cdcosso.cox = function (x, time, status, f, cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
 {
   n = length(time)
   p = length(wt)
@@ -56,15 +57,15 @@ cdcosso.cox = function (x, time, status, cv, nbasis, basis.id, wt, lambda0, lamb
 
   par(mfrow = c(1,3))
   # solve c (1st)
-  getc_cvfit = cv.getc.subset(K, time, status, cv, nbasis, basis.id, rep(1, d)/wt^2, lambda0, type, kparam, one.std = TRUE, show = TRUE)
+  getc_cvfit = cv.getc.subset(K, time, status, f, cv, nbasis, basis.id, rep(1, d)/wt^2, lambda0, type, kparam, one.std = TRUE, show = TRUE)
 
   # solve theta (1st)
-  theta_cvfit = cv.gettheta.subset(getc_cvfit, K, time, status, cv, nbasis, basis.id, wt, getc_cvfit$optlambda, lambda_theta, gamma)
+  theta_cvfit = cv.gettheta.subset(getc_cvfit, K, time, status, f, cv, nbasis, basis.id, wt, getc_cvfit$optlambda, lambda_theta, gamma)
 
   # solve c (2nd)
   theta.new = rescale_theta(theta_cvfit$theta.new)
   # print(theta.new)
-  getc_cvfit = cv.getc.subset(K, time, status, cv, nbasis, basis.id, theta.new/wt^2, lambda0, type, kparam, one.std = FALSE, show = TRUE)
+  getc_cvfit = cv.getc.subset(K, time, status, f, cv, nbasis, basis.id, theta.new/wt^2, lambda0, type, kparam, one.std = FALSE, show = TRUE)
 
   # solve theta (2nd)
   # theta_cvfit = cv.gettheta(getc_cvfit, x, time, status, wt, getc_cvfit$optlambda, lambda_theta, gamma, type, kparam)

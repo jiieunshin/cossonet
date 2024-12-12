@@ -36,8 +36,8 @@ data_generation = function(n, p, rho, SNR,
   if(response == "count"){
     f1 = function(t) t^3
     f2 = function(t) (2 * t - 1)^2
-    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) + .5
-    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 + .5
+    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
+    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
   }
 
   if(response == "survival"){
@@ -141,11 +141,11 @@ data_generation = function(n, p, rho, SNR,
     x = cbind(x, x_nois)
 
     # f2 = 2 * (log(f) / max(log(f)))
-    f2 = f / 3
+    f = f / 3
     # f2 = (exp(f) / (1 + exp(f)) + 1)
     # f2 = (f - min(f)) / (min(f) - max(f)) * 2
-    plot(f2)
-    mu = exp(f2)
+    plot(f)
+    mu = exp(f)
     y = rpois(n, mu)
     out = list(x = x, f = f, y = y)
   }
