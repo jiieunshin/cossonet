@@ -10,9 +10,9 @@
 #' @param f true function.
 #' @param family A character string representing one of the built-in families. The value depends on the type of response variable, `family='gaussian'` for continuous, `family='binomial'` forj binary class, `family='poisson'` for non-negative count , and `family='Cox'` for survival.
 #' @param cv measure for cross-validation
-#' @param kernel Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param nbasis The number of basis.
 #' @param basis.id The index of basis.
+#' @param kernel Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param effect Effect of the component to be analyzed, `effect = "main"` for main effect (default), and `effect = "interaction"` for interaction.
 #' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
 #' @param lambda0 A vector of tuning parameter to select optimal smoothing parameter.
@@ -40,7 +40,7 @@ cdcosso = function (x,
                     y,
                     f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
-                    cv = c("mse", "KL"),
+                    cv = c("mse", "KL", "ACV"),
                     nbasis, basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
