@@ -477,7 +477,7 @@ cv.gettheta.subset = function (model, K, time, status, f, cv, nbasis, basis.id, 
 
     }
   }
-  print(measure)
+
   measure_mean = colMeans(measure, na.rm = T)
   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
 
@@ -690,7 +690,7 @@ gettheta.cd = function(init.theta, f.init, G1, G2, time, status, chat, lambda0, 
     }
     if(conv) break
   }
-  print(i)
+
   # print(theta.new)
   if(i == 1 & (conv2)) theta.old = rep(0, d)
 
