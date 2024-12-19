@@ -470,7 +470,7 @@ cv.gettheta.subset = function (model, K, time, status, f, cv, nbasis, basis.id, 
 
       if(cv == "mse") measure[fid, k] = mean((f[te_id] - fhat)^2)
 
-      if(cv == "mse") {
+      if(cv == "ACV") {
         ACV = cosso::PartialLik(time[tr_id], status[tr_id], RiskSet(time[tr_id], status[tr_id]), fhat) + model$ACV_pen
         measure[fid, k] = ACV
       }

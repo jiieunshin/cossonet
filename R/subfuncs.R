@@ -95,17 +95,11 @@ make_anovaKernel = function(x, y, type, kparam, scale)
 
   # calculate anova kernels for two-way interactions
   if (type == "spline") {
-    print("1step clear")
-
-
     numK = dimx
     anova_kernel = vector(mode = "list", numK)
     kernelCoord = vector(mode = "list", numK)
     index = 0
     for (d in 1:dimx) {
-      print("2step clear")
-
-
       index = index + 1
       A = x[, d, drop = FALSE]
       B = y[, d, drop = FALSE]
@@ -186,9 +180,6 @@ make_anovaKernel = function(x, y, type, kparam, scale)
         K_temp <- cat_kernel(A, B)
         anova_kernel[[d]] = K_temp
       } else{
-        print("3step clear")
-
-
         anova_kernel[[d]] = kernelMatrix(A, B, type, kparam)
       }
       kernelCoord[[d]] = paste("x", d, sep = "")
