@@ -55,6 +55,8 @@ cdcosso.cox = function (x, time, status, f, cv, nbasis, basis.id, wt, lambda0, l
   d = K$numK
   # cat("kernel:", type, "and d =", d, "\n")
 
+  print("1step clear")
+
   par(mfrow = c(1,3))
   # solve c (1st)
   getc_cvfit = cv.getc.subset(K, time, status, f, cv, nbasis, basis.id, rep(1, d)/wt^2, lambda0, type, kparam, one.std = TRUE, show = TRUE)
