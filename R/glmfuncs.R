@@ -23,48 +23,6 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
 
   Rtheta2 <- combine_kernel(R2, mscale)
 
-  # initialize
-  # f.init = rep(0.5, n)
-  # ff = f.init
-  # mu = obj$linkinv(ff)
-  # w = obj$variance(mu)
-  # z = ff + (y - mu) / w
-
-  # measure = c()
-  # for (k in 1:len){
-  #
-  #   EigRtheta2 = eigen(Rtheta2)
-  #   loop = 0
-  #   while (min(EigRtheta2$values) < 0 & loop < 10) {
-  #     loop = loop + 1
-  #     Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
-  #     EigRtheta2 = eigen(Rtheta2)
-  #   }
-  #   if (loop == 10)
-  #     EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
-  #   pseudoX = Rtheta
-  #
-  #   c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
-  #
-  #   ff = Rtheta2 %*% c.init
-  #   mu = obj$linkinv(ff)
-  #   w = as.vector(obj$variance(mu))
-  #   z = ff + (y[basis.id] - mu) / w
-  #
-  #
-  #   zw = z * sqrt(w)
-  #   Rw = tr_Rtheta * w
-  #   sw = sqrt(w)
-  #
-  #
-  #
-  #   # validation
-  #   fhat = c(Rtheta2 %*% c.new)
-  #   measure[k] <- KL(fhat, Rtheta2 %*% c.new, obj)
-  #
-  # }
-
-
   fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
   for(fid in 1:5){
@@ -121,24 +79,20 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
       fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cdcosso")
       b.new = fit$b.new
       c.new = fit$c.new
-      # c.new = cw.new * sqrt(w)[basis.id]
-      # cat("R calculate:", sum(zw - Rw %*% cw.new) / sum(sw), "\n")
-      # cat("C calculate:", b.new, "\n")
 
-      testfhat = c(b.new + te_Rtheta %*% c.new)
+      testf = c(b.new + te_Rtheta %*% c.new)
 
       if(cv == "mse"){
-      testmu = obj$linkinv(testfhat)
+        testmu = obj$linkinv(testf)
 
-      if(obj$family == "gaussian") measure[fid, k] <- mean((testfhat - y[te_id])^2)
-      if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-      if(obj$family == "poisson") measure[fid, k] <- mean((f[te_id] - testmu)^2)
-      # measure[fid, k] <- KL(testfhat, mu, obj)
+        if(obj$family == "gaussian") measure[fid, k] <- mean((testf - y[te_id])^2)
+        if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
+        if(obj$family == "poisson") measure[fid, k] <- mean((y[te_id] - testf)^2)
       }
 
       if(cv == "KL"){
         mu = obj$linkinv(f)
-        measure[fid, k] <- KL(testfhat, mu, obj)
+        measure[fid, k] <- KL(testf, mu, obj)
       }
 
     }
@@ -215,7 +169,7 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
 
   if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
   if(obj$family == "gaussian") miss <- mean((y - f.new)^2)
-  if(obj$family == "poisson") miss <- mean(poisson()$dev.resids(y, mu.new, rep(1, n)))
+  if(obj$family == "poisson") miss <- mean((y - f.new)^2)
 
   cat("training error:", miss, "\n")
 
@@ -359,18 +313,19 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
         te_R[, , j] = K$K[[j]][te_id, basis.id]
       }
 
-      testfhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+      testf = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
 
       if(cv == "mse"){
-        testmu = obj$linkinv(testfhat)
-        if(obj$family == "gaussian") measure[fid, k] <- mean((testfhat - y[te_id])^2)
+        testmu = obj$linkinv(testf)
+
+        if(obj$family == "gaussian") measure[fid, k] <- mean((testf - y[te_id])^2)
         if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-        if(obj$family == "poisson") measure[fid, k] <-mean((f[te_id] - testmu)^2)
+        if(obj$family == "poisson") measure[fid, k] <- mean((y[te_id] - testf)^2)
       }
 
       if(cv == "KL"){
         mu = obj$linkinv(f)
-        measure[fid, k] <- KL(testfhat, mu, obj)
+        measure[fid, k] <- KL(testf, mu, obj)
       }
 
     }
@@ -419,65 +374,6 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
   f.new =  c(wsGram(model$R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
   mu.new = obj$linkinv(f.new)
 
-  if(obj$family == "binomial") miss <- mean(y[te_id] != ifelse(mu.new < 0.5, 0, 1))
-  if(obj$family == "gaussian") miss <- mean((y[te_id] - f.new)^2)
-  if(obj$family == "poisson") miss <- mean((f - mu.new)^2)
-  cat("training error:", miss, "\n")
-
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   return(out)
-}
-
-nng.cd = function (Gw, uw, theta, lambda_theta, gamma)
-{
-  n = nrow(Gw)
-  d = ncol(Gw)
-  r = lambda_theta * gamma * n
-  theta.new = rep(0, d)
-
-  for(i in 1:15){
-    for(j in 1:d){
-      theta.new[j] = 2 * sum((uw - Gw[,-j] %*% theta[-j]) * Gw[,j])
-
-      theta.new[j] = ifelse(theta.new[j] > 0 & r < abs(theta.new[j]), theta.new[j], 0)
-      theta.new[j] = theta.new[j] / (sum(Gw[,j]^2) + n * lambda_theta * (1-gamma)) / 2
-
-      loss = abs(theta - theta.new)
-      conv = max(loss) < 1e-20
-
-      if(conv) break
-      theta[j] = theta.new[j]
-    }
-    if(conv) break
-  }
-
-  if(i == 1 & !conv) theta = rep(0, d)
-
-  return(theta)
-}
-
-
-nng.QP = function (Gw, uw, theta, lambda_theta, gamma)
-{
-  n = nrow(Gw)
-  d = ncol(Gw)
-  r = lambda_theta * gamma * n
-  theta.new = rep(0, d)
-
-  for(i in 1:15){ # outer iteration
-    Dmat = t(Gw) %*% Gw + diag(n * lambda_theta * gamma, d)
-    dvec = as.vector(2 * t(uw) %*% Gw)
-    Amat = t(rbind(diag(1, d), rep(-1, d)))
-    bvec = c(rep(0, d), -lambda_theta)
-    theta.new = solve.QP(2 * Dmat, dvec, Amat, bvec)$solution
-    theta.new[theta.new < 1e-8] = 0
-
-    loss = abs(theta - theta.new)
-    conv = max(loss) < 1e-8
-
-    if(conv) break
-    theta = theta.new
-  }
-
-  return(theta.new)
 }

@@ -76,7 +76,7 @@ cdcosso = function (x,
 
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
-  if(missing(cv))
+  if(missing(cv) | is.null(f))
     cv = 'mse'
 
   # if(missing(lambda0))
