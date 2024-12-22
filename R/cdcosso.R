@@ -79,11 +79,8 @@ cdcosso = function (x,
   if(missing(cv) | is.null(f))
     cv = 'mse'
 
-  # if(missing(lambda0))
-  #   lambda0 = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
-  #
-  # if(missing(lambda_theta))
-  #   lambda_theta = exp(seq(log(2^{-11}), log(2^{2}), length.out = 20))
+  if(scale)
+    x = apply(x, 2, rescale)
 
   if (family == "Cox" & !all(match(c("time", "status"), dimnames(y)[[2]], 0))) {
     stop("Cox model requires a matrix with columns 'time' and 'status' as a response")
