@@ -9,7 +9,7 @@ cdcosso(
   y,
   f = NULL,
   family = c("gaussian", "binomial", "poisson", "Cox"),
-  cv = c("mse", "KL", "ACV"),
+  cv = NULL,
   nbasis,
   basis.id,
   kernel = c("linear", "gaussian", "poly", "spline"),

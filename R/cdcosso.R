@@ -40,7 +40,7 @@ cdcosso = function (x,
                     y,
                     f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
-                    cv = c("mse", "KL", "ACV"),
+                    cv = NULL,
                     nbasis, basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
@@ -76,8 +76,14 @@ cdcosso = function (x,
 
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
-  if(missing(cv) | is.null(f))
+  if(is.null(cv) & (is.null(f) | family != "Cox"))
     cv = 'mse'
+
+  if(is.null(cv) & (!is.null(f) | family != "Cox"))
+    cv = "KL"
+
+  if(is.null(cv) & (is.null(f) | family == "Cox"))
+    cv = "ACV"
 
   if(scale)
     x = apply(x, 2, rescale)
@@ -86,7 +92,7 @@ cdcosso = function (x,
     stop("Cox model requires a matrix with columns 'time' and 'status' as a response")
   }
 
-  objnm = ifelse(family == 'gaussian' | family == 'binomial' | family == 'poisson', 'glm', family)
+  objnm = ifelse(family == 'gaussian' | family == 'binomial' | family == 'poisson', 'glm', "Cox")
 
   wt = rep(1, ncol(x))
 
