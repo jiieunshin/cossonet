@@ -92,7 +92,9 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
 
       if(cv == "KL"){
         mu = obj$linkinv(f)
-        measure[fid, k] <- KL(testf, mu, obj)
+        # measure[fid, k] <- KL(testf, mu, obj)
+        measure[fid, k] <- KL(testf, y[te_id], obj)
+
       }
 
     }
@@ -325,7 +327,8 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
 
       if(cv == "KL"){
         mu = obj$linkinv(f)
-        measure[fid, k] <- KL(testf, mu, obj)
+        # measure[fid, k] <- KL(testf, mu, obj)
+        measure[fid, k] <- KL(testf, y[te_id], obj)
       }
 
     }
