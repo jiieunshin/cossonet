@@ -1,7 +1,7 @@
 # cand.lambda = lambda0
 # mscale = wt
 # obj = binomial()
-cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
+cv.sspline.subset = function (K, y, cv, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -91,10 +91,7 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
       }
 
       if(cv == "KL"){
-        mu = obj$linkinv(f)
-        # measure[fid, k] <- KL(testf, mu, obj)
         measure[fid, k] <- KL(testf, y[te_id], obj)
-
       }
 
     }
@@ -111,7 +108,7 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
     main = "Poisson Family"
   }
 
-  ylab = expression("GCV(" * lambda[0] * ")")
+  ylab = expression("CKL(" * lambda[0] * ")")
 
   # optimal lambda1
   measure_mean = colMeans(measure, na.rm = T)
@@ -168,12 +165,6 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
   mu.new = obj$linkinv(f.new)
   w.new = obj$variance(mu.new)
   z.new = f.new + (y - mu.new) / w.new
-
-  if(obj$family == "binomial") miss <- mean(y != ifelse(mu.new < 0.5, 0, 1))
-  if(obj$family == "gaussian") miss <- mean((y - f.new)^2)
-  if(obj$family == "poisson") miss <- mean((y - f.new)^2)
-
-  cat("training error:", miss, "\n")
 
   rm(K)
   rm(Rtheta)
@@ -326,8 +317,6 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
       }
 
       if(cv == "KL"){
-        mu = obj$linkinv(f)
-        # measure[fid, k] <- KL(testf, mu, obj)
         measure[fid, k] <- KL(testf, y[te_id], obj)
       }
 
@@ -360,7 +349,7 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
   std_id = max(cand_ids)
   optlambda = lambda_theta[std_id]
 
-  ylab = expression("GCV(" * lambda[theta] * ")")
+  ylab = expression("CKL(" * lambda[theta] * ")")
 
 
   plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,

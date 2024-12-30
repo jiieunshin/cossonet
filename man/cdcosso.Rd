@@ -7,8 +7,9 @@
 cdcosso(
   x,
   y,
-  f = NULL,
   family = c("gaussian", "binomial", "poisson", "Cox"),
+  wt = rep(1, ncol(x)),
+  scale = TRUE,
   cv = NULL,
   nbasis,
   basis.id,
@@ -25,38 +26,37 @@ cdcosso(
  }), log(2^{
      2
  }), length.out = 20)),
-  gamma = 0.95,
-  scale = TRUE
+  gamma = 0.95
 )
 }
 \arguments{
-\item{x}{Input matrix with $n$ observations and $p$ dimension.}
+\item{x}{Input matrix of $n$ by $p$, where each row is an observation. A matrix or dataframe. x must have at least two columns ($p>1$).}
 
-\item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
+\item{y}{The response variable. If family="gaussian" or family="poisson" (non-negative counts), it is quantitative. If family="binomial", it must be a vector with two levels. If family="cox", y must be a two-column matrix (or dataframe) with columns named 'time' and 'state'.}
 
-\item{f}{true function.}
+\item{family}{The response type}
 
-\item{family}{A character string representing one of the built-in families. The value depends on the type of response variable, \code{family='gaussian'} for continuous, \code{family='binomial'} forj binary class, \code{family='poisson'} for non-negative count , and \code{family='Cox'} for survival.}
+\item{wt}{The weights of the predictors. The default is \code{rep(1,ncol(x))}.}
 
-\item{cv}{measure for cross-validation}
+\item{scale}{If TRUE, continuous predictors are rescaled to the interval \verb{[0,1]}. The default is \code{TRUE}.}
 
-\item{nbasis}{The number of basis.}
+\item{cv}{Measurement for cross-validation}
 
-\item{basis.id}{The index of basis.}
+\item{nbasis}{The number of "knots" to choose from. If basis.id is provided, it is ignored.}
 
-\item{kernel}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
+\item{basis.id}{An index that specifies the selected "knot".}
 
-\item{effect}{Effect of the component to be analyzed, \code{effect = "main"} for main effect (default), and \code{effect = "interaction"} for interaction.}
+\item{kernel}{The kernel function. Four types are provided: \code{linear} (default), \code{gaussian}, \code{poly}, \code{spline}.}
 
-\item{kparam}{Kernel parameter values that is used in gaussian kernel and polynomial kernel.}
+\item{effect}{The effect of the component. \code{main} (default) for the main effect, \code{interaction} for interactions.}
 
-\item{lambda0}{A vector of tuning parameter to select optimal smoothing parameter.}
+\item{kparam}{Parameters for the kernel function. Used by Gaussian and polynomial kernels.}
 
-\item{lambda_theta}{A vector of tuning parameter to select optimal tuning parameter.}
+\item{lambda0}{A vector of lambda0 sequences. The default is \code{exp()}. This may need to be adjusted based on your data. Do not provide a single value for lambda0.}
 
-\item{gamma}{The elastic net mixing parameter between 0 and 1. When \code{gamma = 1}, the penalty is to be LASSO. When \code{gamma = 0}, the penalty is to be ridge penalty. The default is \code{gamma = 0.95}.}
+\item{lambda_theta}{A vector of lambda_theta sequences. The default is \code{exp()}. This may need to be adjusted based on your data. Do not provide a single value for lambda_theta.}
 
-\item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
+\item{gamma}{Elastic mesh mixing parameter, \verb{0 \\leq \\gamma \\leq 1}. When \code{gamma = 1} it uses LASSO penalty, when \code{gamma = 0} it uses Ridge penalty. The default is \code{gamma = 0.95}.}
 }
 \value{
 A list containing information about the fitted model.

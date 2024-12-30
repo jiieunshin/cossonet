@@ -7,7 +7,6 @@
 cdcosso.glm(
   x,
   y,
-  f,
   cv,
   wt,
   nbasis,
@@ -25,8 +24,6 @@ cdcosso.glm(
 \item{x}{Input matrix with $n$ observations and $p$ dimension.}
 
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
-
-\item{f}{true function.}
 
 \item{cv}{measure for cross-validation}
 

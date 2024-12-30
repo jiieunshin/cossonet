@@ -5,20 +5,20 @@
 #' Because it is a type of nonparametric inference, various types of kernels can be selected.
 #' To select hyperparameters, the function is designed to perform cross-validation.
 #'
-#' @param x Input matrix with $n$ observations and $p$ dimension.
-#' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
-#' @param f true function.
-#' @param family A character string representing one of the built-in families. The value depends on the type of response variable, `family='gaussian'` for continuous, `family='binomial'` forj binary class, `family='poisson'` for non-negative count , and `family='Cox'` for survival.
-#' @param cv measure for cross-validation
-#' @param nbasis The number of basis.
-#' @param basis.id The index of basis.
-#' @param kernel Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
-#' @param effect Effect of the component to be analyzed, `effect = "main"` for main effect (default), and `effect = "interaction"` for interaction.
-#' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
-#' @param lambda0 A vector of tuning parameter to select optimal smoothing parameter.
-#' @param lambda_theta A vector of tuning parameter to select optimal tuning parameter.
-#' @param gamma The elastic net mixing parameter between 0 and 1. When `gamma = 1`, the penalty is to be LASSO. When `gamma = 0`, the penalty is to be ridge penalty. The default is `gamma = 0.95`.
-#' @param scale Boolean for whether to scale the input data to range between 0 and 1.
+#' @param x Input matrix of $n$ by $p$, where each row is an observation. A matrix or dataframe. x must have at least two columns ($p>1$).
+#' @param y The response variable. If family="gaussian" or family="poisson" (non-negative counts), it is quantitative. If family="binomial", it must be a vector with two levels. If family="cox", y must be a two-column matrix (or dataframe) with columns named 'time' and 'state'.
+#' @param family The response type
+#' @param wt The weights of the predictors. The default is `rep(1,ncol(x))`.
+#' @param scale If TRUE, continuous predictors are rescaled to the interval `[0,1]`. The default is `TRUE`.
+#' @param cv Measurement for cross-validation
+#' @param nbasis The number of "knots" to choose from. If basis.id is provided, it is ignored.
+#' @param basis.id An index that specifies the selected "knot".
+#' @param kernel The kernel function. Four types are provided: `linear` (default), `gaussian`, `poly`, `spline`.
+#' @param effect The effect of the component. `main` (default) for the main effect, `interaction` for interactions.
+#' @param kparam Parameters for the kernel function. Used by Gaussian and polynomial kernels.
+#' @param lambda0 A vector of lambda0 sequences. The default is `exp()`. This may need to be adjusted based on your data. Do not provide a single value for lambda0.
+#' @param lambda_theta A vector of lambda_theta sequences. The default is `exp()`. This may need to be adjusted based on your data. Do not provide a single value for lambda_theta.
+#' @param gamma Elastic mesh mixing parameter, `0 \leq \gamma \leq 1`. When `gamma = 1` it uses LASSO penalty, when `gamma = 0` it uses Ridge penalty. The default is `gamma = 0.95`.
 #'
 #' @return A list containing information about the fitted model.
 #' @export
@@ -38,16 +38,18 @@
 # lambda_theta = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20))
 cdcosso = function (x,
                     y,
-                    f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
+                    wt = rep(1, ncol(x)),
+                    scale = TRUE,
                     cv = NULL,
-                    nbasis, basis.id,
+                    nbasis,
+                    basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
                     kparam = 1,
                     lambda0 = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20)),
-                    gamma = 0.95, scale = TRUE)
+                    gamma = 0.95)
 {
   n = nrow(x)
   colnames(x) = NULL
@@ -76,13 +78,10 @@ cdcosso = function (x,
 
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
-  if(is.null(cv) & (is.null(f) | family != "Cox"))
-    cv = 'mse'
-
-  if(is.null(cv) & (!is.null(f) | family != "Cox"))
+  if(is.null(cv) & family != "Cox")
     cv = "KL"
 
-  if(is.null(cv) & (is.null(f) | family == "Cox"))
+  if(is.null(cv) & family == "Cox")
     cv = "ACV"
 
   if(scale)
@@ -94,12 +93,10 @@ cdcosso = function (x,
 
   objnm = ifelse(family == 'gaussian' | family == 'binomial' | family == 'poisson', 'glm', "Cox")
 
-  wt = rep(1, ncol(x))
-
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), f, cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+               glm = cdcosso.glm(x, y, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
+               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
   )
 
   attr(out, "class") = "cdcosso"

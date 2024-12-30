@@ -9,8 +9,11 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-cv.getc.subset = function(K, time, status, f, cv, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
+cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
 {
+  cat("-- c-step -- \n")
+  cat("proceeding... \n")
+
   d = K$numK
   n <- length(status)
   len = length(cand.lambda)
@@ -93,11 +96,6 @@ cv.getc.subset = function(K, time, status, f, cv, nbasis, basis.id, mscale, cand
 #                       PACKAGE = "cdcosso")
 
 
-      if(cv == "mse"){
-        fhat = c(te_Rtheta %*% fit$c.new)
-        measure[fid, k] = mean((f[te_id] - fhat)^2)
-      }
-
       if(cv == "ACV"){
         te_RS = RiskSet(time[te_id], status[te_id])
         tr_RS = RiskSet(time[tr_id], status[tr_id])
@@ -134,7 +132,7 @@ cv.getc.subset = function(K, time, status, f, cv, nbasis, basis.id, mscale, cand
   }
 
 
-  ylab = expression("GCV(" * lambda[0] * ")")
+  ylab = expression("CKL(" * lambda[0] * ")")
 
   if(show){
     plot(log(cand.lambda), measure_mean, main = "Cox family", xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
@@ -169,7 +167,7 @@ cv.getc.subset = function(K, time, status, f, cv, nbasis, basis.id, mscale, cand
 
   fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n / optlambda, PACKAGE = "cdcosso")
 
-  out = list(measure = measure, R = R, RS = RS, f.new = c(fit$b.new + Rtheta %*% fit$c.new), zw.new = zw, w.new = w, sw.new = sw,
+  out = list(measure = measure, R = R, RS = RS, f.new = c(Rtheta %*% fit$c.new), zw.new = zw, w.new = w, sw.new = sw,
              b.new = fit$b.new, c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
 
   rm(K)
@@ -399,7 +397,11 @@ cv.getc.subset = function(K, time, status, f, cv, nbasis, basis.id, mscale, cand
 #   # return(list(z.new = z, zw.new = zw, w.new = w, c.new = c.new, b.new = b.new, cw.new = cw.new, GCV = GCV))
 # }
 
-cv.gettheta.subset = function (model, K, time, status, f, cv, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma){
+cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma)
+  {
+  cat("-- theta-step -- \n")
+  cat("proceeding... \n")
+
   n = length(time)
   d = length(mscale)
 
@@ -466,9 +468,7 @@ cv.gettheta.subset = function (model, K, time, status, f, cv, nbasis, basis.id, 
       }
 
       # fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
-      fhat = c(wsGram(tr_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
-
-      if(cv == "mse") measure[fid, k] = mean((f[te_id] - fhat)^2)
+      fhat = c(wsGram(tr_R, theta.adj/mscale^2) %*% model$c.new)
 
       if(cv == "ACV") {
         ACV = cosso::PartialLik(time[tr_id], status[tr_id], RiskSet(time[tr_id], status[tr_id]), fhat) + model$ACV_pen
@@ -493,7 +493,7 @@ cv.gettheta.subset = function (model, K, time, status, f, cv, nbasis, basis.id, 
   std_id = max(cand_ids)
   optlambda = lambda_theta[std_id]
 
-  ylab = expression("GCV(" * lambda[theta] * ")")
+  ylab = expression("CKL(" * lambda[theta] * ")")
 
 
   plot(log(lambda_theta), measure_mean, main = "Cox family", xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
