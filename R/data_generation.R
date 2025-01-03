@@ -106,7 +106,7 @@ data_generation = function(n, p, rho, SNR,
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
 
-    out = list(x = x, y = f)
+    out = list(x = x, f = f, y = f)
   }
 
   if(response == "classification"){
@@ -121,7 +121,7 @@ data_generation = function(n, p, rho, SNR,
     y = rbinom(n, 1, prob)
     # plot(prob)
     # print(table(y))
-    out = list(x = x, y = y)
+    out = list(x = x, f = f, y = y)
   }
 
   if(response == "count"){
@@ -142,7 +142,7 @@ data_generation = function(n, p, rho, SNR,
     plot(f)
     mu = exp(f)
     y = rpois(n, mu)
-    out = list(x = x, y = y)
+    out = list(x = x, f = f, y = y)
   }
 
   if(response == 'survival'){
@@ -159,7 +159,7 @@ data_generation = function(n, p, rho, SNR,
 
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
 
-    out = list(x = x, y = y)
+    out = list(x = x, f = f, y = y)
   }
   return(out)
 }

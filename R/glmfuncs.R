@@ -1,7 +1,7 @@
 # cand.lambda = lambda0
 # mscale = wt
 # obj = binomial()
-cv.sspline.subset = function (K, y, cv, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
+cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -91,7 +91,8 @@ cv.sspline.subset = function (K, y, cv, nbasis, basis.id, mscale, cand.lambda, o
       }
 
       if(cv == "KL"){
-        measure[fid, k] <- KL(testf, y[te_id], obj)
+        true_mu = obj$linkinv(f[te_id])
+        measure[fid, k] <- KL(testf, true_mu, obj)
       }
 
     }
@@ -170,7 +171,7 @@ cv.sspline.subset = function (K, y, cv, nbasis, basis.id, mscale, cand.lambda, o
   if(obj$family == "binomial") m <- mean(y != ifelse(mu.new < 0.5, 0, 1))
   if(obj$family == "poisson") m <- mean((y - f.new)^2)
 
-  cat("mse:", m, "\n\n")
+  cat("mse:", round(m, 4), "\n\n")
 
   rm(K)
   rm(Rtheta)
@@ -261,7 +262,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
 # model = sspline_cvfit
 # lambda0 = model$optlambda
 # mscale = wt
-cv.nng.subset = function(model, K, y, cv, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
+cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -323,7 +324,8 @@ cv.nng.subset = function(model, K, y, cv, nbasis, basis.id, mscale, lambda0, lam
       }
 
       if(cv == "KL"){
-        measure[fid, k] <- KL(testf, y[te_id], obj)
+        true_mu = obj$linkinv(f[te_id])
+        measure[fid, k] <- KL(testf, true_mu, obj)
       }
 
     }
@@ -376,7 +378,7 @@ cv.nng.subset = function(model, K, y, cv, nbasis, basis.id, mscale, lambda0, lam
   if(obj$family == "binomial") m <- mean(y != ifelse(mu.new < 0.5, 0, 1))
   if(obj$family == "poisson") m <- mean((y - f.new)^2)
 
-  cat("mse:", m, "\n\n")
+  cat("mse:", round(m, 4), "\n\n")
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   return(out)

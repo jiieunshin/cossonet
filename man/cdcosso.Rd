@@ -7,6 +7,7 @@
 cdcosso(
   x,
   y,
+  f = NULL,
   family = c("gaussian", "binomial", "poisson", "Cox"),
   wt = rep(1, ncol(x)),
   scale = TRUE,
@@ -17,14 +18,14 @@ cdcosso(
   effect = c("main", "interaction"),
   kparam = 1,
   lambda0 = exp(seq(log(2^{
-     -6
+     -10
  }), log(2^{
-     2
+     10
  }), length.out = 20)),
   lambda_theta = exp(seq(log(2^{
-     -6
+     -10
  }), log(2^{
-     2
+     10
  }), length.out = 20)),
   gamma = 0.95
 )
@@ -33,6 +34,8 @@ cdcosso(
 \item{x}{Input matrix of $n$ by $p$, where each row is an observation. A matrix or dataframe. x must have at least two columns ($p>1$).}
 
 \item{y}{The response variable. If family="gaussian" or family="poisson" (non-negative counts), it is quantitative. If family="binomial", it must be a vector with two levels. If family="cox", y must be a two-column matrix (or dataframe) with columns named 'time' and 'state'.}
+
+\item{f}{The true function.}
 
 \item{family}{The response type}
 
