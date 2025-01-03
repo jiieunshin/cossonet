@@ -166,6 +166,12 @@ cv.sspline.subset = function (K, y, cv, nbasis, basis.id, mscale, cand.lambda, o
   w.new = obj$variance(mu.new)
   z.new = f.new + (y - mu.new) / w.new
 
+  if(obj$family == "gaussian") m = mean((f.new - y)^2)
+  if(obj$family == "binomial") m <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+  if(obj$family == "poisson") m <- mean((y - f.new)^2)
+
+  cat("mse:", m, "\n\n")
+
   rm(K)
   rm(Rtheta)
   rm(Rtheta2)
@@ -365,6 +371,12 @@ cv.nng.subset = function(model, K, y, cv, nbasis, basis.id, mscale, lambda0, lam
 
   f.new =  c(wsGram(model$R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
   mu.new = obj$linkinv(f.new)
+
+  if(obj$family == "gaussian") m = mean((f.new - y)^2)
+  if(obj$family == "binomial") m <- mean(y != ifelse(mu.new < 0.5, 0, 1))
+  if(obj$family == "poisson") m <- mean((y - f.new)^2)
+
+  cat("mse:", m, "\n\n")
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
   return(out)
