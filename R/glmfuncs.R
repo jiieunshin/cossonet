@@ -15,13 +15,23 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
   }
 
   Rtheta <- combine_kernel(R, mscale)
-
   R2 = array(NA, c(nbasis, nbasis, d))
   for(j in 1:d){
     R2[, , j] = K$K[[j]][basis.id, basis.id]
   }
-
   Rtheta2 <- combine_kernel(R2, mscale)
+
+  # initialize
+  EigRtheta2 = eigen(Rtheta2)
+  loop = 0
+  while (min(EigRtheta2$values) < 0 & loop < 10) {
+    loop = loop + 1
+    Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
+    EigRtheta2 = eigen(Rtheta2)
+  }
+  if (loop == 10)
+    EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
+  pseudoX = Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
 
   fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
@@ -49,18 +59,6 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
 
     te_Rtheta <- combine_kernel(te_R, mscale)
 
-    # initialize
-    EigRtheta2 = eigen(Rtheta2)
-    loop = 0
-    while (min(EigRtheta2$values) < 0 & loop < 10) {
-      loop = loop + 1
-      Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
-      EigRtheta2 = eigen(Rtheta2)
-    }
-    if (loop == 10)
-      EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
-    pseudoX = Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
-
     for (k in 1:len){
 
       c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
@@ -81,6 +79,13 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
       c.new = fit$c.new
 
       testf = c(b.new + te_Rtheta %*% c.new)
+
+      if(cv == "GCV"){
+        err = te_n * sum((time[te_id] - testf)^2)
+        inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + cand.lambda[k] * Rtheta2)
+        df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
+        measure[fid, k] = err / (te_n - df)^2
+      }
 
       if(cv == "mse"){
         testmu = obj$linkinv(testf)
@@ -178,7 +183,7 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
   rm(Rtheta2)
   rm(Rw)
 
-  out = list(measure = measure, R = R, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
+  out = list(measure = measure, R = R, Rtheta2 = Rtheta2, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
              c.new = c.new, optlambda = optlambda, conv = TRUE)
 
@@ -303,17 +308,32 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
     tr_n = length(tr_id)
     te_n = length(te_id)
 
+    tr_R = array(NA, c(tr_n, nbasis, d))
+    for(j in 1:d){
+      tr_R[, , j] = K$K[[j]][tr_id, basis.id]
+    }
+
+    te_R = array(NA, c(te_n, nbasis, d))
+    for(j in 1:d){
+      te_R[, , j] = K$K[[j]][te_id, basis.id]
+    }
+
     for (k in 1:len) {
       theta.new = .Call("wls_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       # save_theta[[k]] <- theta.adj
 
-      te_R = array(NA, c(te_n, nbasis, d))
-      for(j in 1:d){
-        te_R[, , j] = K$K[[j]][te_id, basis.id]
-      }
+      tr_Rtheta = wsGram(tr_R, theta.adj/mscale^2)
+      te_Rtheta = wsGram(te_R, theta.adj/mscale^2)
 
       testf = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+
+      if(cv == "GCV"){
+        err = te_n * sum((time[te_id] - testf)^2)
+        inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + lambda_theta[k] * model$Rtheta2)
+        df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
+        measure[fid, k] = err / (te_n - df)^2
+      }
 
       if(cv == "mse"){
         testmu = obj$linkinv(testf)
