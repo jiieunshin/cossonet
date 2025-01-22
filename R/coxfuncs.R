@@ -78,12 +78,15 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
       w <- - attributes(coxgrad_results)$diag_hessian
       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
 
-
       zw = z * sqrt(w)
       Rw = tr_Rtheta * w
       sw = sqrt(w)
 
-      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n / cand.lambda[k], PACKAGE = "cdcosso")
+      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cdcosso")
+      b.new = fit$b.new
+      c.new = fit$c.new
+
+      testf = c(b.new + te_Rtheta %*% c.new)
 
       # fit <- .Call("glm_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
 
@@ -95,6 +98,13 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
 #                       as.integer(table(time[te_id][status[te_id] == 1])),
 #                       PACKAGE = "cdcosso")
 
+
+      if(cv == "GCV"){
+        err = te_n * sum((time[te_id] - testf)^2)
+        inv.mat = ginv(te_Rtheta %*% te_Rtheta + cand.lambda[k] * Rtheta2)
+        df = sum(diag(te_Rtheta %*% inv.mat %*% te_Rtheta))
+        measure[fid, k] = err / (te_n - df)^2
+        }
 
       if(cv == "ACV"){
         te_RS = RiskSet(time[te_id], status[te_id])
@@ -165,10 +175,14 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n / optlambda, PACKAGE = "cdcosso")
+  fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
 
-  out = list(measure = measure, R = R, RS = RS, f.new = c(Rtheta %*% fit$c.new), zw.new = zw, w.new = w, sw.new = sw,
-             b.new = fit$b.new, c.new = fit$c.new, ACV_pen = ACV_pen, optlambda = optlambda)
+  inv.mat = ginv(Rtheta %*% Rtheta + optlambda * Rtheta2)
+  df = sum(diag(Rtheta %*% inv.mat %*% Rtheta))
+
+  out = list(measure = measure, R = R, Rtheta2 = Rtheta2, RS = RS, f.new = c(Rtheta %*% fit$c.new),
+             zw.new = zw, w.new = w, sw.new = sw, b.new = fit$b.new, c.new = fit$c.new,
+             ACV_pen = ACV_pen, df = df, optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
@@ -411,18 +425,16 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
     G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
   }
 
-
   Gw <- matrix(0, n, d)
   for (j in 1:d) {
     Gw[, j] = ((model$R[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
 
-
   uw = model$zw.new - model$sw.new
 
   h = rep(0, d)
   for (j in 1:d) {
-    h[j] = n * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new) / lambda0
+    h[j] = n * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new) * lambda0
     # h[j] = n * lambda0 * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new)
   }
 
@@ -441,6 +453,16 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
     tr_n = length(tr_id)
     te_n = length(te_id)
 
+    te_R = array(NA, c(te_n, nbasis, d))
+    for(j in 1:d){
+      te_R[, , j] = K$K[[j]][te_id, basis.id]
+    }
+
+    tr_R = array(NA, c(tr_n, nbasis, d))
+    for(j in 1:d){
+      tr_R[, , j] = K$K[[j]][tr_id, basis.id]
+    }
+
     for (k in 1:len) {
 
       response <- survival::Surv(time = time[tr_id], event = status[tr_id])
@@ -457,23 +479,23 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
       #                   lambda0, lambda_theta[k], gamma, RiskSet(time[tr_id], status[tr_id]))
       # theta.adj = ifelse(fit$theta.new <= 1e-6, 0, fit$theta.new)
 
-      te_R = array(NA, c(te_n, nbasis, d))
-      for(j in 1:d){
-        te_R[, , j] = K$K[[j]][te_id, basis.id]
-      }
-
-      tr_R = array(NA, c(tr_n, nbasis, d))
-      for(j in 1:d){
-        tr_R[, , j] = K$K[[j]][tr_id, basis.id]
-      }
+      tr_Rtheta = wsGram(tr_R, theta.adj/mscale^2)
+      te_Rtheta = wsGram(te_R, theta.adj/mscale^2)
 
       # fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
-      fhat = c(wsGram(tr_R, theta.adj/mscale^2) %*% model$c.new)
+      fhat = c(te_Rtheta %*% model$c.new + model$b.new)
 
-      if(cv == "ACV") {
-        ACV = cosso::PartialLik(time[tr_id], status[tr_id], RiskSet(time[tr_id], status[tr_id]), fhat) + model$ACV_pen
-        measure[fid, k] = ACV
+      if(cv == "GCV"){
+        err = te_n * sum((time[te_id] - fhat)^2)
+        inv.mat = ginv(te_Rtheta %*% te_Rtheta + lambda_theta[k] * model$Rtheta2)
+        df = sum(diag(te_Rtheta %*% inv.mat %*% te_Rtheta))
+        measure[fid, k] = err / (te_n - df)^2
       }
+
+      # if(cv == "ACV") {
+      #   ACV = cosso::PartialLik(time[tr_id], status[tr_id], RiskSet(time[tr_id], status[tr_id]), fhat) + model$ACV_pen
+      #   measure[fid, k] = ACV
+      # }
 
     }
   }

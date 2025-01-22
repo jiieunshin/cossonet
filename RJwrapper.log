@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.1.11)  11 JAN 2025 23:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.1.11)  11 JAN 2025 23:44
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -886,16 +886,15 @@ Overfull \hbox (55.35532pt too wide) in paragraph at lines 76--77
 \tf@brf=\write6
 \openout6 = `RJwrapper.brf'.
 
-[1{c:/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/texlive/202
-3/texmf-dist/fonts/enc/dvips/base/8r.enc}
-
-{c:/texlive/2023/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-0.enc}] [2 <./fig
-ures/penguins.png> <./cossonet_files/figure-latex/penguins-ggplot-1.pdf>]
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
 (Font)              scaled to size 9.37807pt on input line 14.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
 (Font)              scaled to size 9.37807pt on input line 14.
-)
+[1{c:/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/texlive/202
+3/texmf-dist/fonts/enc/dvips/base/8r.enc}
+
+{c:/texlive/2023/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-0.enc}] [2 <./fig
+ures/penguins.png> <./cossonet_files/figure-latex/penguins-ggplot-1.pdf>])
 
 LaTeX Font Warning: Font shape `T1/zi4/m/it' undefined
 (Font)              using `T1/zi4/m/n' instead on input line 95.
@@ -911,23 +910,23 @@ L3 programming layer <2024-01-04>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `RJwrapper.out' has not changed.
-(rerunfilecheck)             Checksum: 580BBE342AB5FEA3EF6D8764167BF779;1195.
+(rerunfilecheck)             Checksum: 6E12768E88219DB0DBD37F2DF1937822;843.
 Package rerunfilecheck Info: File `RJwrapper.brf' has not changed.
 (rerunfilecheck)             Checksum: C3F8DC6209FE66D5B9156CBAC85F9672;184.
  ) 
 Here is how much of TeX's memory you used:
  26871 strings out of 474165
  483960 string characters out of 5749497
- 1947528 words of memory out of 5000000
+ 1948528 words of memory out of 5000000
  48538 multiletter control sequences out of 15000+600000
  588145 words of font info for 162 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 117i,11n,131p,1006b,675s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 117i,11n,131p,1006b,775s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2023/texmf-dist/fonts/type1/public/inconsolata/Inconsolata-zi4r.p
 fb><c:/texlive/2023/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb><c:/texlive/
 2023/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/texlive/2023/texmf-dist
 /fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on RJwrapper.pdf (3 pages, 130485 bytes).
+Output written on RJwrapper.pdf (3 pages, 129708 bytes).
 PDF statistics:
  134 PDF objects out of 1000 (max. 8388607)
  114 compressed objects within 2 object streams
