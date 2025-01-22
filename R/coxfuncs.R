@@ -179,7 +179,7 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
 
   out = list(measure = measure, R = R, Rtheta2 = Rtheta2, RS = RS, f.new = c(Rtheta %*% fit$c.new),
              zw.new = zw, w.new = w, sw.new = sw, b.new = fit$b.new, c.new = fit$c.new,
-             ACV_pen = ACV_pen, optlambda = optlambda)
+             optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
