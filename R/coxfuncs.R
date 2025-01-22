@@ -101,8 +101,8 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
 
       if(cv == "GCV"){
         err = te_n * sum((time[te_id] - testf)^2)
-        inv.mat = ginv(te_Rtheta %*% te_Rtheta + cand.lambda[k] * Rtheta2)
-        df = sum(diag(te_Rtheta %*% inv.mat %*% te_Rtheta))
+        inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + cand.lambda[k] * Rtheta2)
+        df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
         measure[fid, k] = err / (te_n - df)^2
         }
 
@@ -177,12 +177,9 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
 
   fit = .Call("wls_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cossonet")
 
-  inv.mat = ginv(Rtheta %*% Rtheta + optlambda * Rtheta2)
-  df = sum(diag(Rtheta %*% inv.mat %*% Rtheta))
-
   out = list(measure = measure, R = R, Rtheta2 = Rtheta2, RS = RS, f.new = c(Rtheta %*% fit$c.new),
              zw.new = zw, w.new = w, sw.new = sw, b.new = fit$b.new, c.new = fit$c.new,
-             ACV_pen = ACV_pen, df = df, optlambda = optlambda)
+             ACV_pen = ACV_pen, optlambda = optlambda)
 
   rm(K)
   rm(Rtheta)
@@ -487,8 +484,8 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
 
       if(cv == "GCV"){
         err = te_n * sum((time[te_id] - fhat)^2)
-        inv.mat = ginv(te_Rtheta %*% te_Rtheta + lambda_theta[k] * model$Rtheta2)
-        df = sum(diag(te_Rtheta %*% inv.mat %*% te_Rtheta))
+        inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + lambda_theta[k] * model$Rtheta2)
+        df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
         measure[fid, k] = err / (te_n - df)^2
       }
 
