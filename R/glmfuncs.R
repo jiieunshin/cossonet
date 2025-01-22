@@ -367,7 +367,7 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
          angle = 90, code = 3, length = 0.1, col = "darkgray")
   abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
 
-  theta.new = .Call("glm_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma))
+  theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma), PACKAGE = "cossonet")
 
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 

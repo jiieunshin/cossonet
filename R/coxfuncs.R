@@ -531,7 +531,7 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
   w <- - attributes(coxgrad_results)$diag_hessian
   z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
   # theta.new <- .Call("cox_theta_step", init.theta, G, as.integer(n), ncol(G), z, w, optlambda, gamma)
-  theta.new = .Call("glm_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma))
+  theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma), PACKAGE = "cossonet")
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.adj)
