@@ -100,7 +100,7 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
 
 
       if(cv == "GCV"){
-        err = te_n * sum((time[te_id] - testf)^2)
+        err = te_n * sum(w * (time[te_id] - testf)^2)
         inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + cand.lambda[k] * Rtheta2)
         df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
         measure[fid, k] = err / (te_n - df)^2
@@ -483,7 +483,7 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
       fhat = c(te_Rtheta %*% model$c.new + model$b.new)
 
       if(cv == "GCV"){
-        err = te_n * sum((time[te_id] - fhat)^2)
+        err = te_n * sum(w * (time[te_id] - fhat)^2)
         inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + lambda_theta[k] * model$Rtheta2)
         df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
         measure[fid, k] = err / (te_n - df)^2
