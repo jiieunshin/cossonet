@@ -469,7 +469,7 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
       z <- (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G[tr_id,] %*% t(G[basis.id, ]) %*% model$c.new
       # theta.new <- .Call("cox_theta_step", init.theta, G[tr_id, ], as.integer(tr_n), ncol(G), z, w, lambda_theta[k], gamma)
 
-      theta.new = .Call("glm_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma))
+      theta.new = .Call("wls_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
       # fit = gettheta.cd(rep(1, d), model$f.new[tr_id], G[tr_id, ], G[basis.id, ], time[tr_id], status[tr_id], model$c.new,
