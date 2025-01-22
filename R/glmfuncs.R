@@ -178,15 +178,14 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
 
   cat("mse:", round(m, 4), "\n\n")
 
-  rm(K)
-  rm(Rtheta)
-  rm(Rtheta2)
-  rm(Rw)
-
   out = list(measure = measure, R = R, Rtheta2 = Rtheta2, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
              c.new = c.new, optlambda = optlambda, conv = TRUE)
 
+  rm(K)
+  rm(Rtheta)
+  rm(Rtheta2)
+  rm(Rw)
 
   return(out)
 }
