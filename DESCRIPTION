@@ -1,5 +1,5 @@
-Package: cdcosso
-Title: cdcosso:An Integrated R-Package for COSSO via coordinate descent
+Package: cossonet
+Title: cossomet:An Integrated R-Package for COSSO via coordinate descent
 Version: 1.0
 Authors@R: person("Jieun", "Shin", email = "jieunstat@uos.ac.kr", role = c("aut", "cre"))
 Description: This package provides functions for data analysis and modeling.

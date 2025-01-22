@@ -33,7 +33,7 @@
 # lambda0 = exp(seq(log(2^{-4}), log(2^{6}), length.out = 20))
 # lambda_theta = exp(seq(log(2^{-6}), log(2^{-4}), length.out = 20))
 # wt = rep(1, ncol(x))
-cdcosso.cox = function (x, time, status, cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+cossonet.cox = function (x, time, status, cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
 {
   n = length(time)
   p = length(wt)

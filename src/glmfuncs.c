@@ -12,7 +12,7 @@ void R_init_markovchain(DllInfo *dll) {
 
 
 // Define the sspline_cd fulention
-SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N, SEXP lambda0) {
+SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N, SEXP lambda0) {
   int tr_nc = INTEGER(tr_n)[0];
   int Nc = INTEGER(N)[0];
 
@@ -157,7 +157,7 @@ SEXP glm_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
 }
 
 
-SEXP glm_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r1, SEXP r2) {
+SEXP wls_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r1, SEXP r2) {
   // Convert R vectors to C arrays
   int nc = INTEGER(n)[0]; // Extract the value of n
   int dc = INTEGER(d)[0]; // Extract the value of d

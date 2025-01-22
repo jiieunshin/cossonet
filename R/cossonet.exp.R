@@ -23,7 +23,7 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-cdcosso.glm = function (x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale)
+cossonet.exp = function (x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale)
 {
   n = length(y)
   p = length(wt)

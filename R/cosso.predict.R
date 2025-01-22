@@ -10,7 +10,7 @@
 #' @return A list containing the predicted value for the new dataset.
 #' @export
 
-predict.cdcosso = function(model, testx)
+cossonet.predict = function(model, testx)
 {
   family = model$family
   if(family == "gaussian") obj = gaussian()

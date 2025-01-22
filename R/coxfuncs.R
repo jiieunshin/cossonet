@@ -82,7 +82,7 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
       Rw = tr_Rtheta * w
       sw = sqrt(w)
 
-      fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cdcosso")
+      fit = .Call("wls_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cossonet")
       b.new = fit$b.new
       c.new = fit$c.new
 
@@ -175,7 +175,7 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
   Rw = Rtheta * w
   sw = sqrt(w)
 
-  fit = .Call("glm_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cdcosso")
+  fit = .Call("wls_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cossonet")
 
   inv.mat = ginv(Rtheta %*% Rtheta + optlambda * Rtheta2)
   df = sum(diag(Rtheta %*% inv.mat %*% Rtheta))

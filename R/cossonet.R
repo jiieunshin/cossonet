@@ -37,7 +37,7 @@
 # algo = "CD"
 # lambda0 = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20))
 # lambda_theta = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20))
-cdcosso = function (x,
+cossonet = function (x,
                     y,
                     f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
@@ -100,8 +100,8 @@ cdcosso = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cdcosso.glm(x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
-               Cox = cdcosso.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+               glm = cossonet.exp(x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
+               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
   )
 
   attr(out, "class") = "cdcosso"
