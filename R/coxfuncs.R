@@ -83,10 +83,9 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
       sw = sqrt(w)
 
       fit = .Call("wls_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cossonet")
-      b.new = fit$b.new
       c.new = fit$c.new
 
-      testf = c(b.new + te_Rtheta %*% c.new)
+      testf = c(te_Rtheta %*% c.new)
 
       # fit <- .Call("glm_c_step", c.init, tr_Rtheta, Rtheta2, as.integer(tr_n), as.integer(nbasis), z, w, cand.lambda[k])
 
@@ -178,7 +177,7 @@ cv.getc.subset = function(K, time, status, cv, nbasis, basis.id, mscale, cand.la
   fit = .Call("wls_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cossonet")
 
   out = list(measure = measure, R = R, Rtheta2 = Rtheta2, RS = RS, f.new = c(Rtheta %*% fit$c.new),
-             zw.new = zw, w.new = w, sw.new = sw, b.new = fit$b.new, c.new = fit$c.new,
+             zw.new = zw, w.new = w, sw.new = sw, c.new = fit$c.new,
              optlambda = optlambda)
 
   rm(K)
@@ -480,7 +479,7 @@ cv.gettheta.subset = function (model, K, time, status, cv, nbasis, basis.id, msc
       te_Rtheta = wsGram(te_R, theta.adj/mscale^2)
 
       # fhat = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
-      fhat = c(te_Rtheta %*% model$c.new + model$b.new)
+      fhat = c(te_Rtheta %*% model$c.new)
 
       if(cv == "GCV"){
         err = te_n * sum(w * (time[te_id] - fhat)^2)

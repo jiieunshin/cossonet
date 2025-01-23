@@ -328,7 +328,7 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
       testf = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
 
       if(cv == "GCV"){
-        err = te_n * sum(w * (y[te_id] - testf)^2)
+        err = te_n * sum(model$w.new * (y[te_id] - testf)^2)
         inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + lambda_theta[k] * model$Rtheta2)
         df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
         measure[fid, k] = err / (te_n - df)^2
