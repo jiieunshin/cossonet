@@ -56,20 +56,7 @@ data_generation = function(n, p, rho, SNR,
   if(missing(rho)) rho = 0.8
   if(missing(SNR)) SNR = 8
 
-  if(p <= 5) stop("dimension size should be larger than 5.")
-
-  # Sigma = matrix(rho, 4, 4)
-  # diag(Sigma) = 1
-
-  # Sigma = matrix(1, 4, 4)
-  # for(j in 1:4){
-  #   for(k in 1:4){
-  #     Sigma[j, k] = rho^abs(j-k)
-  #   }
-  # }
-
-
-  # x = apply(rmvnorm(n, sigma = Sigma), 2, rescale)
+  if(p <= 4) stop("dimension size should be larger than 4.")
 
   t = 2
   pp = 4
@@ -90,19 +77,12 @@ data_generation = function(n, p, rho, SNR,
   # curve(f3, 0, 1)
   # curve(f4, 0, 1)
   # par(mfrow = c(1,1))
-  # f = function(t) t/2 - (2 * t - 1)^2 + (sin(2 * pi * t) / (2 - sin(2 * pi * t))) - (0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3) + 1.5
-  # curve(f, 0, 1)
 
   if(response == "regression"){
     V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
     f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    # V_sig = var(5 * f1(x[,1])) + var(3 * f2(x[,2])) + var(4 * f3(x[,3])) + var(6 * f4(x[,4]))
-    # sd = sqrt(V_sig / SNR)
-    # f = 5 * f1(x[,1]) + 3 * f2(x[,2]) + 4 * f3(x[,3]) + 6 * f4(x[,4]) + rnorm(n, 0, sd)
-
-    # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
 
@@ -114,13 +94,11 @@ data_generation = function(n, p, rho, SNR,
     sd = sqrt(V_sig / SNR)
     f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) - 10 + rnorm(n, 0, sd)
 
-    # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
     x = cbind(x, x_nois)
     prob = exp(f)/(exp(f) + 1)
     y = rbinom(n, 1, prob)
-    # plot(prob)
-    # print(table(y))
+
     out = list(x = x, f = f, y = y)
   }
 
@@ -129,19 +107,13 @@ data_generation = function(n, p, rho, SNR,
     sd = sqrt(V_sig / SNR)
     f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    plot(f)
-
-    # x_nois = apply(matrix(rnorm(n * (p-4), 0, sd/sqrt(p-4)), n, (p-4)), 2, rescale)
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
 
-    # f2 = 2 * (log(f) / max(log(f)))
-    f = f / 3
-    # f2 = (exp(f) / (1 + exp(f)) + 1)
-    # f2 = (f - min(f)) / (min(f) - max(f)) * 2
-    plot(f)
+    f = f / 4
     mu = exp(f)
     y = rpois(n, mu)
+
     out = list(x = x, f = f, y = y)
   }
 
@@ -156,12 +128,9 @@ data_generation = function(n, p, rho, SNR,
     surTime = rexp(n, exp(f))
     cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
 
-
     y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
 
     out = list(x = x, f = f, y = y)
   }
   return(out)
 }
-
-# library(tmvtnorm)

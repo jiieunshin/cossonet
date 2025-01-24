@@ -8,7 +8,6 @@ cossonet.cox(
   x,
   time,
   status,
-  cv,
   nbasis,
   basis.id,
   wt,
@@ -26,8 +25,6 @@ cossonet.cox(
 \item{time}{Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).}
 
 \item{status}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
-
-\item{cv}{measure for cross-validation}
 
 \item{nbasis}{The number of basis.}
 

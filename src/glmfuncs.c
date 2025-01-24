@@ -12,7 +12,7 @@ void R_init_markovchain(DllInfo *dll) {
 
 
 // Define the sspline_cd fulention
-SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N, SEXP lambda0) {
+SEXP wls_c_step(SEXP zw, SEXP Uw, SEXP Qw, SEXP cw, SEXP sw, SEXP tr_n, SEXP N, SEXP lambda0) {
   int tr_nc = INTEGER(tr_n)[0];
   int Nc = INTEGER(N)[0];
 
@@ -20,15 +20,13 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
 
   // Convert R vectors to C arrays
   double *zw_c = REAL(zw);
-  double *Rw_c = REAL(Rw);
-  double *Rw2_c = REAL(Rw2);
+  double *Uw_c = REAL(Uw);
+  double *Qw_c = REAL(Qw);
   double *cw_c = REAL(cw);
   double *sw_c = REAL(sw);
   double lambda0_c = REAL(lambda0)[0];
 
   // Define variables
-  // double *cw_new = (double *)malloc(nc * sizeof(double));
-  // double *c_new = (double *)malloc(nc * sizeof(double));
   double *pow_Rc = (double *)malloc(Nc * sizeof(double));
   double cw_new;
 
@@ -37,8 +35,6 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   }
 
   for(int k = 0; k < Nc; k++) {
-    // cw_new[k] = 0;
-    // c_new[k] = 0;
     pow_Rc[k] = 0;
   }
 
@@ -46,13 +42,12 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   for(int j = 0; j < Nc; ++j) { // iterate by column
     double add = 0.0;
     for(int k = 0; k < tr_nc; ++k) { // iterate by row
-      add += Rw_c[j * tr_nc + k] * Rw_c[j * tr_nc + k];
+      add += Uw_c[j * tr_nc + k] * Uw_c[j * tr_nc + k];
     }
     pow_Rc[j] = 2 * add;
   }
 
   int iter = 0;
-  // double min_diff = 10;
   double diff = 0.0;
   double avg_diff;
   double sum3;
@@ -71,22 +66,22 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
         double Rc1 = 0.0;
         for (int l = 0; l < Nc; ++l) {
           if (l != j) {
-            Rc1 += Rw_c[l * tr_nc + k] * cw_c[l];
+            Rc1 += Uw_c[l * tr_nc + k] * cw_c[l];
           }
         }
-        V1 += (zw_c[k] - Rc1 - b_new * sw_c[k]) * Rw_c[j * tr_nc + k];
+        V1 += (zw_c[k] - Rc1 - b_new * sw_c[k]) * Uw_c[j * tr_nc + k];
       }
       V1 = 2 * V1;
 
       double V2 = 0.0;
       for (int l = 0; l < Nc; ++l) {
         if (l != j) {
-          V2 += Rw2_c[l * Nc + j] * cw_c[l];
+          V2 += Qw_c[l * Nc + j] * cw_c[l];
         }
       }
       V2 = lambda0_c * V2;
 
-      double V4 = lambda0_c * Rw2_c[j * Nc + j];
+      double V4 = lambda0_c * Qw_c[j * Nc + j];
 
       cw_new = (V1 - V2) / (pow_Rc[j] + V4);
 
@@ -110,7 +105,7 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
     for (int k = 0; k < tr_nc; ++k) { // iterate by row
       double Rc = 0.0;
       for (int l = 0; l < Nc; ++l) { // iterate by col
-        Rc += Rw_c[l * tr_nc + k] * cw_c[l];
+        Rc += Uw_c[l * tr_nc + k] * cw_c[l];
       }
       sum3 += (zw_c[k] - Rc) * sw_c[k];
       sum4 += sw_c[k] * sw_c[k];
@@ -127,10 +122,6 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
     }
   } // End outer iteration
 
-  // Rprintf("min_diff: %f\n", avg_diff);
-  // Rprintf("iter: %d\n", iter);
-
-
   // Set values in result SEXP
   SET_VECTOR_ELT(result, 0, allocVector(REALSXP, Nc));
   SET_VECTOR_ELT(result, 1, ScalarReal(b_new));
@@ -138,7 +129,6 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   // Copy values to result SEXP
   for (int i = 0; i < Nc; ++i) {
     REAL(VECTOR_ELT(result, 0))[i] = cw_c[i];
-    // REAL(VECTOR_ELT(result, 2))[i] = c_new[i];
   }
 
   // Set names for the list elements
@@ -148,11 +138,9 @@ SEXP wls_c_step(SEXP zw, SEXP Rw, SEXP Rw2, SEXP cw, SEXP sw, SEXP tr_n, SEXP N,
   setAttrib(result, R_NamesSymbol, name_ssp);
 
   // Free dynamically allocated memory
-  // free(cw_new);
   free(pow_Rc);
-  // free(c_new);
 
-  UNPROTECT(2); // Unprotect result
+  UNPROTECT(2);
   return result;
 }
 
@@ -168,20 +156,15 @@ SEXP wls_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
   double r1_c = REAL(r1)[0];
   double r2_c = REAL(r2)[0];
 
-  // SEXP out = PROTECT(allocVector(VECSXP, 3));
-
   // Define variables
-  // double *theta_new = (double *)malloc(dc * sizeof(double));
   double *pow_theta = (double *)malloc(dc * sizeof(double));
   double theta_new;
 
-  // 메모리 할당 실패 시 처리 방법
   if (pow_theta == NULL) {
     error("Memory allocation failed for pow_theta");
   }
 
   for (int k = 0; k < dc; ++k){
-    // theta_new[k] = 0;
     pow_theta[k] = 0;
   }
 
@@ -195,7 +178,6 @@ SEXP wls_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
 
   // outer iteration
   int iter = 0;
-  // double min_diff = 10.0;
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
@@ -215,12 +197,9 @@ SEXP wls_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
         V1 += (uw_c[k] - GT) * Gw_c[j * nc + k];
       }
       V1 = V1 - h_c[j];
-      // V1 = 2 * V1;
-
 
       if(V1 > 0 && r1_c < fabs(V1)) {
         theta_new = (V1 - r1_c) / (pow_theta[j] + r2_c);
-        // theta_new = V1 / (pow_theta[j] + nc * lambda_theta_c * (1-gamma_c)) / 2;
       } else {
         theta_new = 0;
       }
@@ -251,16 +230,6 @@ SEXP wls_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
       theta_c[k] = 0;
     }
   }
-
-  // print
-  // Rprintf("\n iter: %d \n", iter);
-  // for (int k = 0; k < dc; ++k){
-  //   Rprintf("theta_new: %g \n", theta_c[k]);
-  // }
-  // Rprintf("\n max_diff: %d \n", max_diff);
-
-  // Rprintf("min_diff: %f\n", avg_diff);
-  // Rprintf("iter: %d\n", iter);
 
   // result
   SEXP theta_new_r = PROTECT(allocVector(REALSXP, dc));

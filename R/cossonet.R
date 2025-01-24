@@ -11,7 +11,6 @@
 #' @param family The response type
 #' @param wt The weights of the predictors. The default is `rep(1,ncol(x))`.
 #' @param scale If TRUE, continuous predictors are rescaled to the interval `[0,1]`. The default is `TRUE`.
-#' @param cv Measurement for cross-validation
 #' @param nbasis The number of "knots" to choose from. If basis.id is provided, it is ignored.
 #' @param basis.id An index that specifies the selected "knot".
 #' @param kernel The kernel function. Four types are provided: `linear` (default), `gaussian`, `poly`, `spline`.
@@ -24,26 +23,12 @@
 #' @return A list containing information about the fitted model.
 #' @export
 
-# x = tr_x
-# y = tr_y
-# obj = binomial()
-# gamma = 1
-# type = "spline"
-# one.std = TRUE
-# scale = T
-# wt = rep(1, ncol(x))
-# kparam = 1
-# nfolds =5
-# algo = "CD"
-# lambda0 = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20))
-# lambda_theta = exp(seq(log(2^{-6}), log(2^{2}), length.out = 20))
 cossonet = function (x,
                     y,
                     f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
                     wt = rep(1, ncol(x)),
                     scale = TRUE,
-                    cv = NULL,
                     nbasis,
                     basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
@@ -83,12 +68,6 @@ cossonet = function (x,
 
   if(effect == "interaction") kernel = paste0(kernel, "2")
 
-  if(is.null(cv) & family != "Cox")
-    cv = "KL"
-
-  if(is.null(cv) & family == "Cox")
-    cv = "ACV"
-
   if(scale)
     x = apply(x, 2, rescale)
 
@@ -100,8 +79,8 @@ cossonet = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cossonet.exp(x, y, f, cv, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
-               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), cv, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+               glm = cossonet.exp(x, y, f, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
+               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
   )
 
   attr(out, "class") = "cdcosso"

@@ -8,7 +8,6 @@ cossonet.exp(
   x,
   y,
   f,
-  cv,
   wt,
   nbasis,
   basis.id,
@@ -27,8 +26,6 @@ cossonet.exp(
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
 
 \item{f}{The true function.}
-
-\item{cv}{measure for cross-validation}
 
 \item{wt}{A weight vector for components.}
 

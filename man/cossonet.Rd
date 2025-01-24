@@ -11,7 +11,6 @@ cossonet(
   family = c("gaussian", "binomial", "poisson", "Cox"),
   wt = rep(1, ncol(x)),
   scale = TRUE,
-  cv = NULL,
   nbasis,
   basis.id,
   kernel = c("linear", "gaussian", "poly", "spline"),
@@ -42,8 +41,6 @@ cossonet(
 \item{wt}{The weights of the predictors. The default is \code{rep(1,ncol(x))}.}
 
 \item{scale}{If TRUE, continuous predictors are rescaled to the interval \verb{[0,1]}. The default is \code{TRUE}.}
-
-\item{cv}{Measurement for cross-validation}
 
 \item{nbasis}{The number of "knots" to choose from. If basis.id is provided, it is ignored.}
 

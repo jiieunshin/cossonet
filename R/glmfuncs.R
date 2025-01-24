@@ -1,7 +1,4 @@
-# cand.lambda = lambda0
-# mscale = wt
-# obj = binomial()
-cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
+cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -9,30 +6,29 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
   n <- length(y)
   len = length(cand.lambda)
 
-  R = array(NA, c(n, nbasis, d))
+  Uv = array(NA, c(n, nbasis, d))
   for(j in 1:d){
-    R[, , j] = K$K[[j]][, basis.id]
+    Uv[, , j] = K$K[[j]][, basis.id]
   }
+  U <- combine_kernel(Uv, mscale)
 
-  Rtheta <- combine_kernel(R, mscale)
-  R2 = array(NA, c(nbasis, nbasis, d))
+  Qv = array(NA, c(nbasis, nbasis, d))
   for(j in 1:d){
-    R2[, , j] = K$K[[j]][basis.id, basis.id]
+    Qv[, , j] = K$K[[j]][basis.id, basis.id]
   }
-  Rtheta2 <- combine_kernel(R2, mscale)
+  Q <- combine_kernel(Qv, mscale)
 
-  # initialize
-  EigRtheta2 = eigen(Rtheta2)
+  EigQ = eigen(Q)
   loop = 0
-  while (min(EigRtheta2$values) < 0 & loop < 10) {
+  while (min(EigQ$values) < 0 & loop < 10) {
     loop = loop + 1
-    Rtheta2 = Rtheta2 + 1e-08 * diag(nbasis)
-    EigRtheta2 = eigen(Rtheta2)
+    Q = Q + 1e-08 * diag(nbasis)
+    EigQ = eigen(Q)
   }
   if (loop == 10)
-    EigRtheta2$values[EigRtheta2$values < 0] = 1e-08
-  pseudoX = Rtheta %*% EigRtheta2$vectors %*% diag(sqrt(1/EigRtheta2$values))
+    EigQ$values[EigQ$values < 0] = 1e-08
 
+  # cross-validation
   fold = cvsplitID(n, 5, y, family = obj$family)
   measure <- matrix(NA, 5, len)
   for(fid in 1:5){
@@ -45,65 +41,62 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    tr_R = array(NA, c(tr_n, nbasis, d))
+    tr_U = array(NA, c(tr_n, nbasis, d))
     for(j in 1:d){
-      tr_R[, , j] = K$K[[j]][tr_id, basis.id]
+      tr_U[, , j] = K$K[[j]][tr_id, basis.id]
     }
+    tr_U <- combine_kernel(tr_U, mscale)
 
-    tr_Rtheta <- combine_kernel(tr_R, mscale)
-
-    te_R = array(NA, c(te_n, nbasis, d))
+    te_U = array(NA, c(te_n, nbasis, d))
     for(j in 1:d){
-      te_R[, , j] = K$K[[j]][te_id, basis.id]
+      te_U[, , j] = K$K[[j]][te_id, basis.id]
     }
+    te_U <- combine_kernel(te_U, mscale)
 
-    te_Rtheta <- combine_kernel(te_R, mscale)
+    pseudoX = tr_U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
 
     for (k in 1:len){
 
-      c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
-      # cw = c.init / sqrt(w)[basis.id]
+      c.init = as.vector(glmnet(pseudoX, y[tr_id], family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
 
-      ff = tr_Rtheta %*% c.init
+      ff = tr_U %*% c.init
       mu = obj$linkinv(ff)
       w = as.vector(obj$variance(mu))
       z = ff + (y[tr_id] - mu) / w
 
 
       zw = z * sqrt(w)
-      Rw = tr_Rtheta * w
+      Rw = tr_U * w
       sw = sqrt(w)
 
-      fit = .Call("wls_c_step", zw, Rw, Rtheta2, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cossonet")
+      fit = .Call("wls_c_step", zw, Rw, Q, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cossonet")
       b.new = fit$b.new
       c.new = fit$c.new
 
-      testf = c(b.new + te_Rtheta %*% c.new)
+      testf = c(b.new + te_U %*% c.new)
 
-      if(cv == "GCV"){
-        err = te_n * sum(w * (y[te_id] - testf)^2)
-        inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + cand.lambda[k] * Rtheta2)
-        df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
-        measure[fid, k] = err / (te_n - df)^2
-      }
+      err = te_n * sum(w * (y[te_id] - testf)^2)
+      inv.mat = ginv(t(te_U) %*% te_U + cand.lambda[k] * Q)
+      df = sum(diag(te_U %*% inv.mat %*% t(te_U)))
+      measure[fid, k] = err / (te_n - df)^2
 
-      if(cv == "mse"){
-        testmu = obj$linkinv(testf)
+      # if(cv == "mse"){
+      #   testmu = obj$linkinv(testf)
+      #
+      #   if(obj$family == "gaussian") measure[fid, k] <- mean((testf - y[te_id])^2)
+      #   if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
+      #   if(obj$family == "poisson") measure[fid, k] <- mean((y[te_id] - testf)^2)
+      # }
 
-        if(obj$family == "gaussian") measure[fid, k] <- mean((testf - y[te_id])^2)
-        if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-        if(obj$family == "poisson") measure[fid, k] <- mean((y[te_id] - testf)^2)
-      }
-
-      if(cv == "KL"){
-        true_mu = obj$linkinv(f[te_id])
-        measure[fid, k] <- KL(testf, true_mu, obj)
-      }
+      # if(cv == "KL"){
+      #   true_mu = obj$linkinv(f[te_id])
+      #   measure[fid, k] <- KL(testf, true_mu, obj)
+      # }
 
     }
   }
 
-  # plotting error bar
+  # smoothing parameter selection
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"
   }
@@ -114,9 +107,8 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
     main = "Poisson Family"
   }
 
-  ylab = expression("CKL(" * lambda[0] * ")")
+  ylab = expression("GCV(" * lambda[0] * ")")
 
-  # optimal lambda1
   measure_mean = colMeans(measure, na.rm = T)
   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
 
@@ -146,28 +138,26 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
     abline(v = log(optlambda), lty = 2, col = "darkgray")
   }
 
-  rm(tr_R)
-  rm(te_R)
-  rm(tr_Rtheta)
-  rm(te_Rtheta)
+  rm(tr_U)
+  rm(te_U)
 
+  pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
   c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
-  # cw = c.init / sqrt(w)[basis.id]
 
-  ff = Rtheta %*% c.init
+  ff = U %*% c.init
   mu = obj$linkinv(ff)
   w = as.vector(obj$variance(mu))
   z = ff + (y - mu) / w
 
   zw = z * sqrt(w)
-  Rw = Rtheta * w
+  Uw = U * w
   sw = sqrt(w)
 
-  fit = .Call("wls_c_step", zw, Rw, Rtheta2, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cossonet")
+  fit = .Call("wls_c_step", zw, Uw, Q, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cossonet")
   b.new = fit$b.new
   c.new = fit$c.new
 
-  f.new = c(b.new + Rtheta %*% c.new)
+  f.new = c(b.new + U %*% c.new)
   mu.new = obj$linkinv(f.new)
   w.new = obj$variance(mu.new)
   z.new = f.new + (y - mu.new) / w.new
@@ -178,14 +168,13 @@ cv.sspline.subset = function (K, y, f, cv, nbasis, basis.id, mscale, cand.lambda
 
   cat("mse:", round(m, 4), "\n\n")
 
-  out = list(measure = measure, R = R, Rtheta2 = Rtheta2, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
+  out = list(measure = measure, U = U, Q = Q, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
              c.new = c.new, optlambda = optlambda, conv = TRUE)
 
   rm(K)
-  rm(Rtheta)
-  rm(Rtheta2)
-  rm(Rw)
+  rm(U)
+  rm(Q)
 
   return(out)
 }
@@ -263,10 +252,7 @@ sspline.QP = function (R, y, f, lambda0, obj, c.init)
   return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
-# model = sspline_cvfit
-# lambda0 = model$optlambda
-# mscale = wt
-cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
+cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -276,19 +262,19 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
   # solve theta
   Gw <- matrix(0, n, d)
   for (j in 1:d) {
-    Gw[, j] = ((model$R[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
+    Gw[, j] = ((model$U[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
 
   G <- matrix(0, n, d)
   for (j in 1:d) {
-    G[, j] = (model$R[, , j] %*% model$c.new) * (mscale[j]^(-2))
+    G[, j] = (model$U[, , j] %*% model$c.new) * (mscale[j]^(-2))
   }
 
   uw = model$zw.new - model$sw.new
 
   h = rep(0, d)
   for (j in 1:d) {
-    h[j] = n * lambda0 * ((t(model$c.new) %*% model$R[basis.id, , j]) %*% model$c.new)
+    h[j] = n * lambda0 * ((t(model$c.new) %*% model$U[basis.id, , j]) %*% model$c.new)
   }
 
   init.theta = rep(1, d)
@@ -307,50 +293,52 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    tr_R = array(NA, c(tr_n, nbasis, d))
+    tr_Uv = array(NA, c(tr_n, nbasis, d))
     for(j in 1:d){
-      tr_R[, , j] = K$K[[j]][tr_id, basis.id]
+      tr_Uv[, , j] = K$K[[j]][tr_id, basis.id]
     }
 
-    te_R = array(NA, c(te_n, nbasis, d))
+    te_Uv = array(NA, c(te_n, nbasis, d))
     for(j in 1:d){
-      te_R[, , j] = K$K[[j]][te_id, basis.id]
+      te_Uv[, , j] = K$K[[j]][te_id, basis.id]
     }
 
     for (k in 1:len) {
       theta.new = .Call("wls_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
-      # save_theta[[k]] <- theta.adj
 
-      tr_Rtheta = wsGram(tr_R, theta.adj/mscale^2)
-      te_Rtheta = wsGram(te_R, theta.adj/mscale^2)
+      tr_U = wsGram(tr_Uv, theta.adj/mscale^2)
+      te_U = wsGram(te_Uv, theta.adj/mscale^2)
 
-      testf = c(wsGram(te_R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+      testf = c(wsGram(te_U, theta.adj/mscale^2) %*% model$c.new + model$b.new)
 
-      if(cv == "GCV"){
-        err = te_n * sum(model$w.new * (y[te_id] - testf)^2)
-        inv.mat = ginv(t(te_Rtheta) %*% te_Rtheta + lambda_theta[k] * model$Rtheta2)
-        df = sum(diag(te_Rtheta %*% inv.mat %*% t(te_Rtheta)))
-        measure[fid, k] = err / (te_n - df)^2
-      }
+      err = te_n * sum(model$w.new * (y[te_id] - testf)^2)
+      inv.mat = ginv(t(te_U) %*% te_U + lambda_theta[k] * model$Q)
+      df = sum(diag(te_U %*% inv.mat %*% t(te_U)))
+      measure[fid, k] = err / (te_n - df)^2
 
-      if(cv == "mse"){
-        testmu = obj$linkinv(testf)
+      # if(cv == "mse"){
+      #   testmu = obj$linkinv(testf)
+      #
+      #   if(obj$family == "gaussian") measure[fid, k] <- mean((testf - y[te_id])^2)
+      #   if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
+      #   if(obj$family == "poisson") measure[fid, k] <- mean((y[te_id] - testf)^2)
+      # }
 
-        if(obj$family == "gaussian") measure[fid, k] <- mean((testf - y[te_id])^2)
-        if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
-        if(obj$family == "poisson") measure[fid, k] <- mean((y[te_id] - testf)^2)
-      }
-
-      if(cv == "KL"){
-        true_mu = obj$linkinv(f[te_id])
-        measure[fid, k] <- KL(testf, true_mu, obj)
-      }
+      # if(cv == "KL"){
+      #   true_mu = obj$linkinv(f[te_id])
+      #   measure[fid, k] <- KL(testf, true_mu, obj)
+      # }
 
     }
   }
 
-  # plotting error bar
+  rm(tr_Uv)
+  rm(te_Uv)
+  rm(tr_U)
+  rm(te_U)
+
+  # smoothing parameter selection
   if(obj$family == 'gaussian'){
     main = "Gaussian Family"
   }
@@ -376,7 +364,7 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
   std_id = max(cand_ids)
   optlambda = lambda_theta[std_id]
 
-  ylab = expression("CKL(" * lambda[theta] * ")")
+  ylab = expression("GCV(" * lambda[theta] * ")")
 
 
   plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
@@ -387,10 +375,9 @@ cv.nng.subset = function(model, K, y, f, cv, nbasis, basis.id, mscale, lambda0, 
   abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
 
   theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma), PACKAGE = "cossonet")
-
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-  f.new =  c(wsGram(model$R, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+  f.new =  c(wsGram(model$U, theta.adj/mscale^2) %*% model$c.new + model$b.new)
   mu.new = obj$linkinv(f.new)
 
   if(obj$family == "gaussian") m = mean((f.new - y)^2)
