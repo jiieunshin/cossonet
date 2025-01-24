@@ -213,11 +213,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    tr_Uv = array(NA, c(tr_n, nbasis, d))
-    for(j in 1:d){
-      tr_Uv[, , j] = K$K[[j]][tr_id, basis.id]
-    }
-
     te_Uv = array(NA, c(te_n, nbasis, d))
     for(j in 1:d){
       te_Uv[, , j] = K$K[[j]][te_id, basis.id]
@@ -233,9 +228,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       theta.new = .Call("wls_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-      tr_U = wsGram(tr_Uv, theta.adj/mscale^2)
       te_U = wsGram(te_Uv, theta.adj/mscale^2)
-
       fhat = c(te_U %*% model$c.new)
 
       err = te_n * sum(w * (time[te_id] - fhat)^2)
@@ -251,9 +244,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     }
   }
 
-  rm(tr_Uv)
   rm(te_Uv)
-  rm(tr_U)
   rm(te_U)
 
   # smoothing parameter selection
@@ -285,14 +276,16 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   eta = exp(G %*% init.theta)
   coxgrad_results <- coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w = - attributes(coxgrad_results)$diag_hessian
-  z <= (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
+  z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0) + lambda0 * G %*% t(G[basis.id, ]) %*% model$c.new
 
   theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma), PACKAGE = "cossonet")
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.adj)
 
-  rm()
+  rm(G)
+  rm(Gw)
+
   return(out)
 }
 

@@ -187,7 +187,6 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   n = length(y)
   d = length(mscale)
 
-  # solve theta
   Gw <- matrix(0, n, d)
   for (j in 1:d) {
     Gw[, j] = ((model$Uv[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
@@ -205,12 +204,12 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
     h[j] = n * lambda0 * ((t(model$c.new) %*% model$Uv[basis.id, , j]) %*% model$c.new)
   }
 
+  # cross-validation
   init.theta = rep(1, d)
   len = length(lambda_theta)
   measure <- matrix(NA, 5, len)
   fold = cvsplitID(n, 5, y, family = obj$family)
 
-  # save_theta <- list()
   for(fid in 1:5){
     tr_id = as.vector(fold[, -fid])
     te_id = fold[, fid]
@@ -221,10 +220,6 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    tr_Uv = array(NA, c(tr_n, nbasis, d))
-    for(j in 1:d){
-      tr_Uv[, , j] = K$K[[j]][tr_id, basis.id]
-    }
 
     te_Uv = array(NA, c(te_n, nbasis, d))
     for(j in 1:d){
@@ -235,10 +230,8 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       theta.new = .Call("wls_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-      tr_U = wsGram(tr_Uv, theta.adj/mscale^2)
       te_U = wsGram(te_Uv, theta.adj/mscale^2)
-
-      testf = c(wsGram(te_U, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+      testf = c(te_U %*% model$c.new + model$b.new)
 
       err = te_n * sum(model$w.new * (y[te_id] - testf)^2)
       inv.mat = ginv(t(te_U) %*% te_U + lambda_theta[k] * model$Q)
@@ -261,9 +254,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
     }
   }
 
-  rm(tr_Uv)
   rm(te_Uv)
-  rm(tr_U)
   rm(te_U)
 
   # smoothing parameter selection
@@ -315,5 +306,9 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   cat("mse:", round(m, 4), "\n\n")
 
   out = list(cv_error = measure, optlambda_theta = optlambda, gamma = gamma, theta.new = theta.new)
+
+  rm(G)
+  rm(Gw)
+
   return(out)
 }
