@@ -158,12 +158,14 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambd
 
   fit = .Call("wls_c_step", zw, Uw, Q, c.init, sw, n, nbasis, n * optlambda, PACKAGE = "cossonet")
 
-  out = list(measure = measure, U = U, Q = Q, RS = RS, f.new = c(U %*% fit$c.new),
+  out = list(measure = measure, Uv = Uv, Q = Q, RS = RS, f.new = c(U %*% fit$c.new),
              zw.new = zw, w.new = w, sw.new = sw, c.new = fit$c.new,
              optlambda = optlambda)
 
   rm(K)
+  rm(Uv)
   rm(U)
+  rm(Qv)
   rm(Q)
   rm(RS)
   return(out)
@@ -180,19 +182,19 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   # RS = RiskSet(time, status)
   G <- matrix(0, n, d)
   for (j in 1:d) {
-    G[, j] = (model$U[, , j] %*% model$c.new) * (mscale[j]^(-2))
+    G[, j] = (model$Uv[, , j] %*% model$c.new) * (mscale[j]^(-2))
   }
 
   Gw <- matrix(0, n, d)
   for (j in 1:d) {
-    Gw[, j] = ((model$U[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
+    Gw[, j] = ((model$Uv[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
 
   uw = model$zw.new - model$sw.new
 
   h = rep(0, d)
   for (j in 1:d) {
-    h[j] = n * ((t(model$c.new) %*% model$U[basis.id, , j]) %*% model$c.new) * lambda0
+    h[j] = n * ((t(model$c.new) %*% model$Uv[basis.id, , j]) %*% model$c.new) * lambda0
   }
 
   # cross-validation

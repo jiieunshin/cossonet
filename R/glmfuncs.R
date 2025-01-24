@@ -168,88 +168,17 @@ cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, ob
 
   cat("mse:", round(m, 4), "\n\n")
 
-  out = list(measure = measure, U = U, Q = Q, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
+  out = list(measure = measure, Uv = Uv, Q = Q, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
              c.new = c.new, optlambda = optlambda, conv = TRUE)
 
   rm(K)
+  rm(Uv)
   rm(U)
+  rm(Qv)
   rm(Q)
 
   return(out)
-}
-
-sspline.cd = function (R, y, f, lambda0, obj, c.init)
-{
-  n = length(y)
-  mu = obj$linkinv(f)
-
-  # initialize
-  w = obj$variance(mu)
-  z = f + (y - mu) / w
-  b = 0
-
-  zw = z * sqrt(w)
-  Rw = R * w
-  cw = c.init / sqrt(w)
-  sw = sqrt(w)
-  cw.new = rep(0, n)
-  for(i in 1:15){ # outer iteration
-
-    for(j in 1:n){
-      L = 2 * sum((zw - Rw[,-j] %*% cw[-j] - b * sw) * Rw[,j]) - n * lambda0 * c(Rw[j,-j] %*% cw[-j])
-      R = 2 * sum(Rw[,j]^2) + n * lambda0 * Rw[j,j]
-      cw.new[j] = L/R
-
-      loss = abs(cw-cw.new)
-      conv1 = max(loss) < 1e-6
-      conv2 = min(loss) > 10
-
-      if(conv1 | conv2) break
-      cw[j] = cw.new[j]  # if not convergence
-
-    }
-    if(conv1 | conv2) break
-  }
-  if(i == 1 & !conv1) cw.new = cw
-  cw.new = cw.new
-  c.new = cw.new * sw
-  b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-
-  return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
-}
-
-sspline.QP = function (R, y, f, lambda0, obj, c.init)
-{
-  n = length(y)
-  mu = obj$linkinv(f)
-
-  # initialize
-  w = obj$variance(mu)
-  z = f + (y - mu) / w
-  b = 0
-
-  zw = z * sqrt(w)
-  Rw = R * w
-  cw = c.init / sqrt(w)
-  sw = sqrt(w)
-  cw.new = rep(0, n)
-  for(i in 1:10){ # outer iteration
-    Dmat = t(R) %*% R + n * lambda0 * R
-    dvec = as.vector(t(zw - b * sw) %*% R)
-    cw.new = ginv(Dmat) %*% dvec
-
-    loss = abs(cw-cw.new)
-    conv = max(loss) < 1e-6
-
-    if(conv) break
-    cw = cw.new  # if not convergence
-  }
-
-  cw.new = cw.new
-  c.new = cw.new * sw
-  b.new = sum((zw - Rw %*% cw.new) * sw) / sum(sw)
-  return(list(Rw = Rw, z.new = z, zw.new = zw, w.new = w, sw.new = sw, b.new = b.new, c.new = c.new, cw.new = cw.new))
 }
 
 cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
@@ -262,19 +191,19 @@ cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lamb
   # solve theta
   Gw <- matrix(0, n, d)
   for (j in 1:d) {
-    Gw[, j] = ((model$U[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
+    Gw[, j] = ((model$Uv[, , j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
 
   G <- matrix(0, n, d)
   for (j in 1:d) {
-    G[, j] = (model$U[, , j] %*% model$c.new) * (mscale[j]^(-2))
+    G[, j] = (model$Uv[, , j] %*% model$c.new) * (mscale[j]^(-2))
   }
 
   uw = model$zw.new - model$sw.new
 
   h = rep(0, d)
   for (j in 1:d) {
-    h[j] = n * lambda0 * ((t(model$c.new) %*% model$U[basis.id, , j]) %*% model$c.new)
+    h[j] = n * lambda0 * ((t(model$c.new) %*% model$Uv[basis.id, , j]) %*% model$c.new)
   }
 
   init.theta = rep(1, d)
@@ -377,7 +306,7 @@ cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lamb
   theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma), PACKAGE = "cossonet")
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
 
-  f.new =  c(wsGram(model$U, theta.adj/mscale^2) %*% model$c.new + model$b.new)
+  f.new =  c(wsGram(model$Uv, theta.adj/mscale^2) %*% model$c.new + model$b.new)
   mu.new = obj$linkinv(f.new)
 
   if(obj$family == "gaussian") m = mean((f.new - y)^2)
