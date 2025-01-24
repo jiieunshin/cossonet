@@ -7,7 +7,6 @@
 cossonet.exp(
   x,
   y,
-  f,
   wt,
   nbasis,
   basis.id,
@@ -24,8 +23,6 @@ cossonet.exp(
 \item{x}{Input matrix with $n$ observations and $p$ dimension.}
 
 \item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
-
-\item{f}{The true function.}
 
 \item{wt}{A weight vector for components.}
 

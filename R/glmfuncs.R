@@ -1,4 +1,4 @@
-cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
+cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -41,22 +41,21 @@ cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, ob
     tr_n = length(tr_id)
     te_n = length(te_id)
 
-    tr_U = array(NA, c(tr_n, nbasis, d))
+    tr_Uv = array(NA, c(tr_n, nbasis, d))
     for(j in 1:d){
-      tr_U[, , j] = K$K[[j]][tr_id, basis.id]
+      tr_Uv[, , j] = K$K[[j]][tr_id, basis.id]
     }
-    tr_U <- combine_kernel(tr_U, mscale)
+    tr_U <- combine_kernel(tr_Uv, mscale)
 
-    te_U = array(NA, c(te_n, nbasis, d))
+    te_Uv = array(NA, c(te_n, nbasis, d))
     for(j in 1:d){
-      te_U[, , j] = K$K[[j]][te_id, basis.id]
+      te_Uv[, , j] = K$K[[j]][te_id, basis.id]
     }
-    te_U <- combine_kernel(te_U, mscale)
+    te_U <- combine_kernel(te_Uv, mscale)
 
     pseudoX = tr_U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
 
     for (k in 1:len){
-
       c.init = as.vector(glmnet(pseudoX, y[tr_id], family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
 
       ff = tr_U %*% c.init
@@ -66,10 +65,10 @@ cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, ob
 
 
       zw = z * sqrt(w)
-      Rw = tr_U * w
+      Uw = tr_U * w
       sw = sqrt(w)
 
-      fit = .Call("wls_c_step", zw, Rw, Q, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cossonet")
+      fit = .Call("wls_c_step", zw, Uw, Q, c.init, sw, tr_n, nbasis, tr_n * cand.lambda[k], PACKAGE = "cossonet")
       b.new = fit$b.new
       c.new = fit$c.new
 
@@ -181,7 +180,7 @@ cv.sspline.subset = function (K, y, f, nbasis, basis.id, mscale, cand.lambda, ob
   return(out)
 }
 
-cv.nng.subset = function(model, K, y, f, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
+cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")

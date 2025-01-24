@@ -7,7 +7,6 @@
 cossonet(
   x,
   y,
-  f = NULL,
   family = c("gaussian", "binomial", "poisson", "Cox"),
   wt = rep(1, ncol(x)),
   scale = TRUE,
@@ -33,8 +32,6 @@ cossonet(
 \item{x}{Input matrix of $n$ by $p$, where each row is an observation. A matrix or dataframe. x must have at least two columns ($p>1$).}
 
 \item{y}{The response variable. If family="gaussian" or family="poisson" (non-negative counts), it is quantitative. If family="binomial", it must be a vector with two levels. If family="cox", y must be a two-column matrix (or dataframe) with columns named 'time' and 'state'.}
-
-\item{f}{The true function.}
 
 \item{family}{The response type}
 

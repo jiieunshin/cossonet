@@ -7,7 +7,6 @@
 #'
 #' @param x Input matrix with $n$ observations and $p$ dimension.
 #' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
-#' @param f The true function.
 #' @param wt A weight vector for components.
 #' @param nbasis The number of basis.
 #' @param basis.id The index of basis.
@@ -22,7 +21,7 @@
 #' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
 #' @export
 
-cossonet.exp = function (x, y, f, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale)
+cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale)
 {
   n = length(y)
   p = length(wt)
@@ -46,18 +45,18 @@ cossonet.exp = function (x, y, f, wt, nbasis, basis.id, lambda0, lambda_theta, g
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline.subset(K, y, f, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = TRUE,  show = TRUE)
+  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = TRUE,  show = TRUE)
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng.subset(sspline_cvfit, K, y, f, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj)
+  nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd
-  sspline_cvfit = try({cv.sspline.subset(K, y, f, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = FALSE, show = FALSE)})
+  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = FALSE, show = FALSE)})
 
   par(mfrow = c(1,1))
 
-  out = list(data = list(x = x, y = y, R = sspline_cvfit$R, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
+  out = list(data = list(x = x, y = y, Uv = sspline_cvfit$Uv, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = sspline_cvfit,
              theta_step = nng_fit,

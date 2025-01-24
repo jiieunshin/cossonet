@@ -7,7 +7,6 @@
 #'
 #' @param x Input matrix of $n$ by $p$, where each row is an observation. A matrix or dataframe. x must have at least two columns ($p>1$).
 #' @param y The response variable. If family="gaussian" or family="poisson" (non-negative counts), it is quantitative. If family="binomial", it must be a vector with two levels. If family="cox", y must be a two-column matrix (or dataframe) with columns named 'time' and 'state'.
-#' @param f The true function.
 #' @param family The response type
 #' @param wt The weights of the predictors. The default is `rep(1,ncol(x))`.
 #' @param scale If TRUE, continuous predictors are rescaled to the interval `[0,1]`. The default is `TRUE`.
@@ -25,7 +24,6 @@
 
 cossonet = function (x,
                     y,
-                    f = NULL,
                     family = c("gaussian", "binomial", "poisson", "Cox"),
                     wt = rep(1, ncol(x)),
                     scale = TRUE,
@@ -43,9 +41,6 @@ cossonet = function (x,
   rownames(x) = NULL
   # if(class(x)[1] != "data.frame")
     # stop("A input x must be matrix")
-
-  if(is.null(f))
-    f = y
 
   # family
   family = match.arg(family)
@@ -79,7 +74,7 @@ cossonet = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cossonet.exp(x, y, f, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
+               glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
                Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
   )
 
