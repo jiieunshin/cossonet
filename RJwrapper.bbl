@@ -1,0 +1,122 @@
+\begin{thebibliography}{17}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Breiman et~al.(1984)Breiman, Friedman, Olshen, and
+  Stone]{Breiman:1984}
+L.~Breiman, J.~Friedman, R.~Olshen, and C.~Stone.
+\newblock Classification and regression trees.
+\newblock 1984.
+
+\bibitem[Breslow(1974)]{Breslow:1974}
+N.~Breslow.
+\newblock Covariance analysis of censored survival data.
+\newblock \emph{Biometrics}, 30\penalty0 (1):\penalty0 89--99, 1974.
+\newblock \doi{https://doi.org/10.2307/2529620}.
+
+\bibitem[Fan and Li(2001)]{Fan:2001}
+J.~Fan and R.~Li.
+\newblock Variable selection via nonconcave penalized likelihood and its oracle
+  properties.
+\newblock \emph{Journal of the American statistical Association}, 96\penalty0
+  (456):\penalty0 1348--1360, 2001.
+\newblock URL \url{https://doi.org/10.1198/016214501753382273}.
+
+\bibitem[Friedman(1991)]{Friedman:1991}
+J.~H. Friedman.
+\newblock Multivariate adaptive regression splines.
+\newblock \emph{The annals of statistics}, 19\penalty0 (1):\penalty0 1--67,
+  1991.
+\newblock URL \url{https://www.jstor.org/stable/2241837}.
+
+\bibitem[Friedman and Silverman(1989)]{Friedman:1989}
+J.~H. Friedman and B.~W. Silverman.
+\newblock Flexible parsimonious smoothing and additive modeling.
+\newblock \emph{Technometrics}, 31\penalty0 (1):\penalty0 3--21, 1989.
+\newblock URL \url{https://www.jstor.org/stable/1270359}.
+
+\bibitem[Gu and Gu(2013)]{Gu:2013}
+C.~Gu and C.~Gu.
+\newblock \emph{Counting processes and survival analysis}, volume 297.
+\newblock Smoothing spline ANOVA models, 2013.
+
+\bibitem[Hastie and Stuetzle(1989)]{Hastie:1989}
+T.~Hastie and W.~Stuetzle.
+\newblock Principal curves.
+\newblock \emph{Journal of the American statistical association}, 84\penalty0
+  (406):\penalty0 502--516, 1989.
+\newblock URL \url{https://www.jstor.org/stable/2289936}.
+
+\bibitem[Hoerl and Kennard(1970)]{Hoerl:1970}
+A.~E. Hoerl and R.~W. Kennard.
+\newblock Ridge regression: Biased estimation for nonorthogonal problems.
+\newblock \emph{Technometrics}, 12\penalty0 (1):\penalty0 55--67, 1970.
+\newblock URL \url{https://www.jstor.org/stable/1271436}.
+
+\bibitem[Kavuri and Kokjohn(2017)]{Kavuri:2017}
+C.~Kavuri and S.~L. Kokjohn.
+\newblock Computational optimization of a reactivity controlled compression
+  ignition (rcci) combustion system considering performance at multiple modes
+  simultaneously.
+\newblock \emph{Fuel}, 207:\penalty0 702--718, 2017.
+\newblock \doi{https://doi.org/10.1016/j.fuel.2017.06.071}.
+
+\bibitem[Leng and Zhang(2006)]{Leng:2006}
+C.~Leng and H.~H. Zhang.
+\newblock Model selection in nonparametric hazard regression.
+\newblock \emph{Nonparametric Statistics}, 18\penalty0 (7-8):\penalty0
+  417--429, 2006.
+\newblock URL \url{https://doi.org/10.1080/10485250601027042}.
+
+\bibitem[Lin and Zhang(2006)]{Lin:2006}
+Y.~Lin and H.~H. Zhang.
+\newblock Component selection and smoothing in multivariate nonparametric
+  regression.
+\newblock \emph{The Annals of Statistics}, 34\penalty0 (5):\penalty0
+  2272--2297, 2006.
+\newblock URL \url{http://www.jstor.org/stable/25463508}.
+
+\bibitem[Montgomery et~al.(2021)Montgomery, Peck, and Vining]{Montgomery:2021}
+D.~C. Montgomery, E.~A. Peck, and G.~G. Vining.
+\newblock \emph{Introduction to linear regression analysis}.
+\newblock John Wiley {\&} Sons, 2021.
+
+\bibitem[Simon et~al.(2011)Simon, Friedman, Hastie, , and
+  Tibshirani]{Simon:2011}
+N.~Simon, J.~Friedman, T.~Hastie, , and R.~Tibshirani.
+\newblock Regularization paths for cox's proportional hazards model via
+  coordinate descent.
+\newblock \emph{Journal of statistical software}, 39\penalty0 (5):\penalty0
+  1--13, 2011.
+\newblock URL \url{https://doi.org/10.18637/jss.v039.i05}.
+
+\bibitem[Tibshirani(1996)]{Tibshirani:1996}
+R.~Tibshirani.
+\newblock Regression shrinkage and selection via the lasso.
+\newblock \emph{Journal of the Royal Statistical Society Series B: Statistical
+  Methodology}, 58\penalty0 (1):\penalty0 267--288, 1996.
+\newblock URL \url{https://doi.org/10.1111/j.2517-6161.1996.tb02080.x}.
+
+\bibitem[Wahba(1990)]{Wahba:1990}
+G.~Wahba.
+\newblock \emph{Spline models for observational data}.
+\newblock Society for industrial and applied mathematics, 1990.
+
+\bibitem[Zhang and Lin(2006)]{Zhang:2006}
+H.~H. Zhang and Y.~Lin.
+\newblock Component selection and smoothing for nonparametric regression in
+  exponential families.
+\newblock \emph{Statistica Sinica}, 16\penalty0 (3):\penalty0 1021--1041, 2006.
+\newblock URL \url{https://www.jstor.org/stable/24307585}.
+
+\bibitem[Zou and Hastie(2005)]{Zou:2005}
+H.~Zou and T.~Hastie.
+\newblock Regularization and variable selection via the elastic net.
+\newblock \emph{Journal of the Royal Statistical Society Series B: Statistical
+  Methodology}, 67\penalty0 (2):\penalty0 301--320, 2005.
+\newblock URL \url{https://doi.org/10.1111/j.1467-9868.2005.00527.x}.
+
+\end{thebibliography}

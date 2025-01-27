@@ -13,38 +13,20 @@
 #' @return a list containing the predicted value for the test data (f.new) and the transformed value of that predicted value (mu.new).
 #' @export
 data_generation = function(n, p, rho, SNR,
-                           response = c("regression", "classification", "count", "survival", "interaction")){
+                           response = c("continuous", "binary", "count", "survival")){
 
   if(response == "classification"){
-    # f1 = function(t) t - .5
-    # f2 = function(t) (2 * t - 1)^2 - .4
-    # f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) - .1
-    # f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
-  f1 = function(t) 3 * t
-  f2 = function(t) pi * sin(pi * t) * 2
-  f3 = function(t) 8 * t^3
-  f4 = function(t) 4/ (exp(1) - 1) * exp(t)
-  }
-
-  if(response == "regression"){
-  f1 = function(t) t
-  f2 = function(t) (2 * t - 1)^2
-  f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
-  f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
-  }
-
-  if(response == "count"){
-    f1 = function(t) t
-    f2 = function(t) (2 * t - 1)^2
-    f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) + .5
-    f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 + .5
-  }
-
-  if(response == "survival"){
+    f1 = function(t) 3 * t
+    f2 = function(t) pi * sin(pi * t) * 2
+    f3 = function(t) 8 * t^3
+    f4 = function(t) 4/ (exp(1) - 1) * exp(t)
+  } else{
     f1 = function(t) t
     f2 = function(t) (2 * t - 1)^2
     f3 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t))
     f4 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3
+    f5 = function(t) sin(2 * pi * t) / (2 - sin(2 * pi * t)) + .5
+    f6 = function(t) 0.1*sin(2 * pi * t) + 0.2*cos(2 * pi * t) + 0.3*sin(2 * pi * t)^2 + 0.4*cos(2 * pi * t)^3 + 0.5*sin(2 * pi * t)^3 + .5
   }
 
   if(missing(response))
@@ -78,10 +60,10 @@ data_generation = function(n, p, rho, SNR,
   # curve(f4, 0, 1)
   # par(mfrow = c(1,1))
 
-  if(response == "regression"){
-    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
+  if(response == "continuous"){
+    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f5(x[,3])) + var(3 * f6(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f5(x[,3]) + 3 * f6(x[,4]) + rnorm(n, 0, sd)
 
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
@@ -89,7 +71,7 @@ data_generation = function(n, p, rho, SNR,
     out = list(x = x, f = f, y = f)
   }
 
-  if(response == "classification"){
+  if(response == "binary"){
     V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
     sd = sqrt(V_sig / SNR)
     f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) - 10 + rnorm(n, 0, sd)
@@ -103,14 +85,14 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "count"){
-    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
+    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f5(x[,3])) + var(3 * f6(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f5(x[,3]) + 3 * f6(x[,4]) + rnorm(n, 0, sd)
 
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
 
-    f = f / 4
+    f = f / 3
     mu = exp(f)
     y = rpois(n, mu)
 

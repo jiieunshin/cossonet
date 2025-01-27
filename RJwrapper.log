@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.1.11)  11 JAN 2025 23:44
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2024.1.11)  26 JAN 2025 23:52
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -810,44 +810,28 @@ Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
 )
 Package caption Info: End \AtBeginDocument code.
 (./cossonet.tex
-<figures/penguins.png, id=45, 72.27pt x 42.9605pt>
-File: figures/penguins.png Graphic file (type png)
-<use figures/penguins.png>
-Package pdftex.def Info: figures/penguins.png  used on input line 36.
-(pdftex.def)             Requested size: 398.44772pt x 212.57635pt.
-LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 39
-.
-(c:/texlive/2023/texmf-dist/tex/latex/inconsolata/t1zi4.fd
-File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
-)
-LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 9.18004pt on input line 39.
-Package microtype Info: Loading generic protrusion settings for font family
-(microtype)             `zi4' (encoding: T1).
-(microtype)             For optimal results, create family-specific settings.
-(microtype)             See the microtype manual for details.
-LaTeX Font Info:    Trying to load font information for OT1+ppl on input line 4
+LaTeX Font Info:    Trying to load font information for OT1+ppl on input line 1
 6.
 (c:/texlive/2023/texmf-dist/tex/latex/psnfss/ot1ppl.fd
 File: ot1ppl.fd 2001/06/04 font definitions for OT1/ppl.
 )
 LaTeX Font Info:    Trying to load font information for OML+zplm on input line 
-46.
+16.
 (c:/texlive/2023/texmf-dist/tex/latex/psnfss/omlzplm.fd
 File: omlzplm.fd 2002/09/08 Fontinst v1.914 font definitions for OML/zplm.
 )
 LaTeX Font Info:    Trying to load font information for OMS+zplm on input line 
-46.
+16.
 (c:/texlive/2023/texmf-dist/tex/latex/psnfss/omszplm.fd
 File: omszplm.fd 2002/09/08 Fontinst v1.914 font definitions for OMS/zplm.
 )
 LaTeX Font Info:    Trying to load font information for OMX+zplm on input line 
-46.
+16.
 (c:/texlive/2023/texmf-dist/tex/latex/psnfss/omxzplm.fd
 File: omxzplm.fd 2002/09/08 Fontinst v1.914 font definitions for OMX/zplm.
 )
 LaTeX Font Info:    Trying to load font information for OT1+zplm on input line 
-46.
+16.
 (c:/texlive/2023/texmf-dist/tex/latex/psnfss/ot1zplm.fd
 File: ot1zplm.fd 2002/09/08 Fontinst v1.914 font definitions for OT1/zplm.
 )
@@ -856,80 +840,113 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 7.29405pt on input line 46.
+(Font)              scaled to size 9.37807pt on input line 16.
 (c:/texlive/2023/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 5.21004pt on input line 46.
+(Font)              scaled to size 7.29405pt on input line 16.
+LaTeX Font Info:    Font shape `U/msa/m/n' will be
+(Font)              scaled to size 5.21004pt on input line 16.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 7.29405pt on input line 46.
+(Font)              scaled to size 9.37807pt on input line 16.
 (c:/texlive/2023/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 5.21004pt on input line 46.
-<cossonet_files/figure-latex/penguins-ggplot-1.pdf, id=50, 453.695pt x 351.3125
-pt>
-File: cossonet_files/figure-latex/penguins-ggplot-1.pdf Graphic file (type pdf)
-
-<use cossonet_files/figure-latex/penguins-ggplot-1.pdf>
-Package pdftex.def Info: cossonet_files/figure-latex/penguins-ggplot-1.pdf  use
-d on input line 76.
-(pdftex.def)             Requested size: 453.6939pt x 351.31163pt.
-
-Overfull \hbox (55.35532pt too wide) in paragraph at lines 76--77
- [][] 
- []
-
-(./RJwrapper.bbl (./RJwrapper.brf)
-\tf@brf=\write6
-\openout6 = `RJwrapper.brf'.
-
-LaTeX Font Info:    Font shape `U/msa/m/n' will be
-(Font)              scaled to size 9.37807pt on input line 14.
+(Font)              scaled to size 7.29405pt on input line 16.
 LaTeX Font Info:    Font shape `U/msb/m/n' will be
-(Font)              scaled to size 9.37807pt on input line 14.
+(Font)              scaled to size 5.21004pt on input line 16.
+LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 24
+.
+(c:/texlive/2023/texmf-dist/tex/latex/inconsolata/t1zi4.fd
+File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
+)
+LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
+(Font)              scaled to size 9.18004pt on input line 24.
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `zi4' (encoding: T1).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+
+LaTeX Warning: Reference `sec6' on page 1 undefined on input line 24.
+
 [1{c:/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/texlive/202
 3/texmf-dist/fonts/enc/dvips/base/8r.enc}
 
-{c:/texlive/2023/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-0.enc}] [2 <./fig
-ures/penguins.png> <./cossonet_files/figure-latex/penguins-ggplot-1.pdf>])
+{c:/texlive/2023/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-0.enc}]
+LaTeX Font Info:    Font shape `U/msa/m/n' will be
+(Font)              scaled to size 10.42007pt on input line 30.
+LaTeX Font Info:    Font shape `U/msa/m/n' will be
+(Font)              scaled to size 7.91925pt on input line 30.
+LaTeX Font Info:    Font shape `U/msa/m/n' will be
+(Font)              scaled to size 6.25204pt on input line 30.
+LaTeX Font Info:    Font shape `U/msb/m/n' will be
+(Font)              scaled to size 10.42007pt on input line 30.
+LaTeX Font Info:    Font shape `U/msb/m/n' will be
+(Font)              scaled to size 7.91925pt on input line 30.
+LaTeX Font Info:    Font shape `U/msb/m/n' will be
+(Font)              scaled to size 6.25204pt on input line 30.
 
-LaTeX Font Warning: Font shape `T1/zi4/m/it' undefined
-(Font)              using `T1/zi4/m/n' instead on input line 95.
+Overfull \hbox (241.8563pt too wide) in paragraph at lines 30--43
+ [][] 
+ []
 
-LaTeX Font Info:    Font shape `T1/zi4/m/it' will be
-(Font)              scaled to size 9.18004pt on input line 95.
-) [3] (./RJwrapper.aux)
- ***********
-LaTeX2e <2023-11-01>
-L3 programming layer <2024-01-04>
- ***********
+[2] [3]
+LaTeX Font Info:    Trying to load font information for U+fplmbb on input line 
+184.
+(c:/texlive/2023/texmf-dist/tex/latex/psnfss/ufplmbb.fd
+File: ufplmbb.fd 2003/10/30 Fontinst v1.914 font definitions for U/fplmbb.
+) [4] [5] [6] [7] [8]
+<cossonet_files/figure-latex/model-fitting-1.pdf, id=308, 439.6425pt x 174.6525
+pt>
+File: cossonet_files/figure-latex/model-fitting-1.pdf Graphic file (type pdf)
+<use cossonet_files/figure-latex/model-fitting-1.pdf>
+Package pdftex.def Info: cossonet_files/figure-latex/model-fitting-1.pdf  used 
+on input line 413.
+(pdftex.def)             Requested size: 439.64142pt x 174.65207pt.
 
-LaTeX Font Warning: Some font shapes were not available, defaults substituted.
+Overfull \hbox (41.30284pt too wide) in paragraph at lines 413--414
+ [][] 
+ []
 
-Package rerunfilecheck Info: File `RJwrapper.out' has not changed.
-(rerunfilecheck)             Checksum: 6E12768E88219DB0DBD37F2DF1937822;843.
-Package rerunfilecheck Info: File `RJwrapper.brf' has not changed.
-(rerunfilecheck)             Checksum: C3F8DC6209FE66D5B9156CBAC85F9672;184.
- ) 
+
+Overfull \hbox (1164.51233pt too wide) in paragraph at lines 429--462
+ [][] 
+ []
+
+[9 <./cossonet_files/figure-latex/model-fitting-1.pdf>] [10]
+<figures/nonlinear_funcs.png, id=338, 909.6384pt x 245.718pt>
+File: figures/nonlinear_funcs.png Graphic file (type png)
+<use figures/nonlinear_funcs.png>
+Package pdftex.def Info: figures/nonlinear_funcs.png  used on input line 572.
+(pdftex.def)             Requested size: 3789.83897pt x 1023.89119pt.
+
+Overfull \hbox (3391.5004pt too wide) in paragraph at lines 572--572
+[][] 
+ []
+
+
+LaTeX Warning: Float too large for page by 336.42896pt on input line 573.
+
+[11] [12 <./figures/nonlinear_funcs.png>]
+
+! LaTeX Error: Unicode character γ (U+03B3)
+               not set up for use with LaTeX.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.600 ...95, with standard errors in parentheses.}
+                                                   
 Here is how much of TeX's memory you used:
- 26871 strings out of 474165
- 483960 string characters out of 5749497
- 1948528 words of memory out of 5000000
- 48538 multiletter control sequences out of 15000+600000
- 588145 words of font info for 162 fonts, out of 8000000 for 9000
+ 27221 strings out of 474165
+ 488433 string characters out of 5749497
+ 1960528 words of memory out of 5000000
+ 48640 multiletter control sequences out of 15000+600000
+ 611256 words of font info for 311 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 117i,11n,131p,1006b,775s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<c:/texlive/2023/texmf-dist/fonts/type1/public/inconsolata/Inconsolata-zi4r.p
-fb><c:/texlive/2023/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb><c:/texlive/
-2023/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb><c:/texlive/2023/texmf-dist
-/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on RJwrapper.pdf (3 pages, 129708 bytes).
-PDF statistics:
- 134 PDF objects out of 1000 (max. 8388607)
- 114 compressed objects within 2 object streams
- 24 named destinations out of 1000 (max. 500000)
- 49223 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 117i,20n,131p,1151b,914s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
+!  ==> Fatal error occurred, no output PDF file produced!
