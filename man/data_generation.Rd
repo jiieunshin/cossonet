@@ -9,7 +9,7 @@ data_generation(
   p,
   rho,
   SNR,
-  response = c("regression", "classification", "count", "survival", "interaction")
+  response = c("continuous", "binary", "count", "survival")
 )
 }
 \arguments{
