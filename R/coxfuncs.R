@@ -30,9 +30,6 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambd
   }
   Q <- combine_kernel(Qv, mscale)
 
-  rm(Uv)
-  rm(Qv)
-
   # cross-validation
   fold = cvsplitID(n, 5, status, family = "gaussian")
   measure <- matrix(NA, 5, len)
