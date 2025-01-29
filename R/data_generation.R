@@ -61,9 +61,9 @@ data_generation = function(n, p, rho, SNR,
   # par(mfrow = c(1,1))
 
   if(response == "continuous"){
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
+    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
@@ -85,10 +85,10 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(response == "count"){
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(2 * f5(x[,3])) + var(3 * f6(x[,4]))
+    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f5(x[,3])) + var(3 * f6(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 2 * f5(x[,3]) + 3 * f6(x[,4]) + rnorm(n, 0, sd)
-
+    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f5(x[,3]) + 3 * f6(x[,4]) + rnorm(n, 0, sd)
+    print(sd)
     x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
     x = cbind(x, x_nois)
 
@@ -101,9 +101,9 @@ data_generation = function(n, p, rho, SNR,
 
   if(response == 'survival'){
 
-    V_sig = var(1 * f1(x[,1])) + var(2 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
+    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
     sd = sqrt(V_sig / SNR)
-    f = 1 * f1(x[,1]) + 2 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
     x_nois = matrix(runif(n * (p - pp), 0, 1), n, (p - pp))
     x = cbind(x, x_nois)
