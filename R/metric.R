@@ -1,17 +1,10 @@
-#' Load a matrix from a file
+#' The function `metric` provides a contingency table for the predicted class and the true class for binary classes.
 #'
-#' The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-#' This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-#' Because it is a type of nonparametric inference, various types of kernels can be selected.
-#' To select hyperparameters, the function is designed to perform cross-validation.
+#' @param true binary true class.
+#' @param est binary predicted class.
 #'
-#' @param true A vector of true value of binary class response.
-#' @param est A vector of estimated response by `cdcosso`.
-#'
-#' @return A list of contingency table for predicted results of binary class response.
+#' @return a contingency table for the predicted results of binary class responses.
 #' @export
-#'
-
 metric = function(true, est){
   result_tab = table(true, est)
   is.col = colnames(result_tab) == c("0", "1")

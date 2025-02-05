@@ -1,23 +1,22 @@
 #' Load a matrix from a file
 #'
-#' The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-#' This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-#' Because it is a type of nonparametric inference, various types of kernels can be selected.
-#' To select hyperparameters, the function is designed to perform cross-validation.
+#' The cossonet function implements a nonparametric regression model that estimates nonlinear components.
+#' This function can be applied to continuous, count, binary, and survival responses.
+#' To use this function, the user must specify a family, kernel function, etc. For cross-validation, the sequence vectors `lambda0` and `lambda_theta` appropriate for the input data must also be specified.
 #'
-#' @param x Input matrix of $n$ by $p$, where each row is an observation. A matrix or dataframe. x must have at least two columns ($p>1$).
-#' @param y The response variable. If family="gaussian" or family="poisson" (non-negative counts), it is quantitative. If family="binomial", it must be a vector with two levels. If family="cox", y must be a two-column matrix (or dataframe) with columns named 'time' and 'state'.
-#' @param family The response type
-#' @param wt The weights of the predictors. The default is `rep(1,ncol(x))`.
-#' @param scale If TRUE, continuous predictors are rescaled to the interval `[0,1]`. The default is `TRUE`.
-#' @param nbasis The number of "knots" to choose from. If basis.id is provided, it is ignored.
-#' @param basis.id An index that specifies the selected "knot".
-#' @param kernel The kernel function. Four types are provided: `linear` (default), `gaussian`, `poly`, `spline`.
-#' @param effect The effect of the component. `main` (default) for the main effect, `interaction` for interactions.
-#' @param kparam Parameters for the kernel function. Used by Gaussian and polynomial kernels.
-#' @param lambda0 A vector of lambda0 sequences. The default is `exp()`. This may need to be adjusted based on your data. Do not provide a single value for lambda0.
-#' @param lambda_theta A vector of lambda_theta sequences. The default is `exp()`. This may need to be adjusted based on your data. Do not provide a single value for lambda_theta.
-#' @param gamma Elastic mesh mixing parameter, `0 \leq \gamma \leq 1`. When `gamma = 1` it uses LASSO penalty, when `gamma = 0` it uses Ridge penalty. The default is `gamma = 0.95`.
+#' @param x Input matrix or data frame of $n$ by $p$. `x` must have at least two columns ($p>1$).
+#' @param y A response vector with a continuous, binary, or count type. For survival responses, this should be a two-column matrix (or data frame) with columns called 'time' and 'status'.
+#' @param family A distribution corresponding to the response type. `family="gaussian"` for continuous responses, `family="binomial"` for binary responses, `family="poisson"` for count responses, and `family="cox"` for survival responses.
+#' @param wt The weights assigned to the explanatory variables. The default is `rep(1,ncol(x))`.
+#' @param scale Boolean for whether to scale continuous explanatory variables to values between 0 and 1.
+#' @param nbasis The number of "knots". If `basis.id` is provided, it is set to the length of `basis.id`.
+#' @param basis.id The index of the "knot" to select.
+#' @param kernel TThe kernel function. One of four types of `linear` (default), `gaussian`, `poly`, and `spline`.
+#' @param effect The effect of the component. `main` (default) is the main effect, and `interaction` is the two-way interaction.
+#' @param kparam Parameters for Gaussian and polynomial kernel functions
+#' @param lambda0 A vector of `lambda0` sequences. The default is a grid of 20 values `[2^{-10}, \dots, 2^{10}]` on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set `\lambda0` as a single value.
+#' @param lambda_theta A vector of `lambda` sequences. The default is a grid of 20 values `[2^{-10}, \dots, 2^{10}]` on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set `lambda` as a single value.
+#' @param gamma Elastic-net mixing parameter `0 \leq \gamma \leq 1`. If `gamma = 1`, the LASSO penalty is applied, and if `gamma = 0`, the Ridge penalty is applied. The default is `gamma = 0.95`.
 #'
 #' @return A list containing information about the fitted model.
 #' @export
@@ -39,8 +38,8 @@ cossonet = function (x,
   n = nrow(x)
   colnames(x) = NULL
   rownames(x) = NULL
-  # if(class(x)[1] != "data.frame")
-    # stop("A input x must be matrix")
+  if(!(class(x) %in% c("matrix", "data.frame")))
+    stop("A input x must be matrix or data frame.")
 
   # family
   family = match.arg(family)
@@ -78,7 +77,7 @@ cossonet = function (x,
                Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
   )
 
-  attr(out, "class") = "cdcosso"
+  attr(out, "class") = "cossonet"
 
   return(out)
 }

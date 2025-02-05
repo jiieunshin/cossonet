@@ -29,38 +29,37 @@ cossonet(
 )
 }
 \arguments{
-\item{x}{Input matrix of $n$ by $p$, where each row is an observation. A matrix or dataframe. x must have at least two columns ($p>1$).}
+\item{x}{Input matrix or data frame of $n$ by $p$. \code{x} must have at least two columns ($p>1$).}
 
-\item{y}{The response variable. If family="gaussian" or family="poisson" (non-negative counts), it is quantitative. If family="binomial", it must be a vector with two levels. If family="cox", y must be a two-column matrix (or dataframe) with columns named 'time' and 'state'.}
+\item{y}{A response vector with a continuous, binary, or count type. For survival responses, this should be a two-column matrix (or data frame) with columns called 'time' and 'status'.}
 
-\item{family}{The response type}
+\item{family}{A distribution corresponding to the response type. \code{family="gaussian"} for continuous responses, \code{family="binomial"} for binary responses, \code{family="poisson"} for count responses, and \code{family="cox"} for survival responses.}
 
-\item{wt}{The weights of the predictors. The default is \code{rep(1,ncol(x))}.}
+\item{wt}{The weights assigned to the explanatory variables. The default is \code{rep(1,ncol(x))}.}
 
-\item{scale}{If TRUE, continuous predictors are rescaled to the interval \verb{[0,1]}. The default is \code{TRUE}.}
+\item{scale}{Boolean for whether to scale continuous explanatory variables to values between 0 and 1.}
 
-\item{nbasis}{The number of "knots" to choose from. If basis.id is provided, it is ignored.}
+\item{nbasis}{The number of "knots". If \code{basis.id} is provided, it is set to the length of \code{basis.id}.}
 
-\item{basis.id}{An index that specifies the selected "knot".}
+\item{basis.id}{The index of the "knot" to select.}
 
-\item{kernel}{The kernel function. Four types are provided: \code{linear} (default), \code{gaussian}, \code{poly}, \code{spline}.}
+\item{kernel}{TThe kernel function. One of four types of \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
-\item{effect}{The effect of the component. \code{main} (default) for the main effect, \code{interaction} for interactions.}
+\item{effect}{The effect of the component. \code{main} (default) is the main effect, and \code{interaction} is the two-way interaction.}
 
-\item{kparam}{Parameters for the kernel function. Used by Gaussian and polynomial kernels.}
+\item{kparam}{Parameters for Gaussian and polynomial kernel functions}
 
-\item{lambda0}{A vector of lambda0 sequences. The default is \code{exp()}. This may need to be adjusted based on your data. Do not provide a single value for lambda0.}
+\item{lambda0}{A vector of \code{lambda0} sequences. The default is a grid of 20 values \verb{[2^\{-10\}, \\dots, 2^\{10\}]} on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set \verb{\\lambda0} as a single value.}
 
-\item{lambda_theta}{A vector of lambda_theta sequences. The default is \code{exp()}. This may need to be adjusted based on your data. Do not provide a single value for lambda_theta.}
+\item{lambda_theta}{A vector of \code{lambda} sequences. The default is a grid of 20 values \verb{[2^\{-10\}, \\dots, 2^\{10\}]} on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set \code{lambda} as a single value.}
 
-\item{gamma}{Elastic mesh mixing parameter, \verb{0 \\leq \\gamma \\leq 1}. When \code{gamma = 1} it uses LASSO penalty, when \code{gamma = 0} it uses Ridge penalty. The default is \code{gamma = 0.95}.}
+\item{gamma}{Elastic-net mixing parameter \verb{0 \\leq \\gamma \\leq 1}. If \code{gamma = 1}, the LASSO penalty is applied, and if \code{gamma = 0}, the Ridge penalty is applied. The default is \code{gamma = 0.95}.}
 }
 \value{
 A list containing information about the fitted model.
 }
 \description{
-The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-Because it is a type of nonparametric inference, various types of kernels can be selected.
-To select hyperparameters, the function is designed to perform cross-validation.
+The cossonet function implements a nonparametric regression model that estimates nonlinear components.
+This function can be applied to continuous, count, binary, and survival responses.
+To use this function, the user must specify a family, kernel function, etc. For cross-validation, the sequence vectors \code{lambda0} and \code{lambda_theta} appropriate for the input data must also be specified.
 }

@@ -1,24 +1,20 @@
-#' Load a matrix from a file
+#' The cossonet.cox function is a COSSO model based on the Cox proportional hazards model applied to survival responses.
+#' Survival responses should be in matrix form with time and status as column names. It works internally via the cossonet function.
 #'
-#' The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-#' This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-#' Because it is a type of nonparametric inference, various types of kernels can be selected.
-#' To select hyperparameters, the function is designed to perform cross-validation.
+#' @param x Input matrix or data frame of $n$ by $p$. `x` must have at least two columns ($p>1$).
+#' @param time for right censored data, this is the follow up time. For interval data, the first argument is the starting time for the interval. It follows the same input format as the `time` argument in the `Surv` function from the `survival` package.
+#' @param status Status indicator, typically coded as 0 for "alive" and 1 for "dead." It follows the same input format as the `status` argument in the `Surv` function from the `survival` package.
+#' @param nbasis The number of "knots". If `basis.id` is provided, it is set to the length of `basis.id`.
+#' @param basis.id The index of the "knot" to select.
+#' @param wt The weights assigned to the explanatory variables.
+#' @param lambda0 A vector of `lambda0` sequences.
+#' @param lambda_theta A vector of `lambda` sequences.
+#' @param gamma Elastic-net mixing parameter.
+#' @param type The kernel function.
+#' @param kparam The kernel function.
+#' @param scale Boolean for whether to scale continuous explanatory variables to values between 0 and 1.
 #'
-#' @param x Explanation variable matrix or data frame.
-#' @param time Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).
-#' @param status Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
-#' @param nbasis The number of basis.
-#' @param basis.id The index of basis.
-#' @param wt Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".
-#' @param lambda0 Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".
-#' @param lambda_theta Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".
-#' @param gamma Kernel parameter values to use for SVM models.
-#' @param type Gamma value used in Stochastic Search Optimization.
-#' @param kparam Number of folds for cross-validation.
-#' @param scale Boolean for whether to scale the input data to range between 0 and 1.
-#'
-#' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+#' @return A list of outputs obtained from the fitted model for the Cox proportional hazards model
 #' @export
 
 cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
@@ -57,7 +53,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
 
   par(mfrow = c(1,1))
 
-  out = list(data = list(x = x, time = time, status = status, basis.id = basis.id, Uv = getc_cvfit$Uv, RS = getc_cvfit$RS, wt = wt, kernel = type, kparam = kparam),
+  out = list(data = list(x = x, time = time, status = status, basis.id = basis.id, RS = getc_cvfit$RS, wt = wt, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,

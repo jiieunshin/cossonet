@@ -2,7 +2,7 @@ Package: cossonet
 Title: cossonet: An Integrated R Package for Fast Sparse Nonparametric Regression for High-dimensional data
 Version: 1.0
 Authors@R: person("Jieun", "Shin", email = "jieunstat@uos.ac.kr", role = c("aut", "cre"))
-Description: This package provides functions for data analysis and modeling.
+Description: The cossonet package provides tools for fitting COSSO models to various types of response data, including continuous, count, binary, and survival outcomes. It supports nonparametric regression using kernel-based methods and elastic-net regularization. Functions like cossonet.exp and cossonet.cox enable flexible modeling for exponential family and survival data, respectively, offering robust solutions for complex regression problems.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

@@ -2,7 +2,8 @@
 % Please edit documentation in R/cossonet.cox.R
 \name{cossonet.cox}
 \alias{cossonet.cox}
-\title{Load a matrix from a file}
+\title{The cossonet.cox function is a COSSO model based on the Cox proportional hazards model applied to survival responses.
+Survival responses should be in matrix form with time and status as column names. It works internally via the cossonet function.}
 \usage{
 cossonet.cox(
   x,
@@ -20,36 +21,34 @@ cossonet.cox(
 )
 }
 \arguments{
-\item{x}{Explanation variable matrix or data frame.}
+\item{x}{Input matrix or data frame of $n$ by $p$. \code{x} must have at least two columns ($p>1$).}
 
-\item{time}{Dependent variable vector or matrix or data frame containing time and status columns (for Cox model).}
+\item{time}{for right censored data, this is the follow up time. For interval data, the first argument is the starting time for the interval. It follows the same input format as the \code{time} argument in the \code{Surv} function from the \code{survival} package.}
 
-\item{status}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
+\item{status}{Status indicator, typically coded as 0 for "alive" and 1 for "dead." It follows the same input format as the \code{status} argument in the \code{Surv} function from the \code{survival} package.}
 
-\item{nbasis}{The number of basis.}
+\item{nbasis}{The number of "knots". If \code{basis.id} is provided, it is set to the length of \code{basis.id}.}
 
-\item{basis.id}{The index of basis.}
+\item{basis.id}{The index of the "knot" to select.}
 
-\item{wt}{Type of statistical model. Use one of the following strings: "gaussian", "binomial", "poisson", "negbin", "svm", or "Cox".}
+\item{wt}{The weights assigned to the explanatory variables.}
 
-\item{lambda0}{Type of kernel function to use in case of SVM model. Use one of the following strings: "linear", "gaussian", "poly", "spline", "anova_gaussian", or "gaussian2".}
+\item{lambda0}{A vector of \code{lambda0} sequences.}
 
-\item{lambda_theta}{Type of optimization algorithm. Use either the string "CD" (Coordinate Descent) or "QP".}
+\item{lambda_theta}{A vector of \code{lambda} sequences.}
 
-\item{gamma}{Kernel parameter values to use for SVM models.}
+\item{gamma}{Elastic-net mixing parameter.}
 
-\item{type}{Gamma value used in Stochastic Search Optimization.}
+\item{type}{The kernel function.}
 
-\item{kparam}{Number of folds for cross-validation.}
+\item{kparam}{The kernel function.}
 
-\item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
+\item{scale}{Boolean for whether to scale continuous explanatory variables to values between 0 and 1.}
 }
 \value{
-A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+A list of outputs obtained from the fitted model for the Cox proportional hazards model
 }
 \description{
-The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-Because it is a type of nonparametric inference, various types of kernels can be selected.
-To select hyperparameters, the function is designed to perform cross-validation.
+The cossonet.cox function is a COSSO model based on the Cox proportional hazards model applied to survival responses.
+Survival responses should be in matrix form with time and status as column names. It works internally via the cossonet function.
 }

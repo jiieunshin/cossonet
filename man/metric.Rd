@@ -2,21 +2,18 @@
 % Please edit documentation in R/metric.R
 \name{metric}
 \alias{metric}
-\title{Load a matrix from a file}
+\title{The function \code{metric} provides a contingency table for the predicted class and the true class for binary classes.}
 \usage{
 metric(true, est)
 }
 \arguments{
-\item{true}{A vector of true value of binary class response.}
+\item{true}{binary true class.}
 
-\item{est}{A vector of estimated response by \code{cdcosso}.}
+\item{est}{binary predicted class.}
 }
 \value{
-A list of contingency table for predicted results of binary class response.
+a contingency table for the predicted results of binary class responses.
 }
 \description{
-The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-Because it is a type of nonparametric inference, various types of kernels can be selected.
-To select hyperparameters, the function is designed to perform cross-validation.
+The function \code{metric} provides a contingency table for the predicted class and the true class for binary classes.
 }

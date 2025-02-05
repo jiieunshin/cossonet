@@ -105,7 +105,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambd
     }
   }
 
-  # smoothing paramter selection
+  # smoothing parameter selection
   measure_mean = colMeans(measure, na.rm = T)
   measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
 
@@ -176,7 +176,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   n = length(time)
   d = length(mscale)
 
-  # RS = RiskSet(time, status)
   G <- matrix(0, n, d)
   for (j in 1:d) {
     G[, j] = (model$Uv[, , j] %*% model$c.new) * (mscale[j]^(-2))

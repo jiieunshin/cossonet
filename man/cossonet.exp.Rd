@@ -2,7 +2,9 @@
 % Please edit documentation in R/cossonet.exp.R
 \name{cossonet.exp}
 \alias{cossonet.exp}
-\title{Load a matrix from a file}
+\title{The cossonet.exp function is a COSSO model applied to responses belonging to the exponential family.
+This function is applied to continuous, binary, and count responses.
+It operates internally through the cossonet function.}
 \usage{
 cossonet.exp(
   x,
@@ -20,36 +22,35 @@ cossonet.exp(
 )
 }
 \arguments{
-\item{x}{Input matrix with $n$ observations and $p$ dimension.}
+\item{x}{Input matrix or data frame of $n$ by $p$. \code{x} must have at least two columns ($p>1$).}
 
-\item{y}{Response variable. The type can be continuous (default), binary class, non-negative count, survival.}
+\item{y}{A response vector with a continuous, binary, or count type.}
 
-\item{wt}{A weight vector for components.}
+\item{wt}{The weights assigned to the explanatory variables.}
 
-\item{nbasis}{The number of basis.}
+\item{nbasis}{The number of "knots". If \code{basis.id} is provided, it is set to the length of \code{basis.id}.}
 
-\item{basis.id}{The index of basis.}
+\item{basis.id}{The index of the "knot" to select.}
 
-\item{lambda0}{A vector of tuning parameter to select optimal smoothing parameter.}
+\item{lambda0}{A vector of \code{lambda0} sequences.}
 
-\item{lambda_theta}{A vector of tuning parameter to select optimal tuning parameter.}
+\item{lambda_theta}{A vector of \code{lambda} sequences.}
 
-\item{gamma}{The elastic net mixing parameter between 0 and 1. When \code{gamma = 1}, the penalty is to be LASSO. When \code{gamma = 0}, the penalty is to be ridge penalty. The default is \code{gamma = 0.95}.}
+\item{gamma}{Elastic-net mixing parameter.}
 
-\item{obj}{The type of family.}
+\item{obj}{distribution used in the model.}
 
-\item{type}{Kernel function which is used to convert the input data for training and predicting. The four types is provided, \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
+\item{type}{The kernel function. One of four types of \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
-\item{kparam}{Kernel parameter values that is used in gaussian kernel and polynomial kernel.}
+\item{kparam}{Parameters for Gaussian and polynomial kernel functions.}
 
-\item{scale}{Boolean for whether to scale the input data to range between 0 and 1.}
+\item{scale}{Boolean for whether to scale continuous explanatory variables to values between 0 and 1. Default of \code{TRUE}.}
 }
 \value{
-A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+A list of outputs obtained from a model fitted to an exponential distribution.
 }
 \description{
-The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-Because it is a type of nonparametric inference, various types of kernels can be selected.
-To select hyperparameters, the function is designed to perform cross-validation.
+The cossonet.exp function is a COSSO model applied to responses belonging to the exponential family.
+This function is applied to continuous, binary, and count responses.
+It operates internally through the cossonet function.
 }

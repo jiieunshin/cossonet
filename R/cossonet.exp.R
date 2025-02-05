@@ -1,24 +1,21 @@
-#' Load a matrix from a file
+#' The cossonet.exp function is a COSSO model applied to responses belonging to the exponential family.
+#' This function is applied to continuous, binary, and count responses.
+#' It operates internally through the cossonet function.
 #'
-#' The cdcosso function is a function that solves component selection using the Coordinate Descent algorithm.
-#' This function can be applied to various response variables, continuous, count, binary, and survival analysis.
-#' Because it is a type of nonparametric inference, various types of kernels can be selected.
-#' To select hyperparameters, the function is designed to perform cross-validation.
+#' @param x Input matrix or data frame of $n$ by $p$. `x` must have at least two columns ($p>1$).
+#' @param y A response vector with a continuous, binary, or count type.
+#' @param wt The weights assigned to the explanatory variables.
+#' @param nbasis The number of "knots". If `basis.id` is provided, it is set to the length of `basis.id`.
+#' @param basis.id The index of the "knot" to select.
+#' @param lambda0 A vector of `lambda0` sequences.
+#' @param lambda_theta A vector of `lambda` sequences.
+#' @param gamma Elastic-net mixing parameter.
+#' @param obj distribution used in the model.
+#' @param type The kernel function. One of four types of `linear` (default), `gaussian`, `poly`, and `spline`.
+#' @param kparam Parameters for Gaussian and polynomial kernel functions.
+#' @param scale Boolean for whether to scale continuous explanatory variables to values between 0 and 1. Default of `TRUE`.
 #'
-#' @param x Input matrix with $n$ observations and $p$ dimension.
-#' @param y Response variable. The type can be continuous (default), binary class, non-negative count, survival.
-#' @param wt A weight vector for components.
-#' @param nbasis The number of basis.
-#' @param basis.id The index of basis.
-#' @param lambda0 A vector of tuning parameter to select optimal smoothing parameter.
-#' @param lambda_theta A vector of tuning parameter to select optimal tuning parameter.
-#' @param gamma The elastic net mixing parameter between 0 and 1. When `gamma = 1`, the penalty is to be LASSO. When `gamma = 0`, the penalty is to be ridge penalty. The default is `gamma = 0.95`.
-#' @param obj The type of family.
-#' @param type Kernel function which is used to convert the input data for training and predicting. The four types is provided, `linear` (default), `gaussian`, `poly`, and `spline`.
-#' @param kparam Kernel parameter values that is used in gaussian kernel and polynomial kernel.
-#' @param scale Boolean for whether to scale the input data to range between 0 and 1.
-#'
-#' @return A list containing information about the fitted model. Depending on the type of dependent variable, various information may be returned.
+#' @return A list of outputs obtained from a model fitted to an exponential distribution.
 #' @export
 
 cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale)
@@ -56,7 +53,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
 
   par(mfrow = c(1,1))
 
-  out = list(data = list(x = x, y = y, Uv = sspline_cvfit$Uv, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
+  out = list(data = list(x = x, y = y, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = sspline_cvfit,
              theta_step = nng_fit,
