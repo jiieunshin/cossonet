@@ -13,7 +13,4 @@ Imports:
     stats,
     MASS,
     glmnet,
-    mvtnorm,
-    quadprog,
-    graphics,
-    tmvtnorm
+    graphics
