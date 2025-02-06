@@ -38,7 +38,7 @@ cossonet = function (x,
   n = nrow(x)
   colnames(x) = NULL
   rownames(x) = NULL
-  if(!(class(x) %in% c("matrix", "data.frame")))
+  if(!(class(x)[1] %in% c("matrix", "data.frame")))
     stop("A input x must be matrix or data frame.")
 
   # family
