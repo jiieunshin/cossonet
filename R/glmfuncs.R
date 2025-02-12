@@ -73,8 +73,10 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       c.new = fit$c.new
 
       testf = c(b.new + te_U %*% c.new)
+      testmu = obj$linkinv(testf)
+      testw = as.vector(obj$variance(testmu))
 
-      err = te_n * sum(w * (y[te_id] - testf)^2)
+      err = te_n * sum(testw * (y[te_id] - testf)^2)
       inv.mat = ginv(t(te_U) %*% te_U + cand.lambda[k] * Q)
       df = sum(diag(te_U %*% inv.mat %*% t(te_U)))
       measure[fid, k] = err / (te_n - df)^2
@@ -233,7 +235,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       te_U = wsGram(te_Uv, theta.adj/mscale^2)
       testf = c(te_U %*% model$c.new + model$b.new)
 
-      err = te_n * sum(model$w.new * (y[te_id] - testf)^2)
+      err = te_n * sum(model$w.new[te_id] * (y[te_id] - testf)^2)
       inv.mat = ginv(t(te_U) %*% te_U + lambda_theta[k] * model$Q)
       df = sum(diag(te_U %*% inv.mat %*% t(te_U)))
       measure[fid, k] = err / (te_n - df)^2
