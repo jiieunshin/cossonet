@@ -11,13 +11,15 @@
 #' @param lambda_theta A vector of `lambda` sequences.
 #' @param gamma Elastic-net mixing parameter.
 #' @param type The kernel function.
-#' @param kparam The kernel function.
+#' @param nfold The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.
+#' @param kparam Parameters for Gaussian and polynomial kernel functions.
+#' @param one.std A logical value indicating whether to apply the "1-standard error rule," selecting the simplest model within one standard error of the best model.
 #' @param scale Boolean for whether to scale continuous explanatory variables to values between 0 and 1.
 #'
 #' @return A list of outputs obtained from the fitted model for the Cox proportional hazards model
 #' @export
 
-cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, nfold, kparam, one.std, scale)
 {
   n = length(time)
   p = length(wt)
@@ -41,10 +43,10 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
 
   par(mfrow = c(1,2))
   # solve c (1st)
-  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, rep(1, d)/wt^2, lambda0, type, kparam, one.std = TRUE, show = TRUE)
+  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, rep(1, d)/wt^2, lambda0, type, nfold, kparam, one.std = one.std, show = TRUE)
 
   # solve theta (1st)
-  theta_cvfit = cv.gettheta.subset(getc_cvfit, K, time, status, nbasis, basis.id, wt, getc_cvfit$optlambda, lambda_theta, gamma)
+  theta_cvfit = cv.gettheta.subset(getc_cvfit, K, time, status, nbasis, basis.id, wt, getc_cvfit$optlambda, lambda_theta, gamma, nfold, one.std = one.std)
 
   # solve c (2nd)
   theta.new = rescale_theta(theta_cvfit$theta.new)
@@ -53,7 +55,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
 
   par(mfrow = c(1,1))
 
-  out = list(data = list(x = x, time = time, status = status, basis.id = basis.id, RS = getc_cvfit$RS, wt = wt, kernel = type, kparam = kparam),
+  out = list(data = list(x = x, time = time, status = status, basis.id = basis.id, RS = getc_cvfit$RS, wt = wt, kernel = type, nfold, kparam = kparam, one.std = one.std),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,

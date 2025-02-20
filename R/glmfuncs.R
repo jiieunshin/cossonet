@@ -1,4 +1,4 @@
-cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, kparam, one.std, show)
+cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, nfold, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -29,9 +29,9 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
     EigQ$values[EigQ$values < 0] = 1e-08
 
   # cross-validation
-  fold = cvsplitID(n, 5, y, family = obj$family)
-  measure <- matrix(NA, 5, len)
-  for(fid in 1:5){
+  fold = cvsplitID(n, nfold, y, family = obj$family)
+  measure <- matrix(NA, nfold, len)
+  for(fid in 1:nfold){
     tr_id = as.vector(fold[, -fid])
     te_id = fold[, fid]
 
@@ -182,7 +182,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   return(out)
 }
 
-cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj)
+cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj, nfold, one.std)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -209,10 +209,10 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   # cross-validation
   init.theta = rep(1, d)
   len = length(lambda_theta)
-  measure <- matrix(NA, 5, len)
-  fold = cvsplitID(n, 5, y, family = obj$family)
+  measure <- matrix(NA, nfold, len)
+  fold = cvsplitID(n, nfold, y, family = obj$family)
 
-  for(fid in 1:5){
+  for(fid in 1:nfold){
     tr_id = as.vector(fold[, -fid])
     te_id = fold[, fid]
 
@@ -279,11 +279,16 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   lambda_theta = lambda_theta[sel_id]
 
   min_id = which.min(measure_mean)
-  cand_ids = which((measure_mean >= measure_mean[min_id]) &
-                     (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
-  cand_ids = cand_ids[cand_ids >= min_id]
-  std_id = max(cand_ids)
-  optlambda = lambda_theta[std_id]
+
+  if(one.std){
+    cand_ids = which((measure_mean >= measure_mean[min_id]) &
+                       (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
+    cand_ids = cand_ids[cand_ids >= min_id]
+    std_id = max(cand_ids)
+    optlambda = cand.lambda[std_id]
+  } else{
+    optlambda = cand.lambda[min_id]
+  }
 
   ylab = expression("GCV(" * lambda[theta] * ")")
 
@@ -293,7 +298,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
-  abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
+  abline(v = log(optlambda), lty = 2, col = "darkgray")
 
   theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * optlambda * gamma / 2, n * optlambda * (1-gamma), PACKAGE = "cossonet")
   theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)

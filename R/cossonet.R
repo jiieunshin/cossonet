@@ -13,11 +13,12 @@
 #' @param basis.id The index of the "knot" to select.
 #' @param kernel TThe kernel function. One of four types of `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param effect The effect of the component. `main` (default) is the main effect, and `interaction` is the two-way interaction.
+#' @param nfold The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.
 #' @param kparam Parameters for Gaussian and polynomial kernel functions
 #' @param lambda0 A vector of `lambda0` sequences. The default is a grid of 20 values `[2^{-10}, \dots, 2^{10}]` on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set `\lambda0` as a single value.
 #' @param lambda_theta A vector of `lambda` sequences. The default is a grid of 20 values `[2^{-10}, \dots, 2^{10}]` on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set `lambda` as a single value.
 #' @param gamma Elastic-net mixing parameter `0 \leq \gamma \leq 1`. If `gamma = 1`, the LASSO penalty is applied, and if `gamma = 0`, the Ridge penalty is applied. The default is `gamma = 0.95`.
-#'
+#' @param one.std A logical value indicating whether to apply the "1-standard error rule." When set to `TRUE`, it applies to both the c-step and theta-step, selecting the simplest model within one standard error of the best model.
 #' @return A list containing information about the fitted model.
 #' @export
 
@@ -30,10 +31,12 @@ cossonet = function (x,
                     basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
+                    nfold = 5,
                     kparam = 1,
                     lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
-                    gamma = 0.95)
+                    gamma = 0.95,
+                    one.std = TRUE)
 {
   n = nrow(x)
   colnames(x) = NULL
@@ -73,8 +76,8 @@ cossonet = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale),
-               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, kparam, scale)
+               glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, nfold, kparam, scale, one.std),
+               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, nfold, kparam, scale, one.std)
   )
 
   attr(out, "class") = "cossonet"

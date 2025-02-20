@@ -9,7 +9,7 @@ RiskSet = function (time, status)
   return(RiskSet)
 }
 
-cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambda, type, kparam, one.std, show)
+cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambda, type, nfold, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
   cat("proceeding... \n")
@@ -31,9 +31,9 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambd
   Q <- combine_kernel(Qv, mscale)
 
   # cross-validation
-  fold = cvsplitID(n, 5, status, family = "gaussian")
-  measure <- matrix(NA, 5, len)
-  for(fid in 1:5){
+  fold = cvsplitID(n, nfold, status, family = "gaussian")
+  measure <- matrix(NA, nfold, len)
+  for(fid in 1:nfold){
     tr_id = as.vector(fold[, -fid])
     te_id = fold[, fid]
 
@@ -168,7 +168,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambd
   return(out)
 }
 
-cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma)
+cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale, lambda0, lambda_theta, nfold, gamma, one.std)
   {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -196,10 +196,10 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   # cross-validation
   init.theta = rep(1, d)
   len = length(lambda_theta)
-  measure = matrix(NA, 5, len)
-  fold = cvsplitID(n, 5, time, family = "gaussian")
+  measure = matrix(NA, nfold, len)
+  fold = cvsplitID(n, nfold, time, family = "gaussian")
 
-  for(fid in 1:5){
+  for(fid in 1:nfold){
     tr_id = as.vector(fold[, -fid])
     te_id = fold[, fid]
 
@@ -253,11 +253,17 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   lambda_theta = lambda_theta[sel_id]
 
   min_id = which.min(measure_mean)
-  cand_ids = which((measure_mean >= measure_mean[min_id]) &
-                     (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
-  cand_ids = cand_ids[cand_ids >= min_id]
-  std_id = max(cand_ids)
-  optlambda = lambda_theta[std_id]
+
+
+  if(one.std){
+    cand_ids = which((measure_mean >= measure_mean[min_id]) &
+                       (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
+    cand_ids = cand_ids[cand_ids >= min_id]
+    std_id = max(cand_ids)
+    optlambda = cand.lambda[std_id]
+  } else{
+    optlambda = cand.lambda[min_id]
+  }
 
   ylab = expression("GCV(" * lambda[theta] * ")")
 
@@ -266,7 +272,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   arrows(x0 = log(lambda_theta), y0 = measure_mean - measure_se,
          x1 = log(lambda_theta), y1 = measure_mean + measure_se,
          angle = 90, code = 3, length = 0.1, col = "darkgray")
-  abline(v = log(lambda_theta)[std_id], lty = 2, col = "darkgray")
+  abline(v = log(optlambda), lty = 2, col = "darkgray")
 
   response = survival::Surv(time = time, event = status)
   eta = exp(G %*% init.theta)

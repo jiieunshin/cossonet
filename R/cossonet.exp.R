@@ -12,13 +12,15 @@
 #' @param gamma Elastic-net mixing parameter.
 #' @param obj distribution used in the model.
 #' @param type The kernel function. One of four types of `linear` (default), `gaussian`, `poly`, and `spline`.
+#' @param nfold The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.
 #' @param kparam Parameters for Gaussian and polynomial kernel functions.
+#' @param one.std A logical value indicating whether to apply the "1-standard error rule," selecting the simplest model within one standard error of the best model.
 #' @param scale Boolean for whether to scale continuous explanatory variables to values between 0 and 1. Default of `TRUE`.
 #'
 #' @return A list of outputs obtained from a model fitted to an exponential distribution.
 #' @export
 
-cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, kparam, scale)
+cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, nfold, kparam, one.std, scale)
 {
   n = length(y)
   p = length(wt)
@@ -42,14 +44,14 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = TRUE,  show = TRUE)
+  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, nfold, kparam, one.std = one.std, show = TRUE)
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, obj)
+  nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, nfold, one.std = one.std, obj)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd
-  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, kparam, one.std = FALSE, show = FALSE)})
+  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, nfold, kparam, one.std = FALSE, show = FALSE)})
 
   par(mfrow = c(1,1))
 
