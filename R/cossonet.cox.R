@@ -1,24 +1,3 @@
-#' The cossonet.cox function is a COSSO model based on the Cox proportional hazards model applied to survival responses.
-#' Survival responses should be in matrix form with time and status as column names. It works internally via the cossonet function.
-#'
-#' @param x Input matrix or data frame of $n$ by $p$. `x` must have at least two columns ($p>1$).
-#' @param time for right censored data, this is the follow up time. For interval data, the first argument is the starting time for the interval. It follows the same input format as the `time` argument in the `Surv` function from the `survival` package.
-#' @param status Status indicator, typically coded as 0 for "alive" and 1 for "dead." It follows the same input format as the `status` argument in the `Surv` function from the `survival` package.
-#' @param nbasis The number of "knots". If `basis.id` is provided, it is set to the length of `basis.id`.
-#' @param basis.id The index of the "knot" to select.
-#' @param wt The weights assigned to the explanatory variables.
-#' @param lambda0 A vector of `lambda0` sequences.
-#' @param lambda_theta A vector of `lambda` sequences.
-#' @param gamma Elastic-net mixing parameter.
-#' @param type The kernel function.
-#' @param nfold The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.
-#' @param kparam Parameters for Gaussian and polynomial kernel functions.
-#' @param one.std A logical value indicating whether to apply the "1-standard error rule," selecting the simplest model within one standard error of the best model.
-#' @param scale Boolean for whether to scale continuous explanatory variables to values between 0 and 1.
-#'
-#' @return A list of outputs obtained from the fitted model for the Cox proportional hazards model
-#' @export
-
 cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, nfold, kparam, one.std, scale)
 {
   n = length(time)

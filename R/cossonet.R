@@ -20,8 +20,26 @@
 #' @param gamma Elastic-net mixing parameter `0 \leq \gamma \leq 1`. If `gamma = 1`, the LASSO penalty is applied, and if `gamma = 0`, the Ridge penalty is applied. The default is `gamma = 0.95`.
 #' @param one.std A logical value indicating whether to apply the "1-standard error rule." When set to `TRUE`, it applies to both the c-step and theta-step, selecting the simplest model within one standard error of the best model.
 #' @return A list containing information about the fitted model.
+#'
+#' @examples
+#' # Generate example data
+#' set.seed(20250101)
+#' tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
+#' tr_x = tr$x
+#' tr_y = tr$y
+#'
+#' te = data_generation(n = 1000, p = 20, SNR = 9, response = "continuous")
+#' te_x = te$x
+#' te_y = te$y
+#'
+#' # Fit the model
+#' fit = cossonet(tr_x, tr_y, family = 'gaussian', gamma = 0.95, kernel = "spline", scale = TRUE,
+#'       lambda0 = exp(seq(log(2^{-4}), log(2^{0}), length.out = 20)),
+#'       lambda_theta = exp(seq(log(2^{-8}), log(2^{-6}), length.out = 20))
+#'       )
+#'
 #' @export
-
+#'
 cossonet = function (x,
                     y,
                     family = c("gaussian", "binomial", "poisson", "Cox"),

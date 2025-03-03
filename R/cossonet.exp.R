@@ -1,25 +1,3 @@
-#' The cossonet.exp function is a COSSO model applied to responses belonging to the exponential family.
-#' This function is applied to continuous, binary, and count responses.
-#' It operates internally through the cossonet function.
-#'
-#' @param x Input matrix or data frame of $n$ by $p$. `x` must have at least two columns ($p>1$).
-#' @param y A response vector with a continuous, binary, or count type.
-#' @param wt The weights assigned to the explanatory variables.
-#' @param nbasis The number of "knots". If `basis.id` is provided, it is set to the length of `basis.id`.
-#' @param basis.id The index of the "knot" to select.
-#' @param lambda0 A vector of `lambda0` sequences.
-#' @param lambda_theta A vector of `lambda` sequences.
-#' @param gamma Elastic-net mixing parameter.
-#' @param obj distribution used in the model.
-#' @param type The kernel function. One of four types of `linear` (default), `gaussian`, `poly`, and `spline`.
-#' @param nfold The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.
-#' @param kparam Parameters for Gaussian and polynomial kernel functions.
-#' @param one.std A logical value indicating whether to apply the "1-standard error rule," selecting the simplest model within one standard error of the best model.
-#' @param scale Boolean for whether to scale continuous explanatory variables to values between 0 and 1. Default of `TRUE`.
-#'
-#' @return A list of outputs obtained from a model fitted to an exponential distribution.
-#' @export
-
 cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, nfold, kparam, one.std, scale)
 {
   n = length(y)

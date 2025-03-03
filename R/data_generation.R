@@ -7,7 +7,20 @@
 #' @param response the type of the response variable.
 #'
 #' @return a list of explanatory variables, response variables, and true functions.
+#'
+#' @examples
+#' # Generate example data
+#' set.seed(20250101)
+#' tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
+#' tr_x = tr$x
+#' tr_y = tr$y
+#'
+#' te = data_generation(n = 1000, p = 20, SNR = 9, response = "continuous")
+#' te_x = te$x
+#' te_y = te$y
+#'
 #' @export
+#'
 data_generation = function(n, p, rho, SNR,
                            response = c("continuous", "binary", "count", "survival")){
 

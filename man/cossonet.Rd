@@ -69,3 +69,21 @@ The cossonet function implements a nonparametric regression model that estimates
 This function can be applied to continuous, count, binary, and survival responses.
 To use this function, the user must specify a family, kernel function, etc. For cross-validation, the sequence vectors \code{lambda0} and \code{lambda_theta} appropriate for the input data must also be specified.
 }
+\examples{
+# Generate example data
+set.seed(20250101)
+tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
+tr_x = tr$x
+tr_y = tr$y
+
+te = data_generation(n = 1000, p = 20, SNR = 9, response = "continuous")
+te_x = te$x
+te_y = te$y
+
+# Fit the model
+fit = cossonet(tr_x, tr_y, family = 'gaussian', gamma = 0.95, kernel = "spline", scale = TRUE,
+      lambda0 = exp(seq(log(2^{-4}), log(2^{0}), length.out = 20)),
+      lambda_theta = exp(seq(log(2^{-8}), log(2^{-6}), length.out = 20))
+      )
+
+}

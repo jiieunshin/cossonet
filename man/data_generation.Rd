@@ -29,3 +29,15 @@ a list of explanatory variables, response variables, and true functions.
 \description{
 The function data_generation generates an example dataset for applying the cossonet function.
 }
+\examples{
+# Generate example data
+set.seed(20250101)
+tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
+tr_x = tr$x
+tr_y = tr$y
+
+te = data_generation(n = 1000, p = 20, SNR = 9, response = "continuous")
+te_x = te$x
+te_y = te$y
+
+}

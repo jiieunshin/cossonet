@@ -10,7 +10,5 @@ import(graphics)
 
 export(data_generation)
 export(cossonet)
-export(cossonet.exp)
-export(cossonet.cox)
 export(cossonet.predict)
 export(metric)
