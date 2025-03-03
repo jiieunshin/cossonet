@@ -14,6 +14,7 @@ cossonet(
   basis.id,
   kernel = c("linear", "gaussian", "poly", "spline"),
   effect = c("main", "interaction"),
+  nfold = 5,
   kparam = 1,
   lambda0 = exp(seq(log(2^{
      -10
@@ -25,7 +26,8 @@ cossonet(
  }), log(2^{
      10
  }), length.out = 20)),
-  gamma = 0.95
+  gamma = 0.95,
+  one.std = TRUE
 )
 }
 \arguments{
@@ -47,6 +49,8 @@ cossonet(
 
 \item{effect}{The effect of the component. \code{main} (default) is the main effect, and \code{interaction} is the two-way interaction.}
 
+\item{nfold}{The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.}
+
 \item{kparam}{Parameters for Gaussian and polynomial kernel functions}
 
 \item{lambda0}{A vector of \code{lambda0} sequences. The default is a grid of 20 values \verb{[2^\{-10\}, \\dots, 2^\{10\}]} on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set \verb{\\lambda0} as a single value.}
@@ -54,6 +58,8 @@ cossonet(
 \item{lambda_theta}{A vector of \code{lambda} sequences. The default is a grid of 20 values \verb{[2^\{-10\}, \\dots, 2^\{10\}]} on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set \code{lambda} as a single value.}
 
 \item{gamma}{Elastic-net mixing parameter \verb{0 \\leq \\gamma \\leq 1}. If \code{gamma = 1}, the LASSO penalty is applied, and if \code{gamma = 0}, the Ridge penalty is applied. The default is \code{gamma = 0.95}.}
+
+\item{one.std}{A logical value indicating whether to apply the "1-standard error rule." When set to \code{TRUE}, it applies to both the c-step and theta-step, selecting the simplest model within one standard error of the best model.}
 }
 \value{
 A list containing information about the fitted model.

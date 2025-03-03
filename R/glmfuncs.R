@@ -182,7 +182,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   return(out)
 }
 
-cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, obj, nfold, one.std)
+cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, nfold, one.std, obj)
 {
   cat("-- theta-step -- \n")
   cat("proceeding... \n")
@@ -285,9 +285,9 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
                        (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
     cand_ids = cand_ids[cand_ids >= min_id]
     std_id = max(cand_ids)
-    optlambda = cand.lambda[std_id]
+    optlambda = lambda_theta[std_id]
   } else{
-    optlambda = cand.lambda[min_id]
+    optlambda = lambda_theta[min_id]
   }
 
   ylab = expression("GCV(" * lambda[theta] * ")")

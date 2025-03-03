@@ -17,7 +17,9 @@ cossonet.exp(
   gamma,
   obj,
   type,
+  nfold,
   kparam,
+  one.std,
   scale
 )
 }
@@ -42,7 +44,11 @@ cossonet.exp(
 
 \item{type}{The kernel function. One of four types of \code{linear} (default), \code{gaussian}, \code{poly}, and \code{spline}.}
 
+\item{nfold}{The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.}
+
 \item{kparam}{Parameters for Gaussian and polynomial kernel functions.}
+
+\item{one.std}{A logical value indicating whether to apply the "1-standard error rule," selecting the simplest model within one standard error of the best model.}
 
 \item{scale}{Boolean for whether to scale continuous explanatory variables to values between 0 and 1. Default of \code{TRUE}.}
 }
