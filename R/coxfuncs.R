@@ -12,7 +12,7 @@ RiskSet = function (time, status)
 cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambda, type, nfold, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
-  cat("proceeding... \n")
+  cat("proceeding... \n\n")
 
   d = K$numK
   n <- length(status)
@@ -171,7 +171,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambd
 cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, nfold, one.std)
   {
   cat("-- theta-step -- \n")
-  cat("proceeding... \n")
+  cat("proceeding... \n\n")
 
   n = length(time)
   d = length(mscale)

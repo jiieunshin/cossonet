@@ -51,7 +51,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
   # solve c (2nd)
   theta.new = rescale_theta(theta_cvfit$theta.new)
 
-  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, theta.new/wt^2, lambda0, type, kparam, one.std = FALSE, show = FALSE)
+  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, theta.new/wt^2, lambda0, type, nfold, kparam, one.std = FALSE, show = FALSE)
 
   par(mfrow = c(1,1))
 

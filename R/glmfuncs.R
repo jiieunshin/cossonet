@@ -1,7 +1,7 @@
 cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, nfold, kparam, one.std, show)
 {
   cat("-- c-step -- \n")
-  cat("proceeding... \n")
+  cat("proceeding... \n\n")
   d = K$numK
   n <- length(y)
   len = length(cand.lambda)
@@ -183,9 +183,9 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 }
 
 cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, nfold, one.std, obj)
-{print(nfold)
+{
   cat("-- theta-step -- \n")
-  cat("proceeding... \n")
+  cat("proceeding... \n\n")
   n = length(y)
   d = length(mscale)
 
