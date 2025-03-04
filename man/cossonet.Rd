@@ -70,6 +70,7 @@ This function can be applied to continuous, count, binary, and survival response
 To use this function, the user must specify a family, kernel function, etc. For cross-validation, the sequence vectors \code{lambda0} and \code{lambda_theta} appropriate for the input data must also be specified.
 }
 \examples{
+\donttest{
 # Generate example data
 set.seed(20250101)
 tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
@@ -86,4 +87,5 @@ fit = cossonet(tr_x, tr_y, family = 'gaussian', gamma = 0.95, kernel = "spline",
       lambda_theta = exp(seq(log(2^{-8}), log(2^{-6}), length.out = 20))
       )
 
+}
 }

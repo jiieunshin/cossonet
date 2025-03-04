@@ -3,7 +3,7 @@ title: "cossonet"
 author: "Jieun Shin"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{The component selection and smoothing operator (COSSO) is a function that estimates sparse nonlinear components. This model is an extension of the COSSO regression model to make it functional and practical for high-dimensional data. This model supports a variety of response types, including the exponential family and Cox proportional hazards models.}
+  %\VignetteIndexEntry{This package provides a function for estimating sparse nonlinear components in nonparametric regression, specifically designed for high-dimensional data. The method is applicable to various types of data, including models from the exponential family and the Cox proportional hazards model.}
   %\VignetteEngine{knitr::rmarkdown}
 ---
 

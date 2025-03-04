@@ -6,6 +6,7 @@
 #' @return A list of predicted values for the new data set.
 #'
 #' @examples
+#' \donttest{
 #' set.seed(20250101)
 #' tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
 #' tr_x = tr$x
@@ -23,7 +24,7 @@
 #'
 #' # Predict new dataset
 #' pred = cossonet.predict(fit, te_x)
-#'
+#' }
 #' @export
 
 cossonet.predict = function(model, testx)

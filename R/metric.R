@@ -6,6 +6,7 @@
 #' @return a contingency table for the predicted results of binary class responses.
 #'
 #' @examples
+#' \donttest{
 #' set.seed(20250101)
 #' tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
 #' tr_x = tr$x
@@ -28,6 +29,7 @@
 #' true_var = c(rep(1, 4), rep(0, 20-4))
 #' est_var = ifelse(fit$theta_step$theta.new > 0, 1, 0)
 #' metric(true_var, est_var)
+#' }
 #'
 #' @export
 metric = function(true, est){

@@ -18,6 +18,7 @@ A list of predicted values for the new data set.
 The function \code{cossonet.predict} predicts predictive values for new data based on an object from the \code{cossonet} function.
 }
 \examples{
+\donttest{
 set.seed(20250101)
 tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
 tr_x = tr$x
@@ -35,5 +36,5 @@ fit = cossonet(tr_x, tr_y, family = 'gaussian', gamma = 0.95, kernel = "spline",
 
 # Predict new dataset
 pred = cossonet.predict(fit, te_x)
-
+}
 }

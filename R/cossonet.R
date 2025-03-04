@@ -22,6 +22,7 @@
 #' @return A list containing information about the fitted model.
 #'
 #' @examples
+#' \donttest{
 #' # Generate example data
 #' set.seed(20250101)
 #' tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
@@ -38,6 +39,7 @@
 #'       lambda_theta = exp(seq(log(2^{-8}), log(2^{-6}), length.out = 20))
 #'       )
 #'
+#' }
 #' @export
 #'
 cossonet = function (x,
