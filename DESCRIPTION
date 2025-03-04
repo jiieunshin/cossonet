@@ -1,8 +1,8 @@
 Package: cossonet
-Title: Sparse Nonparametric Regression for High-Dimensional Data using COSSO
+Title: Sparse Nonparametric Regression for High-Dimensional Data using "COSSO" Penalty
 Version: 1.0
 Authors@R: person("Jieun", "Shin", email = "jieunstat@uos.ac.kr", role = c("aut", "cre"))
-Description: The component selection and smoothing operator (COSSO) is a function that estimates sparse nonlinear components. This model is an extension of the COSSO regression model to make it functional and practical for high-dimensional data. This model supports a variety of response types, including the exponential family and Cox proportional hazards models.
+Description: The component selection and smoothing operator ("COSSO") is a function that estimates sparse nonlinear components. This model is an extension of the "COSSO" regression model to make it functional and practical for high-dimensional data. This model supports a variety of response types, including the exponential family and Cox proportional hazards models.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
