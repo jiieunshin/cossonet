@@ -1,0 +1,57 @@
+---
+title: "cossonet"
+author: "Jieun Shin"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The component selection and smoothing operator (COSSO) is a function that estimates sparse nonlinear components. This model is an extension of the COSSO regression model to make it functional and practical for high-dimensional data. This model supports a variety of response types, including the exponential family and Cox proportional hazards models.}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+## Introduction
+
+The package \pkg{cossonet} is a integrated function that estimates sparse nonlinear components using COSSO penalty. This package is available from the Comprehensive R Archive Network. This script describes a example of how to use the \pkg{cossonet} package.
+
+## Installation
+
+We first load the library for \pkg{cossonet} and set a seed for reproducibility.
+
+```{r, eval=FALSE}
+devtools::install_github("jiieunshin/cossonet")
+library(cossonet)
+set.seed(20250101)
+```
+
+## Data generation
+
+The function \texttt{data\_generation} generates example datasets with continuous response. We generate a training set with $n=200$ and $p=20$, and a test set with $n=1000$ and $p=20$.
+```{reval=FALSE}
+tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
+str(tr)
+
+te = data_generation(n = 1000, p = 20, SNR = 9, response = "continuous")
+str(te)
+```
+
+## Model fitting
+
+The function \texttt{cossonet} is the main function that fits the model. We need to input specific arguments to this function. \texttt{family} is the type of response, and \texttt{lambda0} and \texttt{lambda_theta} are vector sequences of specific intervals.
+
+```{r, eval=FALSE}
+lambda0_seq = exp(seq(log(2^{-5}), log(2^{-1}), length.out = 20))
+lambda_theta_seq = exp(seq(log(2^{-8}), log(2^{-5}), length.out = 20))
+
+fit = cossonet(tr$x, tr$y, family = 'gaussian',
+	       lambda0 = lambda0_seq,
+	       lambda_theta = lambda_theta_seq
+	       )
+```
+
+## Prediction
+
+The function \texttt{cossonet.predict} is used to predict for new data using the fitted model. The output of the function \texttt{cossonet.predict} includes the predicted values $\hat{f}$ from \texttt{f.new} and $\hat{\mu}$ from \texttt{mu.new} for the new data. The predicted value and predictive accuracy for the test set using our fitted model can be obtained by
+```{r, eval=FALSE}
+pred = cossonet.predict(fit, te$x)
+str(pred)
+
+mean((te$f - pred$f.new)^2)
+```

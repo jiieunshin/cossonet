@@ -1,2 +1,5 @@
-^cdcosso\.Rproj$
+^cossonet\.Rproj$
 ^\.Rproj\.user$
+^\.github$
+^doc$
+^Meta$
