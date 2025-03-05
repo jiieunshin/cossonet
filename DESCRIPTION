@@ -2,7 +2,7 @@ Package: cossonet
 Title: Sparse Nonparametric Regression for High-Dimensional Data
 Version: 1.0
 Authors@R: person("Jieun", "Shin", email = "jieunstat@uos.ac.kr", role = c("aut", "cre"))
-Description: This package provides a function for estimating sparse nonlinear components in nonparametric regression, specifically designed for high-dimensional data. The method is applicable to various types of data, including models from the exponential family and the Cox proportional hazards model.
+Description: The package provides functions for estimating sparse nonlinear functions in nonparametric regression. The functions are based on component selection and smoothing and are specifically designed for the analysis of high-dimensional data. The models can be applied to a variety of data types, including models of exponential family and Cox proportional hazards models.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
