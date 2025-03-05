@@ -34,7 +34,7 @@ fit = cossonet(tr$x, tr$y, family = 'gaussian',
 
 ## Prediction
 
-The function `cossonet.predict` is used to predict new data based on the fitted model. The output includes predicted values $\hat{f}$ (from \texttt{f.new}) and $\hat{\mu}$ (from \texttt{mu.new}) for the new data. The predicted value and predictive accuracy for the test set using our fitted model can be obtained by
+The function `cossonet.predict` is used to predict new data based on the fitted model. The output includes predicted values $\hat{f}$ (from `f.new`) and $\hat{\mu}$ (from `mu.new`) for the new data. The predicted value and predictive accuracy for the test set using our fitted model can be obtained by
 ```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 pred = cossonet.predict(fit, te$x)
 mean((te$f - pred$f.new)^2)
