@@ -2,23 +2,17 @@ Package: cossonet
 Title: Sparse Nonparametric Regression for High-Dimensional Data
 Version: 1.0
 Authors@R: person("Jieun", "Shin", email = "jieunstat@uos.ac.kr", role = c("aut", "cre"))
-Description: The package provides functions for estimating sparse nonlinear functions in nonparametric regression. The functions are based on component selection and smoothing and are specifically designed for the analysis of high-dimensional data. The models can be applied to a variety of data types, including models of exponential family and Cox proportional hazards models.
+Description: Estimation of sparse nonlinear functions in nonparametric regression using component selection and smoothing. Designed for the analysis of high-dimensional data, the models support various data types, including exponential family models and Cox proportional hazards models. The methodology is based on Lin and Zhang (2006) <doi:10.1214/009053606000000722>.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
-Imports:
-    cosso,
-    survival,
-    stats,
-    MASS,
-    glmnet,
-    graphics
-Suggests: 
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0),
-    usethis (>= 2.1.5),
-    devtools
+Imports: cosso, survival, stats, MASS, glmnet, graphics
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0), usethis (>= 2.1.5),
+        devtools
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+NeedsCompilation: yes
+Packaged: 2025-03-05 02:30:18 UTC; jieun
+Author: Jieun Shin [aut, cre]
+Maintainer: Jieun Shin <jieunstat@uos.ac.kr>

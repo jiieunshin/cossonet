@@ -3,37 +3,38 @@ title: "cossonet"
 author: "Jieun Shin"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{The package provides functions for estimating sparse nonlinear functions in nonparametric regression. The functions are based on component selection and smoothing and are specifically designed for the analysis of high-dimensional data. The models can be applied to a variety of data types, including models of exponential family and Cox proportional hazards models.}
+  %\VignetteIndexEntry{Estimation of sparse nonlinear functions in nonparametric regression using component selection and smoothing.}
   %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ## Introduction
 
-The package \pkg{cossonet} is an integrated function that estimates sparse nonlinear components using the COSSO penalty. This package is available from the Comprehensive R Archive Network. This script describes a example of how to use the \pkg{cossonet} package.
+The package \CRANpkg{cossonet} is an function that estimates sparse nonlinear components using the COSSO penalty. This package is available from the Comprehensive R Archive Network. This script describes a example of how to use the \CRANpkg{cossonet} package.
 
 ## Installation
 
-We first load the library for \pkg{cossonet} and set a seed for reproducibility.
+We first load the library for \CRANpkg{cossonet} and set a seed for reproducibility.
 
-```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
-devtools::install_github("jiieunshin/cossonet")
+```{r, eval=FALSE}
+install.packages("cossonet")
 library(cossonet)
 set.seed(20250101)
 ```
 
 ## Data generation
 
-The function \texttt{data_generation} generates example datasets with continuous response. We generate a training set with $n=200$ and $p=20$, and a test set with $n=1000$ and $p=20$.
-```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+The function `data_generation` generates example datasets with continuous response. We generate a training set with $n=200$ and $p=20$, and a test set with $n=1000$ and $p=20$.
+```{r, eval=FALSE}
 tr = data_generation(n = 200, p = 20, SNR = 9, response = "continuous")
 te = data_generation(n = 1000, p = 20, SNR = 9, response = "continuous")
 ```
 
 ## Model fitting
 
-The function \texttt{cossonet} is the main function that fits the model. We have to input training set in this function. And Specific values are required to the arguments, such as  \texttt{family}, \texttt{lambda0}, and \texttt{lambda_theta}.
+The function `cossonet` is the main function that fits the model. We have to input training set in this function. And Specific values are required to the arguments, such as  `family`, `lambda0`, and `lambda_theta`.
 
-```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, eval=FALSE}
 lambda0_seq = exp(seq(log(2^{-5}), log(2^{-1}), length.out = 20))
 lambda_theta_seq = exp(seq(log(2^{-8}), log(2^{-5}), length.out = 20))
 
@@ -45,8 +46,13 @@ fit = cossonet(tr$x, tr$y, family = 'gaussian',
 
 ## Prediction
 
-The function \texttt{cossonet.predict} is used to predict new data based on the fitted model. The output includes predicted values $\hat{f}$ (from \texttt{f.new}) and $\hat{\mu}$ (from \texttt{mu.new}) for the new data. The predicted value and predictive accuracy for the test set using our fitted model can be obtained by
-```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+The function `cossonet.predict` is used to predict new data based on the fitted model. The output includes predicted values $\hat{f}$ (from `f.new`) and $\hat{\mu}$ (from `mu.new`) for the new data. The predicted value and predictive accuracy for the test set using our fitted model can be obtained by
+```{r, eval=FALSE}
 pred = cossonet.predict(fit, te$x)
 mean((te$f - pred$f.new)^2)
 ```
+
+## References
+
+- Lin, Y., & Zhang, H. (2006). Component selection and smoothing in multivariate nonparametric regression.  
+  *Annals of Statistics*, **34**(5), 2272–2297. <doi:10.1214/009053606000000722>.
