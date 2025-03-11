@@ -3,7 +3,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
   n = length(y)
   p = length(wt)
 
-  cat("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
+  message("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
 
   if (missing(nbasis) & missing(basis.id)) {
     nbasis = max(40, ceiling(12 * n^(2/9)))
@@ -18,7 +18,10 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
 
   K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
-  cat("kernel:", type, "and d =", d, "\n")
+  message("kernel:", type, "and d =", d, "\n")
+
+  op <- par(no.readonly = TRUE)
+  on.exit(par(op))
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
@@ -28,10 +31,10 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
   nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, nfold, one.std = one.std, obj)
   theta.new = rescale_theta(nng_fit$theta.new)
 
-  # solve (theta) - 2nd
-  sspline_cvfit = try({cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p)/wt^2, lambda0, obj, type, nfold, kparam, one.std = FALSE, show = FALSE)})
+  par(op)
 
-  par(mfrow = c(1,1))
+  # solve (theta) - 2nd
+  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p) / wt^2, lambda0, obj, type, nfold, kparam, one.std = FALSE, show = FALSE)
 
   out = list(data = list(x = x, y = y, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),

@@ -1,7 +1,7 @@
 cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, type, nfold, kparam, one.std, show)
 {
   message("-- c-step -- \n")
-  message("proceeding... \n\n")
+  message("proceeding... \n")
   d = K$numK
   n <- length(y)
   len = length(cand.lambda)
@@ -167,7 +167,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   if(obj$family == "binomial") m <- mean(y != ifelse(mu.new < 0.5, 0, 1))
   if(obj$family == "poisson") m <- mean((y - f.new)^2)
 
-  message("mse:", round(m, 4), "\n\n")
+  message("mse:", round(m, 4), "\n")
 
   out = list(measure = measure, Uv = Uv, Q = Q, w.new = w.new, sw.new = sqrt(w.new), mu.new = mu.new,
              z.new = z.new, zw.new = z.new * sqrt(w.new), b.new = b.new,
@@ -185,7 +185,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
 cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_theta, gamma, nfold, one.std, obj)
 {
   message("-- theta-step -- \n")
-  message("proceeding... \n\n")
+  message("proceeding... \n")
   n = length(y)
   d = length(mscale)
 
