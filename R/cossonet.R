@@ -83,7 +83,7 @@ cossonet = function (x,
   else
     effect = match.arg(kernel)
 
-  if(effect == "interaction") kernel = paste0(kernel, "2")
+  if(effect == "interaction") type = paste0(kernel, "2")
 
   if(scale)
     x = apply(x, 2, rescale)

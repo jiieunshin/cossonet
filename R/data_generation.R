@@ -22,7 +22,8 @@
 #' @export
 #'
 data_generation = function(n, p, rho, SNR,
-                           response = c("continuous", "binary", "count", "survival")){
+                           response = c("continuous", "binary", "count", "survival"),
+                           interaction = TRUE){
 
   if(response == "binary"){
     f1 = function(t) 3 * t
@@ -39,7 +40,7 @@ data_generation = function(n, p, rho, SNR,
   }
 
   if(missing(response))
-    type = "classification"
+    type = "continuous"
   response = match.arg(response)
 
   if(missing(n)) n = 200
@@ -70,14 +71,26 @@ data_generation = function(n, p, rho, SNR,
   # par(mfrow = c(1,1))
 
   if(response == "continuous"){
-    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
-    sd = sqrt(V_sig / SNR)
-    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+    if(interaction){
+      V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
+      sd = sqrt(V_sig / SNR)
+      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
-    x = cbind(x, x_nois)
+      x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
+      x = cbind(x, x_nois)
+      out = list(x = x, f = f, y = f)
+    }
+    else{
+      V_sig = var(f1(x[,1])) + var(f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4])) +
+        var(f1(x[, 3] * x[, 4])) + var(f2((x[, 1] + x[, 3])/2)) + var(f3(x[, 1] * x[, 2]))
+      sd = sqrt(V_sig / SNR)
+      f = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) +
+        f1(x[, 3] * x[, 4]) + f2((x[, 1] + x[, 3])/2) + f3(x[, 1] * x[, 2]) + rnorm(n, 0, sd)
 
-    out = list(x = x, f = f, y = f)
+      x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
+      x = cbind(x, x_nois)
+      out = list(x = x, f = f, y = f)
+    }
   }
 
   if(response == "binary"){
