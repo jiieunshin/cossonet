@@ -31,8 +31,6 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
   nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, wt, sspline_cvfit$optlambda, lambda_theta, gamma, nfold, one.std = one.std, obj)
   theta.new = rescale_theta(nng_fit$theta.new)
 
-  par(op)
-
   # solve (theta) - 2nd
   sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, p) / wt^2, lambda0, obj, type, nfold, kparam, one.std = FALSE, show = FALSE)
 
