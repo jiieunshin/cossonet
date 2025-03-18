@@ -9,7 +9,8 @@ data_generation(
   p,
   rho,
   SNR,
-  response = c("continuous", "binary", "count", "survival")
+  response = c("continuous", "binary", "count", "survival"),
+  interaction = TRUE
 )
 }
 \arguments{

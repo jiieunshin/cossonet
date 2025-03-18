@@ -80,8 +80,6 @@ cossonet = function (x,
 
   if(missing(effect))
     effect = 'main'
-  else
-    effect = match.arg(kernel)
 
   if(effect == "interaction") type = paste0(kernel, "2")
 
