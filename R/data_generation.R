@@ -86,7 +86,7 @@ data_generation = function(n, p, rho, SNR,
         var(f1(x[, 3] * x[, 4])) + var(f2(x[, 1] + x[, 3])) + var(f3(x[, 1] * x[, 2]))
       sd = sqrt(V_sig / SNR)
       f = f1(x[,1]) + f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) +
-        2 * f1(x[, 3] * x[, 4]) + 2 * f2((x[, 1] * x[, 3])) + 1 * f3(x[, 1] * x[, 2]) + rnorm(n, 0, sd)
+        3 * f1(x[, 3] * x[, 4]) + 2 * f2((x[, 2] * x[, 3])) + 1 * f3(x[, 1] * x[, 2]) + rnorm(n, 0, sd)
 
       x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
       x = cbind(x, x_nois)

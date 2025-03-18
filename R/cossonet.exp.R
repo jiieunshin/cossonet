@@ -36,7 +36,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
   # solve (theta) - 2nd
   sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, theta.new/mscale^2, lambda0, obj, type, nfold, kparam, one.std = FALSE, show = FALSE)
 
-  out = list(data = list(x = x, y = y, coord = K$coord, basis.id = basis.id, wt = wt, kernel = type, kparam = kparam),
+  out = list(data = list(x = x, y = y, coord = K$coord, basis.id = basis.id, wt = mscale, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = sspline_cvfit,
              theta_step = nng_fit,
