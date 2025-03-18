@@ -23,6 +23,8 @@ data_generation(
 \item{SNR}{signal-to-noise ratio.}
 
 \item{response}{the type of the response variable.}
+
+\item{interaction}{the type of the effect, main or two-way interaction.}
 }
 \value{
 a list of explanatory variables, response variables, and true functions.

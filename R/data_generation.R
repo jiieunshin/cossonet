@@ -5,6 +5,7 @@
 #' @param rho a positive integer indicating the correlation strength for the first four informative variables.
 #' @param SNR signal-to-noise ratio.
 #' @param response the type of the response variable.
+#' @param interaction the type of the effect, main or two-way interaction.
 #'
 #' @return a list of explanatory variables, response variables, and true functions.
 #'
