@@ -38,7 +38,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
 
   getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, theta.new/mscale^2, lambda0, type, nfold, kparam, one.std = FALSE, show = FALSE)
 
-  out = list(data = list(x = x, time = time, status = status, basis.id = basis.id, RS = getc_cvfit$RS, wt = mscale, kernel = type, nfold, kparam = kparam, one.std = one.std),
+  out = list(data = list(x = x, time = time, status = status, coord = K$coord, basis.id = basis.id, RS = getc_cvfit$RS, wt = mscale, kernel = type, nfold, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,
