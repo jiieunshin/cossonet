@@ -86,8 +86,8 @@ data_generation = function(n, p, rho, SNR,
       sd = sqrt(V_sig / SNR)
 
 
-      f = 3.2 * x[, 2]^2 - 1.8 * exp(x[, 3]) + 3.8 * x[, 1] +
-        1.6 * f2(x[, 1] * x[, 2]) + .6 * f3(x[, 1] * x[, 3]) + .8 * f4(x[, 2] * x[, 3])
+      f = .8 * x[, 2]^2 - .8 * exp(x[, 3]) + .5 * x[, 1] +
+       1.1 * f2(x[, 1] * x[, 2]) + 1.2 * f3(x[, 1] * x[, 3]) + 1 * f4(x[, 2] * x[, 3])
       # f = 1.5 * x[, 2]^2 - 2 * exp(x[, 3]) + 2.5 * x[, 1] +
       #   1.4 * f2(x[, 1] * x[, 2]) + .8 * f3(x[, 1] * x[, 3]) + 1.2 * f4(x[, 2] * x[, 3])
       # f = 3 * x[, 1]^2 - 3 * exp(x[, 2]) + 2 * x[, 3] -
@@ -100,13 +100,6 @@ data_generation = function(n, p, rho, SNR,
       # f = 3 * x[, 2]^2 - 3 * exp(x[, 3]) + 2 * x[, 1] -
       #   2.2 * f2(x[, 1] * x[, 2]) + 1 * f3(x[, 1] * x[, 3]) + .5 * f4(x[, 2] * x[, 3]) + rnorm(n, 0, sd)  ##저장
 
-      # f = 2 * x[, 2]^2 - .8 * exp(x[, 3]) + 3 * x[, 1] -
-        # 3 * f2(x[, 1] * x[, 2]) + 4 * f3(x[, 1] * x[, 3]) + .8 * f4(x[, 2] * x[, 3]) + rnorm(n, 0, sd)
-
-      # f = 2 * x[, 2]^2 - .8 * exp(x[, 3]) + 3 * x[, 1] -
-      #   4 * f2(x[, 1] * x[, 2]) + .8 * f3(x[, 1] * x[, 3]) + 3 * f4(x[, 2] * x[, 3]) + rnorm(n, 0, sd)
-      # f = 1 * x[, 2]^2 - .8 * exp(x[, 3]^2) + 2 * x[, 1] -
-      #   4 * f2(x[, 1] * x[, 2]) + .8 * f3(x[, 1] * x[, 3]) + 3 * f4(x[, 2] * x[, 3]) + rnorm(n, 0, sd)
       #
       # par(mfrow = c(2,3))
       # plot(x[,1], f)
@@ -188,10 +181,11 @@ data_generation = function(n, p, rho, SNR,
         var(0.5 *  f2(x[, 1] * x[, 2]) ) + var(.1 * f2(x[, 1] * x[, 3])) + var(.2 * f3(x[, 2] * x[, 3]))
       sd = sqrt(V_sig / SNR)
 
-      f = 3.8 * x[, 2]^2 - 1.2 * exp(x[, 3]) + 1.5 * x[, 1] -
-        .5 * f2(x[, 1] * x[, 2]) - .6 * f5(x[, 1] * x[, 3]) + .6 * f6(x[, 2] * x[, 3]) + 4
+
+      f = 2 * x[, 2]^2 - .4 * exp(x[, 3]) + 1 * x[, 1] -
+        .9 * f2(x[, 1] * x[, 2]) - 1 * f5(x[, 1] * x[, 3]) + .7 * f6(x[, 2] * x[, 3]) + 3
       plot(f)
-      mu = exp(f/2.5)
+      mu = exp(f/2)
 
       y = rpois(n, mu)
       x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
@@ -215,18 +209,36 @@ data_generation = function(n, p, rho, SNR,
 
   if(response == 'survival'){
 
-    V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
-    sd = sqrt(V_sig / SNR)
-    f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+    if(!interaction){
+      V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
+      sd = sqrt(V_sig / SNR)
+      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
 
-    x_nois = matrix(runif(n * (p - pp), 0, 1), n, (p - pp))
-    x = cbind(x, x_nois)
-    surTime = rexp(n, exp(f))
-    cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
+      x_nois = matrix(runif(n * (p - pp), 0, 1), n, (p - pp))
+      x = cbind(x, x_nois)
+      surTime = rexp(n, exp(f))
+      cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
 
-    y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
+      y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
 
-    out = list(x = x, f = f, y = y)
+      out = list(x = x, f = f, y = y)
+    }
+    else{
+      V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,1]))
+      sd = sqrt(V_sig / SNR)
+
+      f = .8 * x[, 2]^2 - .8 * exp(x[, 3]) + .5 * x[, 1] +
+        1.1 * f2(x[, 1] * x[, 2]) + 1.2 * f3(x[, 1] * x[, 3]) + 1 * f4(x[, 2] * x[, 3])
+
+      x_nois = matrix(runif(n * (p - pp), 0, 1), n, (p - pp))
+      x = cbind(x, x_nois)
+      surTime = rexp(n, exp(f))
+      cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
+
+      y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
+
+      out = list(x = x, f = f, y = y)
+    }
   }
   return(out)
 }

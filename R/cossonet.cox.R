@@ -18,6 +18,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
 
   K = make_anovaKernel(x, x, type = type, kparam, scale)
   d = K$numK
+  mscale = rep(1, d)
   message("kernel:", type, "and d =", d, "\n")
 
   op <- par(no.readonly = TRUE)
@@ -25,19 +26,19 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
 
   par(mfrow = c(1,2))
   # solve c (1st)
-  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, rep(1, d)/wt^2, lambda0, type, nfold, kparam, one.std = one.std, show = TRUE)
+  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id,  rep(1, d)/mscale^2, lambda0, type, nfold, kparam, one.std = one.std, show = TRUE)
 
   # solve theta (1st)
-  theta_cvfit = cv.gettheta.subset(getc_cvfit, K, time, status, nbasis, basis.id, wt, getc_cvfit$optlambda, lambda_theta, gamma, nfold, one.std = one.std)
+  theta_cvfit = cv.gettheta.subset(getc_cvfit, K, time, status, nbasis, basis.id, mscale, getc_cvfit$optlambda, lambda_theta, gamma, nfold, one.std = one.std)
 
   par(op)
 
   # solve c (2nd)
   theta.new = rescale_theta(theta_cvfit$theta.new)
 
-  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, theta.new/wt^2, lambda0, type, nfold, kparam, one.std = FALSE, show = FALSE)
+  getc_cvfit = cv.getc.subset(K, time, status, nbasis, basis.id, theta.new/mscale^2, lambda0, type, nfold, kparam, one.std = FALSE, show = FALSE)
 
-  out = list(data = list(x = x, time = time, status = status, basis.id = basis.id, RS = getc_cvfit$RS, wt = wt, kernel = type, nfold, kparam = kparam, one.std = one.std),
+  out = list(data = list(x = x, time = time, status = status, basis.id = basis.id, RS = getc_cvfit$RS, wt = mscale, kernel = type, nfold, kparam = kparam, one.std = one.std),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
              c_step = getc_cvfit,
              theta_step = theta_cvfit,
