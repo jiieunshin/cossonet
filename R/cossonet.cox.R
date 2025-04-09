@@ -3,7 +3,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
   n = length(time)
   p = length(wt)
 
-  message("fit COSSO  with n = ", n, "p =", ncol(x), "\n")
+  message("fit COSSO  with n = ", n, ", p =", ncol(x), "\n")
 
   if (missing(nbasis) & missing(basis.id)) {
     nbasis = max(40, ceiling(12 * n^(2/9)))
