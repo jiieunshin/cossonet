@@ -262,11 +262,9 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     min_id = which.min(measure)
     optlambda = lambda_theta[min_id]
     
-    if(show){
-      plot(log(lambda_theta), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
-           ylim = range(measure), pch = 15, col = 'red', type = "b")
-      abline(v = log(optlambda), lty = 2, col = "darkgray")
-    }
+    plot(log(lambda_theta), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+         ylim = range(measure), pch = 15, col = 'red', type = "b")
+    abline(v = log(optlambda), lty = 2, col = "darkgray")
   }
   
   # cv = "mse" -> nfold
