@@ -75,7 +75,8 @@ data_generation = function(n, p, rho, SNR,
     if(!interaction){
       V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
       sd = sqrt(V_sig / SNR)
-      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+      # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4])
       x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
       x = cbind(x, x_nois)
       out = list(x = x, f = f, y = f)
@@ -85,30 +86,8 @@ data_generation = function(n, p, rho, SNR,
         var(0.5 *  f2(x[, 1] * x[, 2]) ) + var(.1 * f2(x[, 1] * x[, 3])) + var(.2 * f3(x[, 2] * x[, 3]))
       sd = sqrt(V_sig / SNR)
 
-
       f = .8 * x[, 2]^2 - .8 * exp(x[, 3]) + .5 * x[, 1] +
        1.1 * f2(x[, 1] * x[, 2]) + 1.2 * f3(x[, 1] * x[, 3]) + 1 * f4(x[, 2] * x[, 3])
-      # f = 1.5 * x[, 2]^2 - 2 * exp(x[, 3]) + 2.5 * x[, 1] +
-      #   1.4 * f2(x[, 1] * x[, 2]) + .8 * f3(x[, 1] * x[, 3]) + 1.2 * f4(x[, 2] * x[, 3])
-      # f = 3 * x[, 1]^2 - 3 * exp(x[, 2]) + 2 * x[, 3] -
-      #   1.2 * f2(x[, 1] * x[, 2]) + .8 * f3(x[, 1] * x[, 3]) + .6 * f4(x[, 2] * x[, 3]) + rnorm(n, 0, sd)
-
-
-      # f = 2 * x[, 2]^2 - 3 * exp(x[, 3]) + 1.8 * x[, 1] -
-      #   1.8 * f2(x[, 1] * x[, 2]) + .6 * f3(x[, 1] * x[, 3]) + .5 * f4(x[, 2] * x[, 3]) + rnorm(n, 0, sd)  ## 개선1
-
-      # f = 3 * x[, 2]^2 - 3 * exp(x[, 3]) + 2 * x[, 1] -
-      #   2.2 * f2(x[, 1] * x[, 2]) + 1 * f3(x[, 1] * x[, 3]) + .5 * f4(x[, 2] * x[, 3]) + rnorm(n, 0, sd)  ##저장
-
-      #
-      # par(mfrow = c(2,3))
-      # plot(x[,1], f)
-      # plot(x[,2], f)
-      # plot(x[,3], f)
-      # plot(x[,1]*x[,2], f)
-      # plot(x[,1]*x[,3], f)
-      # plot(x[,2]*x[,3], f)
-      # par(mfrow = c(1,1))
       x_nois = matrix(runif(n * (p-pp), 0, 1), n, (p-pp))
       x = cbind(x, x_nois)
       out = list(x = x, f = f, y = f)
@@ -132,14 +111,14 @@ data_generation = function(n, p, rho, SNR,
       f = .8 * f1(x[, 1]) + 1.4 * f2(x[, 2]) + .8 * f3(x[, 3]) +
         1.2 * f2(x[, 1] * x[, 3]) - 1.2 * f3(x[, 1] * x[, 2]) - 1.2 * f4(x[, 2] * x[, 3])  -8
 
-      par(mfrow = c(2,3))
-      plot(4 * x[, 2]^2, f)
-      plot(3 * exp(x[, 3]), f)
-      plot(3.5 * x[, 1] , f)
-      plot(.6 * f2(x[, 1] * x[, 2]), f)
-      plot(.6 * f3(x[, 1] * x[, 3]), f)
-      plot(.6* f4(x[, 2] * x[, 3]), f)
-      par(mfrow = c(1,1))
+      # par(mfrow = c(2,3))
+      # plot(4 * x[, 2]^2, f)
+      # plot(3 * exp(x[, 3]), f)
+      # plot(3.5 * x[, 1] , f)
+      # plot(.6 * f2(x[, 1] * x[, 2]), f)
+      # plot(.6 * f3(x[, 1] * x[, 3]), f)
+      # plot(.6* f4(x[, 2] * x[, 3]), f)
+      # par(mfrow = c(1,1))
 
       # f = f1(x[,1]) + f2(x[,2]) + 1 * f3(x[,3]) + 1 * f4(x[,4]) +
       #   1 * f1(x[, 1]) * f2(x[, 2]) + 3 * f2(x[, 2]) * f4(x[, 4]) + 6 * f3(x[, 3]) * f4(x[, 4]) +
@@ -150,9 +129,9 @@ data_generation = function(n, p, rho, SNR,
       x = cbind(x, x_nois)
       prob = exp(f)/(exp(f) + 1)
       par(mfrow = c(1,2))
-      plot(f)
-      plot(prob)
-      par(mfrow = c(1,1))
+      # plot(f)
+      # plot(prob)
+      # par(mfrow = c(1,1))
       y = ifelse(prob > 0.5, 1, 0)
       out = list(x = x, f = f, y = y)
     }
@@ -166,8 +145,9 @@ data_generation = function(n, p, rho, SNR,
     if(!interaction){
       V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
       sd = sqrt(V_sig / SNR)
-      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
-
+      # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4])
+      
       f = f / 3
       mu = exp(f)
       y = rpois(n, mu)
@@ -212,8 +192,9 @@ data_generation = function(n, p, rho, SNR,
     if(!interaction){
       V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
       sd = sqrt(V_sig / SNR)
-      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
-
+      # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
+      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4])
+      
       x_nois = matrix(runif(n * (p - pp), 0, 1), n, (p - pp))
       x = cbind(x, x_nois)
       surTime = rexp(n, exp(f))
