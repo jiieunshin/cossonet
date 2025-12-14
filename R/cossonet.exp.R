@@ -1,4 +1,4 @@
-cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, nfold, kparam, one.std, scale)
+cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, cv, nfold, kparam, one.std, scale)
 {
   n = length(y)
   p = length(wt)
@@ -27,14 +27,14 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamm
 
   par(mfrow = c(1,2))
   # solve (theta) - 1st
-  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, d)/mscale^2, lambda0, obj, type, nfold, kparam, one.std = one.std, show = TRUE)
+  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, rep(1, d)/mscale^2, lambda0, obj, type, cv, nfold, kparam, one.std = one.std, show = TRUE)
 
   # solve (b, c) - 1st
-  nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, mscale, sspline_cvfit$optlambda, lambda_theta, gamma, nfold, one.std = one.std, obj)
+  nng_fit = cv.nng.subset(sspline_cvfit, K, y, nbasis, basis.id, mscale, sspline_cvfit$optlambda, lambda_theta, gamma, cv, nfold, one.std = one.std, obj)
   theta.new = rescale_theta(nng_fit$theta.new)
 
   # solve (theta) - 2nd
-  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, theta.new/mscale^2, lambda0, obj, type, nfold, kparam, one.std = FALSE, show = FALSE)
+  sspline_cvfit = cv.sspline.subset(K, y, nbasis, basis.id, theta.new/mscale^2, lambda0, obj, type, cv, nfold, kparam, one.std = FALSE, show = FALSE)
 
   out = list(data = list(x = x, y = y, coord = K$coord, basis.id = basis.id, wt = mscale, kernel = type, kparam = kparam),
              tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
