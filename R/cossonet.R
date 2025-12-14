@@ -83,7 +83,7 @@ cossonet = function (x,
   if(missing(effect))
     effect = 'main'
 
-  if(missing(cv)}
+  if(missing(cv))
     cv = 'GCV'
   
   if(effect == "interaction") type = paste0(kernel, "2")
