@@ -260,10 +260,10 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     
     ylab = expression("GCV(" * lambda[0] * ")")
     min_id = which.min(measure)
-    optlambda = cand.lambda[min_id]
+    optlambda = lambda_theta[min_id]
     
     if(show){
-      plot(log(cand.lambda), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+      plot(log(lambda_theta), measure, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
            ylim = range(measure), pch = 15, col = 'red', type = "b")
       abline(v = log(optlambda), lty = 2, col = "darkgray")
     }
