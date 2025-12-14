@@ -262,13 +262,13 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
       theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
       
-      te_U = wsGram(Uv, theta.adj/mscale^2)
+      U = wsGram(model$Uv, theta.adj/mscale^2)
       testf = c(U %*% model$c.new + model$b.new)
       
       err = n * sum(model$w.new * (y - testf)^2)
       inv.mat = ginv(t(U) %*% U + lambda_theta[k] * model$Q)
       df = sum(diag(U %*% inv.mat %*% t(U)))
-      measure[k] = err / (te_n - df)^2
+      measure[k] = err / (n - df)^2
     }
     
     # smoothing parameter selection
@@ -283,7 +283,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
     }
     
     ylab = expression("GCV(" * lambda[0] * ")")
-    min_id = which.min(measure_mean)
+    min_id = which.min(measure)
     optlambda = cand.lambda[min_id]
     
     if(show){
