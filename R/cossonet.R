@@ -13,6 +13,7 @@
 #' @param basis.id The index of the "knot" to select.
 #' @param kernel TThe kernel function. One of four types of `linear` (default), `gaussian`, `poly`, and `spline`.
 #' @param effect The effect of the component. `main` (default) is the main effect, and `interaction` is the two-way interaction.
+#' @param cv The criterion for selecting smoothing parameters.
 #' @param nfold The number of folds to use in cross-validation is used to determine how many subsets to divide the data into for the training and validation sets.
 #' @param kparam Parameters for Gaussian and polynomial kernel functions
 #' @param lambda0 A vector of `lambda0` sequences. The default is a grid of 20 values `[2^{-10}, \dots, 2^{10}]` on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set `\lambda0` as a single value.
@@ -51,6 +52,7 @@ cossonet = function (x,
                     basis.id,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
+                    cv = c("GCV", "mse"),
                     nfold = 5,
                     kparam = 1,
                     lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
@@ -81,6 +83,9 @@ cossonet = function (x,
   if(missing(effect))
     effect = 'main'
 
+  if(missing(cv)}
+    cv = 'GCV'
+  
   if(effect == "interaction") type = paste0(kernel, "2")
 
   if(scale)
