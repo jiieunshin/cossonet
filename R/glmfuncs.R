@@ -31,7 +31,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
   # cv = "GCV" -> use only training data
   if(cv == "GCV"){
     pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
-    measure = numeric(NA, len)
+    measure = numeric(len)
     for (k in 1:len){
       c.init = as.vector(glmnet(pseudoX, y, family = obj$family, lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
       
@@ -256,7 +256,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
   if(cv == "GCV"){
     init.theta = rep(1, d)
     len = length(lambda_theta)
-    measure = numeric(NA, len)
+    measure = numeric(len)
     
     for (k in 1:len) {
       theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")

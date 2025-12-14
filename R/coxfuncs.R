@@ -33,7 +33,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, cand.lambd
   # cv = "GCV" -> use only training data
   if(cv == "GCV"){
     pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
-    measure = numeric(NA, len)
+    measure = numeric(len)
     
     for (k in 1:len){
       response <- survival::Surv(time = time, event = status)
@@ -232,7 +232,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   if(cv == "GCV"){
     init.theta = rep(1, d)
     len = length(lambda_theta)
-    measure = numeric(NA, len)
+    measure = numeric(len)
     
     for (k in 1:len) {
       theta.new = .Call("wls_theta_step", Gw, uw, h/2, n, d, init.theta, n * lambda_theta[k] * gamma / 2, n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
