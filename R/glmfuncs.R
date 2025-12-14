@@ -71,7 +71,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       }
       
       ylab = expression("GCV(" * lambda[0] * ")")
-      min_id = which.min(measure_mean)
+      min_id = which.min(measure)
       optlambda = cand.lambda[min_id]
       
       if(show){
