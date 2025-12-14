@@ -99,8 +99,8 @@ cossonet = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, nfold, kparam, scale, one.std),
-               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, nfold, kparam, scale, one.std)
+               glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, cv, nfold, kparam, scale, one.std),
+               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, cv, nfold, kparam, scale, one.std)
   )
 
   attr(out, "class") = "cossonet"
