@@ -75,15 +75,11 @@ data_generation = function(n, p, rho, SNR,
   
   if(response == "continuous"){
     if(!interaction){
-      # V_sig = var(5 * f1(x_sig[,1])) + var(3 * f2(x_sig[,2])) + var(4 * f3(x_sig[,3])) + var(6 * f4(x_sig[,4]))
-      # sd = sqrt(V_sig / SNR)
-      # f = 5 * f1(x_sig[,1]) + 3 * f2(x_sig[,2]) + 4 * f3(x_sig[,3]) + 6 * f4(x_sig[,4])
-      
-      f = 1 * f1(x_sig[,1]) + 1 * f2(x_sig[,2]) + 2 * f3(x_sig[,3]) + 3 * f4(x_sig[,4])
+      f = (5/5) * f1(x_sig[,1]) + (3/4) * f2(x_sig[,2]) + (4/3) * f3(x_sig[,3]) + (6/3) * f4(x_sig[,4])
       V_sig = var(f)
-      sigma = sqrt(V_sig / SNR)
+      sigma = sqrt(V_sig / 5)
       f = f + rnorm(n, sd = sigma)
-      x_nois = matrix(runif(n * (p - pp)), n, p - pp)
+      x_nois = matrix(runif(n * (p - 4)), n, p - 4)
       x = cbind(x_sig, x_nois)
       out = list(x = x, f = f, y = f)
     }

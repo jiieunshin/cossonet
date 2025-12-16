@@ -134,57 +134,57 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
         if(obj$family == "binomial") measure[fid, k] <- mean(y[te_id] != ifelse(testmu < 0.5, 0, 1))
         if(obj$family == "poisson") measure[fid, k] <- mean((y[te_id] - testf)^2)
       }
-      
-      # smoothing parameter selection
-      if(obj$family == 'gaussian'){
-        main = "Gaussian Family"
-      }
-      if(obj$family == 'binomial'){
-        main = "Binomial Family"
-      }
-      if(obj$family == 'poisson'){
-        main = "Poisson Family"
-      }
-      
-      ylab = expression("GCV(" * lambda[0] * ")")
-      
-      measure_mean = colMeans(measure, na.rm = T)
-      measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
-      
-      sel_id = which(!is.nan(measure_se) & measure_se != Inf)
-      measure_mean = measure_mean[sel_id]
-      measure_se = measure_se[sel_id]
-      cand.lambda = cand.lambda[sel_id]
-      
-      min_id = which.min(measure)
-      
-      if(one.std){
-        cand_ids = which((measure_mean >= measure_mean[min_id]) &
-                           (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
-        cand_ids = cand_ids[cand_ids >= min_id]
-        std_id = max(cand_ids)
-        optlambda = cand.lambda[std_id]
-      } else{
-        optlambda = cand.lambda[min_id]
-      }
-      
-      if(show){
-        plot(log(cand.lambda), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
-             ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
-        arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
-               x1 = log(cand.lambda), y1 = measure_mean + measure_se,
-               angle = 90, code = 3, length = 0.1, col = "darkgray")
-        abline(v = log(optlambda), lty = 2, col = "darkgray")
-      }
-      
-      # if(cv == "KL"){
-      #   true_mu = obj$linkinv(f[te_id])
-      #   measure[fid, k] <- KL(testf, true_mu, obj)
-      # }
-      
-      rm(tr_U)
-      rm(te_U)
     }
+    # smoothing parameter selection
+    if(obj$family == 'gaussian'){
+      main = "Gaussian Family"
+    }
+    if(obj$family == 'binomial'){
+      main = "Binomial Family"
+    }
+    if(obj$family == 'poisson'){
+      main = "Poisson Family"
+    }
+    
+    ylab = expression("GCV(" * lambda[0] * ")")
+    
+    measure_mean = colMeans(measure, na.rm = T)
+    measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
+    
+    sel_id = which(!is.nan(measure_se) & measure_se != Inf)
+    measure_mean = measure_mean[sel_id]
+    measure_se = measure_se[sel_id]
+    cand.lambda = cand.lambda[sel_id]
+    
+    min_id = which.min(measure)
+    
+    if(one.std){
+      cand_ids = which((measure_mean >= measure_mean[min_id]) &
+                         (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
+      cand_ids = cand_ids[cand_ids >= min_id]
+      std_id = max(cand_ids)
+      optlambda = cand.lambda[std_id]
+    } else{
+      optlambda = cand.lambda[min_id]
+    }
+    
+    if(show){
+      plot(log(cand.lambda), measure_mean, main = main, xlab = expression("Log(" * lambda[0] * ")"), ylab = ylab,
+           ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
+      arrows(x0 = log(cand.lambda), y0 = measure_mean - measure_se,
+             x1 = log(cand.lambda), y1 = measure_mean + measure_se,
+             angle = 90, code = 3, length = 0.1, col = "darkgray")
+      abline(v = log(optlambda), lty = 2, col = "darkgray")
+    }
+    
+    # if(cv == "KL"){
+    #   true_mu = obj$linkinv(f[te_id])
+    #   measure[fid, k] <- KL(testf, true_mu, obj)
+    # }
+    
+    rm(tr_U)
+    rm(te_U)
+
   }
 
   pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
