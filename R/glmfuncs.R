@@ -146,7 +146,7 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       main = "Poisson Family"
     }
     
-    ylab = expression(nfold, "CV(" * lambda[0] * ")")
+    ylab = expression(paste0(nfold, "CV(" * lambda[0] * ")"))
     
     measure_mean = colMeans(measure, na.rm = T)
     measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(nfold)
@@ -358,7 +358,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       main = "Poisson Family"
     }
     
-    ylab = expression(nfold, "CV(" * lambda[theta] * ")")
+    ylab = expression(paste0(nfold, "CV(" * lambda[theta] * ")"))
     
     measure_mean = colMeans(measure, na.rm = T)
     measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(nfold)

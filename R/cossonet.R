@@ -58,7 +58,7 @@ cossonet = function (x,
                     lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     gamma = 0.95,
-                    one.std = TRUE)
+                    one.std)
 {
   n = nrow(x)
   colnames(x) = NULL
@@ -85,6 +85,9 @@ cossonet = function (x,
 
   if(missing(cv))
     cv = 'GCV'
+  
+  if(missing(one.std) & cv == "mse")
+    one.std = FALSE
   
   if(effect == "interaction") type = paste0(kernel, "2")
 
