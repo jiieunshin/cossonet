@@ -146,17 +146,17 @@ cv.sspline.subset = function (K, y, nbasis, basis.id, mscale, cand.lambda, obj, 
       main = "Poisson Family"
     }
     
-    ylab = expression("GCV(" * lambda[0] * ")")
+    ylab = expression(nfold, "CV(" * lambda[0] * ")")
     
     measure_mean = colMeans(measure, na.rm = T)
-    measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
+    measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(nfold)
     
-    sel_id = which(!is.nan(measure_se) & measure_se != Inf)
+    sel_id = which(!is.nan(measure_se) & measure_se != Inf & measure_mean != Inf & measure_mean != - Inf)
     measure_mean = measure_mean[sel_id]
     measure_se = measure_se[sel_id]
     cand.lambda = cand.lambda[sel_id]
     
-    min_id = which.min(measure)
+    min_id = which.min(measure_mean)
     
     if(one.std){
       cand_ids = which((measure_mean >= measure_mean[min_id]) &
@@ -358,13 +358,15 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       main = "Poisson Family"
     }
     
-    measure_mean = colMeans(measure, na.rm = T)
-    measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(5)
+    ylab = expression(nfold, "CV(" * lambda[0] * ")")
     
-    sel_id = which(!is.nan(measure_se) & measure_se != Inf)
+    measure_mean = colMeans(measure, na.rm = T)
+    measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(nfold)
+    
+    sel_id = which(!is.nan(measure_se) & measure_se != Inf & measure_mean != Inf & measure_mean != - Inf)
     measure_mean = measure_mean[sel_id]
     measure_se = measure_se[sel_id]
-    lambda_theta = lambda_theta[sel_id]
+    cand.lambda = cand.lambda[sel_id]
     
     min_id = which.min(measure_mean)
     
@@ -373,13 +375,10 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
                          (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
       cand_ids = cand_ids[cand_ids >= min_id]
       std_id = max(cand_ids)
-      optlambda = lambda_theta[std_id]
+      optlambda = cand.lambda[std_id]
     } else{
-      optlambda = lambda_theta[min_id]
+      optlambda = cand.lambda[min_id]
     }
-    
-    ylab = expression("GCV(" * lambda[theta] * ")")
-    
     
     plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
          ylim = range(c(measure_mean - measure_se, measure_mean + measure_se)), pch = 15, col = 'red')
