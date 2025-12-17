@@ -358,7 +358,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
       main = "Poisson Family"
     }
     
-    ylab = expression(nfold, "CV(" * lambda[0] * ")")
+    ylab = expression(nfold, "CV(" * lambda[theta] * ")")
     
     measure_mean = colMeans(measure, na.rm = T)
     measure_se = apply(measure, 2, sd, na.rm = T) / sqrt(nfold)
@@ -366,7 +366,7 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
     sel_id = which(!is.nan(measure_se) & measure_se != Inf & measure_mean != Inf & measure_mean != - Inf)
     measure_mean = measure_mean[sel_id]
     measure_se = measure_se[sel_id]
-    cand.lambda = cand.lambda[sel_id]
+    lambda_theta = lambda_theta[sel_id]
     
     min_id = which.min(measure_mean)
     
@@ -375,9 +375,9 @@ cv.nng.subset = function(model, K, y, nbasis, basis.id, mscale, lambda0, lambda_
                          (measure_mean <= (measure_mean[min_id] + measure_se[min_id])))
       cand_ids = cand_ids[cand_ids >= min_id]
       std_id = max(cand_ids)
-      optlambda = cand.lambda[std_id]
+      optlambda = lambda_theta[std_id]
     } else{
-      optlambda = cand.lambda[min_id]
+      optlambda = lambda_theta[min_id]
     }
     
     plot(log(lambda_theta), measure_mean, main = main, xlab = expression("Log(" * lambda[theta] * ")"), ylab = ylab,
