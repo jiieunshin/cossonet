@@ -48,7 +48,7 @@
 
 cossonet.exp = function (x, y, wt, nbasis, basis.id, 
                          lambda0, lambda_theta, gamma, obj, 
-                         type, cv, nfold, kparam, one.std, scale = TRUE)
+                         type, cv, nfold, kparam, one.std, scale)
 {
   n = length(y)
   
