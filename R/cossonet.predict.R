@@ -28,7 +28,7 @@
 #' @export
 
 
-cossonet.predict_v2 = function(model, testx){
+cossonet.predict = function(model, testx){
   family = model$family
   obj <- switch(family,
                 gaussian = gaussian(),
