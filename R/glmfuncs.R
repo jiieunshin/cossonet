@@ -42,7 +42,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
       
       ## 1-step IRLS
-      ff <- U %*% Qhalf.inv %*% c.init
+      ff <- U %*% c.init
       mu <- ff
       w <- rep(1, n)
       z <- ff + (y-ff)
@@ -170,8 +170,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     lambda = optlambda,
     b.new = final$b.new,
     c.new = final$c.new,
-    Uv = Uv, Q=Q, U = U,
-    Qhalf.inv = Qhalf.inv
+    Uv = Uv, Q=Q, U = U
   )
   return(out)
 }
