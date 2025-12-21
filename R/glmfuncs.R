@@ -23,10 +23,8 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     EigQ <- eigen(Q)
     loop <- loop + 1
   }
-  Qhalf.inv <- EigQ$vectors %*% diag( 1 / sqrt(EigQ$values) ) %*% t(EigQ$vectors)
-  
-  ## ---- Pseudo design for glmnet ----
-  pseudoX <- U %*% Qhalf.inv
+  EigQ$values[EigQ$values < 0] = 1e-08
+  pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
   
   ## =========================================================
   ## 1) Gaussian – GCV option
@@ -72,7 +70,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     optlambda <- cand.lambda[ which.min(measure) ]
     
     if(show){
-      plot(log(cand.lambda), measure, type="b", pch=15,
+      plot(log(cand.lambda), measure, type="b", pch=15, col = "red",
            xlab="log(lambda)", ylab="GCV",
            main="Gaussian – GCV")
       abline(v=log(optlambda), col="darkgray", lty=2)
@@ -104,7 +102,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
         c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
         
         ## IRLS update
-        ff <- Utr %*% Qhalf.inv %*% c.init
+        ff <- Utr %*% c.init
         mu <- obj$linkinv(ff)
         w <- obj$variance(mu)
         z <- ff + (y[tr] - mu) / w
@@ -135,13 +133,13 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     if(one.std){
       cand <- which(mean_m <= mean_m[id] + se_m[id])
       cand <- cand[cand >= id]
-      optlambda <- cand.lambda[min(cand)]
+      optlambda <- cand.lambda[max(cand)]
     } else {
       optlambda <- cand.lambda[id]
     }
     
     if(show){
-      plot(log(cand.lambda), mean_m, pch=15,
+      plot(log(cand.lambda), mean_m, pch=15, col = 'red',
            xlab="log(lambda)", ylab=paste0(nfold,"-CV"),
            ylim=range(c(mean_m-se_m,mean_m+se_m)))
       arrows(log(cand.lambda), mean_m-se_m,
@@ -156,7 +154,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
                     lambda=optlambda, standardize=FALSE)
   c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
   
-  ff <- U %*% Qhalf.inv %*% c.init
+  ff <- U %*% c.init
   mu <- obj$linkinv(ff)
   w <- obj$variance(mu)
   z <- ff + (y - mu) / w
