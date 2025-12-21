@@ -59,7 +59,7 @@ cossonet = function (x,
                     lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     gamma = 0.95,
-                    one.std,
+                    one.std = FALSE,
                     scale = TRUE)
 {
   n = nrow(x)
@@ -88,9 +88,6 @@ cossonet = function (x,
   if(missing(cv))
     cv = 'GCV'
   
-  if(missing(one.std) & cv == "mse")
-    one.std = FALSE
-  
   if(effect == "interaction") type = paste0(kernel, "2")
 
   if (family == "Cox" & !all(match(c("time", "status"), dimnames(y)[[2]], 0))) {
@@ -102,7 +99,7 @@ cossonet = function (x,
   # fitting
   out = switch(objnm,
                glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, cv, nfold, kparam, one.std, scale),
-               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, cv, nfold, kparam, scale, one.std)
+               Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, cv, nfold, kparam, one.std, scale)
   )
 
   attr(out, "class") = "cossonet"
