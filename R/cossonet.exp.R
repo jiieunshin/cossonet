@@ -101,7 +101,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
   ## --------------------------
   op <- par(no.readonly = TRUE)
   on.exit(par(op))
-  par(mfrow = c(1,2))
+  par(mfrow = c(1,3))
   
   sspline_cvfit = cv.sspline.subset(
     K       = K,
@@ -154,7 +154,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     cv       = cv,
     nfold    = nfold,
     one.std  = one.std,
-    show     = FALSE
+    show     = TRUE
   )
   
   rm(sspline_cvfit)

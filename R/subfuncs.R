@@ -82,155 +82,112 @@ kernelMatrix = function(x, y, type, kparam = 1.0) {
   return(K)
 }
 
-# make_anovaKernel = function(x, y, type, kparam, scale)
-# {
-# 
-#   # if (length(unique(c(A, B))) <= 6)
-#   #   K_temp <- cat_kernel(A, B)
-#   # else K_temp <- spline_kernel(A, B)
-# 
-#   x = as.matrix(x)
-#   y = as.matrix(y)
-#   dimx = ncol(x)
-# 
-#   # calculate anova kernels for two-way interactions
-#   if (type == "spline") {
-#     numK = dimx
-#     anova_kernel = vector(mode = "list", numK)
-#     kernelCoord = vector(mode = "list", numK)
-#     index = 0
-#     for (d in 1:dimx) {
-#       index = index + 1
-#       A = x[, d, drop = FALSE]
-#       B = y[, d, drop = FALSE]
-#       if (length(unique(c(A, B))) <= 6){
-#         K_temp <- cat_kernel(A, B)
-#         anova_kernel[[index]] = K_temp
-#       } else{
-#         K_temp = spline_kernel(A, B)
-#         anova_kernel[[index]] = (K_temp$K1 + K_temp$K2)
-#       }
-#       kernelCoord[[index]] = paste("x", d, sep = "")
-#     }
-#   } else if (type == 'spline2') {
-#     numK = dimx + dimx * (dimx - 1) / 2
-#     anova_kernel = vector(mode = "list", numK)
-#     kernelCoord = vector(mode = "list", numK)
-#     index = 0
-# 
-#     for (d in 1:dimx) {
-#       index = index + 1
-#       A = x[, d, drop = FALSE]
-#       B = y[, d, drop = FALSE]
-#       if (length(unique(c(A, B))) <= 6){
-#         K_temp <- cat_kernel(A, B)
-#         anova_kernel[[index]] = K_temp
-#       } else{
-#         K_temp = spline_kernel(A, B)
-#         anova_kernel[[index]] = (K_temp$K1 + K_temp$K2)
-#       }
-#       kernelCoord[[index]] = paste("x", d, sep = "")
-#     }
-# 
-#     for (i in 1:(dimx - 1)) {
-#       for (j in (i + 1):dimx) {
-#         index = index + 1
-#         A = anova_kernel[[i]]
-#         B = anova_kernel[[j]]
-#         anova_kernel[[index]] = A * B
-#         kernelCoord[[index]] = paste("x", i, " x", j, sep = "")
-#       }
-#     }
-#   } else if (type == "gaussian2") {
-#     numK = dimx + dimx * (dimx - 1) / 2
-#     anova_kernel = vector(mode = "list", numK)
-#     kernelCoord = vector(mode = "list", numK)
-#     index = 0
-# 
-#     for (d in 1:dimx) {
-#       index = index + 1
-#       A = x[, d, drop = FALSE]
-#       B = y[, d, drop = FALSE]
-#       if (length(unique(c(A, B))) <= 6){
-#         K_temp <- cat_kernel(A, B)
-#         anova_kernel[[index]] = K_temp
-#       } else{
-#         anova_kernel[[index]] = kernelMatrix(A, B, type, kparam)
-#       }
-#       kernelCoord[[index]] = paste("x", d, sep = "")
-#     }
-# 
-#     for (i in 1:(dimx - 1)) {
-#       for (j in (i + 1):dimx) {
-#         index = index + 1
-#         A = anova_kernel[[i]]
-#         B = anova_kernel[[j]]
-#         anova_kernel[[index]] = A * B
-#         kernelCoord[[index]] = paste("x", i, " x", j, sep = "")
-#       }
-#     }
-#   } else { # calculate anova kernels for main effects
-#     numK = dimx
-#     anova_kernel = vector(mode = "list", numK)
-#     kernelCoord = vector(mode = "list", numK)
-#     for (d in 1:dimx) {
-#       A = x[, d, drop = FALSE]
-#       B = y[, d, drop = FALSE]
-#       if (length(unique(c(A, B))) <= 6){
-#         K_temp <- cat_kernel(A, B)
-#         anova_kernel[[d]] = K_temp
-#       } else{
-#         anova_kernel[[d]] = kernelMatrix(A, B, type, kparam)
-#       }
-#       kernelCoord[[d]] = paste("x", d, sep = "")
-#     }
-#   }
-# 
-# 
-#   return(list(x = x, K = anova_kernel, coord = kernelCoord, numK = numK, kernel = type, kparam = kparam))
-# }
+make_anovaKernel = function(x, y, type, kparam)
+{
 
-make_anovaKernel <- function(x, y, type = "spline", kparam = NULL){
-  
-  x <- as.matrix(x)
-  y <- as.matrix(y)
-  dimx <- ncol(x)
-  
-  anova_kernel <- vector("list", dimx)
-  kernelCoord  <- vector("list", dimx)
-  
-  for(d in 1:dimx){
-    A <- x[, d, drop = FALSE]
-    B <- y[, d, drop = FALSE]
-    
-    ## categorical case
-    if(length(unique(c(A,B))) <= 6){
-      K_temp <- cat_kernel(A, B)
-      
-    } else {
-      ## spline case
-      if(type == "spline"){
-        tmp <- spline_kernel(A, B)  ## returns list(K1,K2,...)
-        K_temp <- tmp$K1 + tmp$K2   ## the COSSO canonical form
-      } else {
-        ## fallback Gaussian kernel
-        K_temp <- exp(- as.matrix(dist(A,B))^2 / kparam )
+  # if (length(unique(c(A, B))) <= 6)
+  #   K_temp <- cat_kernel(A, B)
+  # else K_temp <- spline_kernel(A, B)
+
+  x = as.matrix(x)
+  y = as.matrix(y)
+  dimx = ncol(x)
+
+  # calculate anova kernels for two-way interactions
+  if (type == "spline") {
+    numK = dimx
+    anova_kernel = vector(mode = "list", numK)
+    kernelCoord = vector(mode = "list", numK)
+    index = 0
+    for (d in 1:dimx) {
+      index = index + 1
+      A = x[, d, drop = FALSE]
+      B = y[, d, drop = FALSE]
+      if (length(unique(c(A, B))) <= 6){
+        K_temp <- cat_kernel(A, B)
+        anova_kernel[[index]] = K_temp
+      } else{
+        K_temp = spline_kernel(A, B)
+        anova_kernel[[index]] = (K_temp$K1 + K_temp$K2)
+      }
+      kernelCoord[[index]] = paste("x", d, sep = "")
+    }
+  } else if (type == 'spline2') {
+    numK = dimx + dimx * (dimx - 1) / 2
+    anova_kernel = vector(mode = "list", numK)
+    kernelCoord = vector(mode = "list", numK)
+    index = 0
+
+    for (d in 1:dimx) {
+      index = index + 1
+      A = x[, d, drop = FALSE]
+      B = y[, d, drop = FALSE]
+      if (length(unique(c(A, B))) <= 6){
+        K_temp <- cat_kernel(A, B)
+        anova_kernel[[index]] = K_temp
+      } else{
+        K_temp = spline_kernel(A, B)
+        anova_kernel[[index]] = (K_temp$K1 + K_temp$K2)
+      }
+      kernelCoord[[index]] = paste("x", d, sep = "")
+    }
+
+    for (i in 1:(dimx - 1)) {
+      for (j in (i + 1):dimx) {
+        index = index + 1
+        A = anova_kernel[[i]]
+        B = anova_kernel[[j]]
+        anova_kernel[[index]] = A * B
+        kernelCoord[[index]] = paste("x", i, " x", j, sep = "")
       }
     }
-    
-    ## MUST be matrix
-    anova_kernel[[d]] <- as.matrix(K_temp)
-    kernelCoord[[d]]  <- paste0("x", d)
+  } else if (type == "gaussian2") {
+    numK = dimx + dimx * (dimx - 1) / 2
+    anova_kernel = vector(mode = "list", numK)
+    kernelCoord = vector(mode = "list", numK)
+    index = 0
+
+    for (d in 1:dimx) {
+      index = index + 1
+      A = x[, d, drop = FALSE]
+      B = y[, d, drop = FALSE]
+      if (length(unique(c(A, B))) <= 6){
+        K_temp <- cat_kernel(A, B)
+        anova_kernel[[index]] = K_temp
+      } else{
+        anova_kernel[[index]] = kernelMatrix(A, B, type, kparam)
+      }
+      kernelCoord[[index]] = paste("x", d, sep = "")
+    }
+
+    for (i in 1:(dimx - 1)) {
+      for (j in (i + 1):dimx) {
+        index = index + 1
+        A = anova_kernel[[i]]
+        B = anova_kernel[[j]]
+        anova_kernel[[index]] = A * B
+        kernelCoord[[index]] = paste("x", i, " x", j, sep = "")
+      }
+    }
+  } else { # calculate anova kernels for main effects
+    numK = dimx
+    anova_kernel = vector(mode = "list", numK)
+    kernelCoord = vector(mode = "list", numK)
+    for (d in 1:dimx) {
+      A = x[, d, drop = FALSE]
+      B = y[, d, drop = FALSE]
+      if (length(unique(c(A, B))) <= 6){
+        K_temp <- cat_kernel(A, B)
+        anova_kernel[[d]] = K_temp
+      } else{
+        anova_kernel[[d]] = kernelMatrix(A, B, type, kparam)
+      }
+      kernelCoord[[d]] = paste("x", d, sep = "")
+    }
   }
-  
-  return(list(
-    x = x,
-    K = anova_kernel,
-    coord = kernelCoord,
-    numK = dimx,
-    kernel = type,
-    kparam = kparam
-  ))
+
+
+  return(list(x = x, K = anova_kernel, coord = kernelCoord, numK = numK, kernel = type, kparam = kparam))
 }
 
 rescale = function (x)

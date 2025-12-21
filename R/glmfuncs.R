@@ -206,7 +206,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     Gw[,j] <- ((Uv[,,j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
   
-  ## ---- CV ----v
+  ## ---- CV ----
   if(cv == "GCV"){
     init.theta <- rep(1, d)
     len <- length(lambda_theta)
@@ -259,7 +259,9 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   
   
   if(cv == "mse"){
-
+    
+  if(len == 1) nfold = 1
+  
   fold <- cvsplitID(n, nfold, y, family=obj$family)
   measure <- matrix(NA, nfold, len)
   
