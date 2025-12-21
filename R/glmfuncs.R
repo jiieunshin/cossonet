@@ -167,10 +167,12 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
                  n, nbasis, n*optlambda, PACKAGE="cossonet")
   
   out <- list(
-    lambda = optlambda,
+    cv_error = measure, Uv = Uv, Q=Q,
+    w.new = w, sw.new = sw, mu.new = mu,
+    z.new = z, zw.new = zw,
+    opt_lambda0 = optlambda,
     b.new = final$b.new,
-    c.new = final$c.new,
-    Uv = Uv, Q=Q, U = U
+    c.new = final$c.new
   )
   return(out)
 }
@@ -326,17 +328,11 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   )
   theta.adj <- ifelse(theta.new<1e-6,0,theta.new)
   
-  U.final <- wsGram(Uv, theta.adj/mscale^2)
-  f.new <- as.vector(U.final %*% model$c.new + model$b.new)
-  mu.new <- obj$linkinv(f.new)
-  
-  out <- list(
-    opt_lambda_theta = opt_lambda_theta,
-    theta.new = theta.adj,
-    f.new = f.new,
-    mu.new = mu.new,
-    measure = measure
-  )
+  out <- list(cv_error = measure, 
+              optlambda_theta = opt_lambda_theta, 
+              gamma = gamma, 
+              theta.new = theta.adj
+              )
   return(out)
 }
 
