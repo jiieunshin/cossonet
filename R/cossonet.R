@@ -59,8 +59,7 @@ cossonet = function (x,
                     lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     gamma = 0.95,
-                    one.std = FALSE,
-                    scale = TRUE)
+                    one.std = FALSE)
 {
   n = nrow(x)
   colnames(x) = NULL
