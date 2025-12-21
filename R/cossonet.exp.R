@@ -137,7 +137,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     obj      = obj
   )
   
-  theta.new = rescale_theta(nng_fit$theta.new)
+  # theta.new = rescale_theta(nng_fit$theta.new)
   
   ## --------------------------
   ## (F) second theta refinement
@@ -147,8 +147,8 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     y        = y,
     nbasis   = nbasis,
     basis.id = basis.id,
-    mscale   = theta.new/mscale^2,
-    cand.lambda = lambda0,
+    mscale   = nng_fit$theta.new/mscale^2,
+    cand.lambda = sspline_cvfit$opt_lambda0,
     obj      = obj,
     type     = type,
     cv       = cv,

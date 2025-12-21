@@ -27,11 +27,9 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
   pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
   
   ## =========================================================
-  ## 1) Gaussian – GCV option
+  ## 1) GCV option
   ## =========================================================
   if(cv == "GCV"){
-    if(obj$family != "gaussian")
-      stop("GCV only supported for Gaussian. Use cv='mse'.")
     
     measure <- numeric(len)
     for(k in 1:len){
