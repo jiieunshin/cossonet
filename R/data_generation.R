@@ -97,12 +97,10 @@ data_generation = function(n, p, rho, SNR,
   
   if(response == "binary"){
     if(!interaction){
-      V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(f3(x[,3])) + var(f4(x[,4]))
-      sd = sqrt(V_sig / SNR)
-      f = 1 * f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) - 11
+      f = 1 * f1(x_sig[,1]) + f2(x_sig[,2]) + f3(x_sig[,3]) + f4(x_sig[,4]) - 11
       
       x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
-      x = cbind(x, x_nois)
+      x = cbind(x_sig, x_nois)
       prob = exp(f)/(exp(f) + 1)
       y = rbinom(n, 1, prob)
       out = list(x = x, f = f, y = y)
