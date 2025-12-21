@@ -1,7 +1,6 @@
 cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
-                              cand.lambda, obj, type = "c-step",
-                              cv = c("GCV","mse"), nfold = 5,
-                              one.std = TRUE, show = TRUE, scale.info = NULL)
+                              cand.lambda, obj, type,
+                              cv, nfold, one.std, show)
 {
   cv <- match.arg(cv)
   d <- K$numK
@@ -39,12 +38,11 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     
     measure <- numeric(len)
     for(k in 1:len){
-      λ <- cand.lambda[k]
       
       ## glmnet initial c
       fit.glm <- glmnet(pseudoX, y, alpha=1, family="gaussian",
-                        lambda = λ, standardize=FALSE)
-      c.init <- as.numeric(coef(fit.glm, s=λ))[-1]
+                        lambda = cand.lambda[k], standardize=FALSE)
+      c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
       
       ## 1-step IRLS
       ff <- U %*% Qhalf.inv %*% c.init
@@ -57,7 +55,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       sw <- sqrt(w)
       
       fit <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
-                   n, nbasis, n*λ, PACKAGE="cossonet")
+                   n, nbasis, n*cand.lambda[k], PACKAGE="cossonet")
       
       c.new <- fit$c.new
       b.new <- fit$b.new
@@ -65,7 +63,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       
       ## GCV df
       XtX <- crossprod(pseudoX)
-      S <- pseudoX %*% solve(XtX + λ * diag(nbasis)) %*% t(pseudoX)
+      S <- pseudoX %*% solve(XtX + cand.lambda[k] * diag(nbasis)) %*% t(pseudoX)
       df <- sum(diag(S))
       
       rss <- sum((y - f.new)^2)
@@ -99,13 +97,12 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       pseudo_tr <- pseudoX[tr, , drop=FALSE]
       
       for(k in 1:len){
-        λ <- cand.lambda[k]
         
         ## glmnet
         fit.glm <- glmnet(pseudo_tr, y[tr],
                           alpha=1, family=obj$family,
-                          lambda=λ, standardize=FALSE)
-        c.init <- as.numeric(coef(fit.glm, s=λ))[-1]
+                          lambda=cand.lambda[k], standardize=FALSE)
+        c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
         
         ## IRLS update
         ff <- Utr %*% Qhalf.inv %*% c.init
@@ -118,7 +115,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
         sw <- sqrt(w)
         
         fit <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
-                     ntr, nbasis, ntr*λ, PACKAGE="cossonet")
+                     ntr, nbasis, ntr*cand.lambda[k], PACKAGE="cossonet")
         
         b.new <- fit$b.new
         c.new <- fit$c.new
@@ -156,10 +153,9 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
   }
   
   ## ---- Final fit using optlambda ----
-  λ <- optlambda
   fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
-                    lambda=λ, standardize=FALSE)
-  c.init <- as.numeric(coef(fit.glm, s=λ))[-1]
+                    lambda=optlambda, standardize=FALSE)
+  c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
   
   ff <- U %*% Qhalf.inv %*% c.init
   mu <- obj$linkinv(ff)
@@ -171,7 +167,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
   sw <- sqrt(w)
   
   final <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
-                 n, nbasis, n*λ, PACKAGE="cossonet")
+                 n, nbasis, n*optlambda, PACKAGE="cossonet")
   
   out <- list(
     lambda = optlambda,
@@ -184,13 +180,13 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
 }
 
 cv.nng.subset <- function(model, K, y, nbasis, basis.id,
-                          mscale, lambda0, cand.theta,
-                          gamma = 0.5, nfold=5, one.std=TRUE,
-                          obj, show=TRUE)
+                          mscale, lambda0, lambda_theta,
+                          gamma, cv, nfold, one.std,
+                          obj)
 {
   n <- length(y)
   d <- length(mscale)
-  len <- length(cand.theta)
+  len <- length(lambda_theta)
   
   ## Precompute Uv for prediction
   Uv <- model$Uv
@@ -212,7 +208,60 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     Gw[,j] <- ((Uv[,,j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
   
-  ## ---- CV ----
+  ## ---- CV ----v
+  if(cv == "GCV"){
+    init.theta <- rep(1, d)
+    len <- length(lambda_theta)
+    measure <- numeric(len)
+    
+    for(k in 1:len){
+      ## theta update: weighted least squares step
+      theta.new <- .Call("wls_theta_step",
+                         Gw, uw, h/2, n, d,
+                         init.theta,
+                         n*lambda_theta[k]*gamma/2,
+                         n*lambda_theta[k]*(1-gamma),
+                         PACKAGE = "cossonet")
+      
+      theta.adj <- ifelse(theta.new <= 1e-6, 0, theta.new)
+      
+      ## update U
+      U <- wsGram(U0, theta.adj / mscale^2)
+      testf <- c(U %*% model$c.new + model$b.new)
+      
+      ## squared error weighted
+      err <- n * sum(model$w.new * (y - testf)^2)
+      
+      ## effective degrees of freedom
+      inv.mat <- ginv(t(U) %*% U + lambda_theta[k] * model$Q)
+      df      <- sum(diag(U %*% inv.mat %*% t(U)))
+      
+      ## GCV score
+      measure[k] <- err / (n - df)^2
+    }
+    
+    ## choose lambda minimizing GCV
+    min_id   <- which.min(measure)
+    opt_lambda_theta <- lambda_theta[min_id]
+    
+    ## diagnostic plot
+    if(obj$family == "gaussian")  ttl <- "Gaussian Family"
+    if(obj$family == "binomial") ttl <- "Binomial Family"
+    if(obj$family == "poisson")  ttl <- "Poisson Family"
+    
+    ylab <- expression("GCV(" * lambda * ")")
+    plot(log(lambda_theta), measure,
+         main = ttl,
+         xlab = expression("log(" * lambda * ")"),
+         ylab = ylab,
+         type="b", pch=15, col="red")
+    abline(v = log(opt_lambda_theta), col="darkgray", lty=2)
+    
+  }
+  
+  
+  if(cv == "mse"){
+
   fold <- cvsplitID(n, nfold, y, family=obj$family)
   measure <- matrix(NA, nfold, len)
   
@@ -225,15 +274,14 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     for(j in 1:d) Ute[,,j] <- K$K[[j]][te, basis.id]
     
     for(k in 1:len){
-      θλ <- cand.theta[k]
       
       theta.new <- .Call(
         "wls_theta_step",
         Gw[tr,], uw[tr], h/2,
         ntr, d,
         rep(1,d),
-        ntr*θλ*gamma/2,
-        ntr*θλ*(1-gamma),
+        ntr*lambda_theta[k]*gamma/2,
+        ntr*lambda_theta[k]*(1-gamma),
         PACKAGE="cossonet"
       )
       theta.adj <- ifelse(theta.new<1e-6,0,theta.new)
@@ -257,28 +305,29 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   if(one.std){
     cand <- which(mean_m <= mean_m[id] + se_m[id])
     cand <- cand[cand >= id]
-    opttheta <- cand.theta[min(cand)]
+    opt_lambda_theta <- lambda_theta[min(cand)]
   } else {
-    opttheta <- cand.theta[id]
+    opt_lambda_theta <- lambda_theta[id]
   }
   
   if(show){
-    plot(log(cand.theta), mean_m, pch=15,
+    plot(log(lambda_theta), mean_m, pch=15,
          xlab="log(theta)", ylab=paste0(nfold,"-CV"))
-    arrows(log(cand.theta), mean_m-se_m,
-           log(cand.theta), mean_m+se_m,
+    arrows(log(lambda_theta), mean_m-se_m,
+           log(lambda_theta), mean_m+se_m,
            angle=90, code=3, length=0.08)
-    abline(v=log(opttheta), col="darkgray", lty=2)
+    abline(v=log(opt_lambda_theta), col="darkgray", lty=2)
   }
   
+  }
   ## ---- Final theta ----
   theta.new <- .Call(
     "wls_theta_step",
     Gw, uw, h/2,
     n, d,
     rep(1,d),
-    n*opttheta*gamma/2,
-    n*opttheta*(1-gamma),
+    n*opt_lambda_theta*gamma/2,
+    n*opt_lambda_theta*(1-gamma),
     PACKAGE="cossonet"
   )
   theta.adj <- ifelse(theta.new<1e-6,0,theta.new)
@@ -288,7 +337,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   mu.new <- obj$linkinv(f.new)
   
   out <- list(
-    opttheta = opttheta,
+    opt_lambda_theta = opt_lambda_theta,
     theta.new = theta.adj,
     f.new = f.new,
     mu.new = mu.new,

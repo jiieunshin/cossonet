@@ -108,16 +108,14 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     y       = y,
     nbasis  = nbasis,
     basis.id = basis.id,
-    theta0  = rep(1, d)/mscale^2,
+    mscale  = rep(1, d)/mscale^2,
     cand.lambda = lambda0,
     obj     = obj,
     type    = type,
     cv      = cv,
     nfold   = nfold,
-    kparam  = kparam,
     one.std = one.std,
-    show    = TRUE,
-    scale.info = list(mean = x_mean, sd = x_sd)   ## pass scaling info
+    show    = TRUE
   )
   
   ## --------------------------
@@ -129,15 +127,14 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     y        = y,
     nbasis   = nbasis,
     basis.id = basis.id,
-    mscale   = mscale,
-    optlambda = sspline_cvfit$optlambda,
-    cand.lambda = lambda_theta,
+    mscale   = rep(1, d)/mscale^2,
+    lambda0 = sspline_cvfit$optlambda,
+    lambda_theta = lambda_theta,
     gamma    = gamma,
     cv       = cv,
     nfold    = nfold,
     one.std  = one.std,
-    obj      = obj,
-    scale.info = list(mean = x_mean, sd = x_sd)
+    obj      = obj
   )
   
   theta.new = rescale_theta(nng_fit$theta.new)
@@ -150,17 +147,17 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     y        = y,
     nbasis   = nbasis,
     basis.id = basis.id,
-    theta0   = theta.new/mscale^2,
+    mscale   = theta.new/mscale^2,
     cand.lambda = lambda0,
     obj      = obj,
     type     = type,
     cv       = cv,
     nfold    = nfold,
-    kparam   = kparam,
-    one.std  = FALSE,
-    show     = FALSE,
-    scale.info = list(mean = x_mean, sd = x_sd)
+    one.std  = one.std,
+    show     = FALSE
   )
+  
+  rm(sspline_cvfit)
   
   ## --------------------------
   ## (G) save structure
