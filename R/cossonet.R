@@ -20,6 +20,7 @@
 #' @param lambda_theta A vector of `lambda` sequences. The default is a grid of 20 values `[2^{-10}, \dots, 2^{10}]` on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set `lambda` as a single value.
 #' @param gamma Elastic-net mixing parameter `0 \leq \gamma \leq 1`. If `gamma = 1`, the LASSO penalty is applied, and if `gamma = 0`, the Ridge penalty is applied. The default is `gamma = 0.95`.
 #' @param one.std A logical value indicating whether to apply the "1-standard error rule." When set to `TRUE`, it applies to both the c-step and theta-step, selecting the simplest model within one standard error of the best model.
+#' @param scale scale.
 #' @return A list containing information about the fitted model.
 #'
 #' @examples
@@ -58,7 +59,8 @@ cossonet = function (x,
                     lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
                     gamma = 0.95,
-                    one.std)
+                    one.std,
+                    scale = TRUE)
 {
   n = nrow(x)
   colnames(x) = NULL
@@ -91,9 +93,6 @@ cossonet = function (x,
   
   if(effect == "interaction") type = paste0(kernel, "2")
 
-  if(scale)
-    x = apply(x, 2, rescale)
-
   if (family == "Cox" & !all(match(c("time", "status"), dimnames(y)[[2]], 0))) {
     stop("Cox model requires a matrix with columns 'time' and 'status' as a response")
   }
@@ -102,7 +101,7 @@ cossonet = function (x,
 
   # fitting
   out = switch(objnm,
-               glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, cv, nfold, kparam, scale, one.std),
+               glm = cossonet.exp(x, y, wt, nbasis, basis.id, lambda0, lambda_theta, gamma, obj, type, cv, nfold, kparam, one.std, scale),
                Cox = cossonet.cox(x, unlist(y[, "time"]), unlist(y[, "status"]), nbasis, basis.id, wt, lambda0, lambda_theta, gamma, type, cv, nfold, kparam, scale, one.std)
   )
 
