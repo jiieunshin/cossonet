@@ -2,7 +2,6 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
                               cand.lambda, obj, type,
                               cv, nfold, one.std, show)
 {
-  cv <- match.arg(cv)
   d <- K$numK
   n <- length(y)
   len <- length(cand.lambda)
@@ -40,7 +39,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     for(k in 1:len){
       
       ## glmnet initial c
-      fit.glm <- glmnet(pseudoX, y, alpha=1, family="gaussian",
+      fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
                         lambda = cand.lambda[k], standardize=FALSE)
       c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
       
@@ -310,14 +309,12 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     opt_lambda_theta <- lambda_theta[id]
   }
   
-  if(show){
     plot(log(lambda_theta), mean_m, pch=15,
          xlab="log(theta)", ylab=paste0(nfold,"-CV"))
     arrows(log(lambda_theta), mean_m-se_m,
            log(lambda_theta), mean_m+se_m,
            angle=90, code=3, length=0.08)
     abline(v=log(opt_lambda_theta), col="darkgray", lty=2)
-  }
   
   }
   ## ---- Final theta ----
