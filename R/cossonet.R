@@ -20,7 +20,7 @@
 #' @param lambda_theta A vector of `lambda` sequences. The default is a grid of 20 values `[2^{-10}, \dots, 2^{10}]` on an equally spaced logarithmic scale. This may need to be adjusted based on the input data. Do not set `lambda` as a single value.
 #' @param gamma Elastic-net mixing parameter `0 \leq \gamma \leq 1`. If `gamma = 1`, the LASSO penalty is applied, and if `gamma = 0`, the Ridge penalty is applied. The default is `gamma = 0.95`.
 #' @param one.std A logical value indicating whether to apply the "1-standard error rule." When set to `TRUE`, it applies to both the c-step and theta-step, selecting the simplest model within one standard error of the best model.
-#' @param scale scale.
+
 #' @return A list containing information about the fitted model.
 #'
 #' @examples
