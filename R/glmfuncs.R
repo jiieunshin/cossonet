@@ -224,7 +224,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       theta.adj <- ifelse(theta.new <= 1e-6, 0, theta.new)
       
       ## update U
-      U <- wsGram(U0, theta.adj / mscale^2)
+      U <- wsGram(Uv, theta.adj / mscale^2)
       testf <- c(U %*% model$c.new + model$b.new)
       
       ## squared error weighted
