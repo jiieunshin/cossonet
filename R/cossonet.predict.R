@@ -52,14 +52,14 @@ cossonet.predict = function(model, testx){
   
   K = make_anovaKernel(
     testx,
-    model$data$x[model$data$basis.id, , drop=FALSE],
+    model$data$x,
     model$data$kernel,
     model$data$kparam
   )
   
   d = K$numK
   R = array(NA, c(te_n, nbasis, d))
-  for (j in 1:d) R[, , j] = K$K[[j]]
+  for (j in 1:d) R[, , j] = K$K[[j]][, model$data$basis.id]
   
   Rtheta = combine_kernel(R, model$theta_step$theta.new/(model$data$wt^2))
   

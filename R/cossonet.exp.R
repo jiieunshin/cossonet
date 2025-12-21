@@ -89,7 +89,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
   ## (C) kernel construction on TRAIN ONLY
   ## --------------------------
   ## IMPORTANT: use x_scaled (train scale)
-  K = make_anovaKernel(x_scaled, x_scaled[basis.id, ], 
+  K = make_anovaKernel(x_scaled, x_scaled, 
                        type = type, kparam = kparam)
   d = K$numK
   mscale = rep(1, d)
