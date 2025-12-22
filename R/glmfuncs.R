@@ -35,9 +35,11 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     for(k in 1:len){
       
       ## glmnet initial c
-      fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
-                        lambda = cand.lambda[k], standardize=FALSE)
-      c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
+      # fit.glm <- glmnet(pseudoX, y, alpha=0, family=obj$family,
+      #                   lambda = cand.lambda[k], standardize=FALSE)
+      # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
+      
+      c.init = solve(U %*% t(U) + 2 * n * cand.lambda[k] + Q, U %*% (y - mean(y)))
       
       ## 1-step IRLS
       ff <- U %*% c.init
@@ -94,10 +96,12 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       for(k in 1:len){
         
         ## glmnet
-        fit.glm <- glmnet(pseudo_tr, y[tr],
-                          alpha=1, family=obj$family,
-                          lambda=cand.lambda[k], standardize=FALSE)
-        c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
+        # fit.glm <- glmnet(pseudo_tr, y[tr],
+        #                   alpha=0, family=obj$family,
+        #                   lambda=cand.lambda[k], standardize=FALSE)
+        # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
+        
+        c.init = solve(U %*% t(U) + 2 * n * cand.lambda[k] + Q, U %*% (y[tr] - mean(y[tr])))
         
         ## IRLS update
         ff <- Utr %*% c.init
