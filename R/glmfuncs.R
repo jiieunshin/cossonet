@@ -1,4 +1,4 @@
-cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
+cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
                               cand.lambda, obj, type,
                               cv, nfold, one.std, show)
 {
@@ -33,13 +33,14 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
     
     measure <- numeric(len)
     for(k in 1:len){
-      
-      ## glmnet initial c
-      # fit.glm <- glmnet(pseudoX, y, alpha=0, family=obj$family,
-      #                   lambda = cand.lambda[k], standardize=FALSE)
-      # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
-     
-      c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(U) %*% (y - mean(y)))
+      if(is.null(c.init)){
+        ## glmnet initial c
+        # fit.glm <- glmnet(pseudoX, y, alpha=0, family=obj$family,
+        #                   lambda = cand.lambda[k], standardize=FALSE)
+        # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
+        
+        c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(U) %*% (y - mean(y)))
+      }
       
       ## 1-step IRLS
       # ff <- U %*% c.init
@@ -65,7 +66,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       
       c.new <- fit$c.new
       b.new <- fit$b.new
-      f.new <- as.vector(b.new + U%*%c.new)
+      f.new <- as.vector(b.new + U %*% c.new)
       mu.new = obj$linkinv(f.new)
       w.new = as.vector(obj$variance(mu.new))
       
@@ -106,17 +107,18 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       
       Utr <- U[tr, , drop=FALSE]
       Ute <- U[te, , drop=FALSE]
-      pseudo_tr <- pseudoX[tr, , drop=FALSE]
+      # pseudo_tr <- pseudoX[tr, , drop=FALSE]
       
       for(k in 1:len){
-        
-        ## glmnet
-        # fit.glm <- glmnet(pseudo_tr, y[tr],
-        #                   alpha=0, family=obj$family,
-        #                   lambda=cand.lambda[k], standardize=FALSE)
-        # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
-        
-        c.init = solve(t(Utr) %*% Utr + 2 * ntr * cand.lambda[k] + Q, t(Utr) %*% (y[tr] - mean(y[tr])))
+        if(is.null(c.init)){
+          ## glmnet
+          # fit.glm <- glmnet(pseudo_tr, y[tr],
+          #                   alpha=0, family=obj$family,
+          #                   lambda=cand.lambda[k], standardize=FALSE)
+          # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
+          
+          c.init = solve(t(Utr) %*% Utr + 2 * ntr * cand.lambda[k] + Q, t(Utr) %*% (y[tr] - mean(y[tr])))
+        }
         
         ## IRLS update
         ff <- Utr %*% c.init
@@ -138,7 +140,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
         
         ## Loss
         if(obj$family=="gaussian") measure[fid,k] <- mean((ftest - y[te])^2)
-        if(obj$family=="binomial") measure[fid,k] <- mean( (mutest<0.5) != y[te] )
+        if(obj$family=="binomial") measure[fid,k] <- mean( (mutest < 0.5) != y[te] )
         if(obj$family=="poisson") measure[fid,k] <- mean((ftest - y[te])^2)
       }
     }
@@ -167,11 +169,14 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
   }
   
   ## ---- Final fit using optlambda ----
-  # fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
-  #                   lambda=optlambda, standardize=FALSE)
-  # c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
-  
-  c.init = solve(t(U) %*% U + 2 * n * optlambda + Q, t(U) %*% (y - mean(y)))
+  if(is.null(c.init)){
+    # fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
+    #                   lambda=optlambda, standardize=FALSE)
+    # c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
+    
+    
+    c.init = solve(t(U) %*% U + 2 * n * optlambda + Q, t(U) %*% (y - mean(y)))
+  }
   
   ff <- U %*% c.init
   mu <- obj$linkinv(ff)
@@ -219,7 +224,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   ## Gw_j = w-scaled Gram direction
   Gw <- matrix(0, n, d)
   for(j in 1:d){
-    Gw[,j] <- ((Uv[,,j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
+    Gw[,j] <- sqrt(model$w.new) * (Uv[,,j] %*% model$c.new) * (mscale[j]^(-2))
   }
   
   ## Working residual uw
