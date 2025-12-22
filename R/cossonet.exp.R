@@ -55,16 +55,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
   ## --------------------------
   ## (A) scaling step
   ## --------------------------
-  if(scale){
-    x_mean <- apply(x, 2, mean)
-    x_sd   <- apply(x, 2, sd)
-    x_sd[x_sd == 0] <- 1
-    x_scaled <- scale(x, center = x_mean, scale = x_sd)
-  } else {
-    x_scaled <- x
-    x_mean <- rep(0, ncol(x))
-    x_sd   <- rep(1, ncol(x))
-  }
+  x_scaled = apply(x, 2, rescale)
   
   ## weight dimension check
   p = length(wt)
