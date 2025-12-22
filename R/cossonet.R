@@ -56,8 +56,8 @@ cossonet = function (x,
                     cv = c("GCV", "mse"),
                     nfold = 5,
                     kparam = 1,
-                    lambda0 = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
-                    lambda_theta = exp(seq(log(2^{-10}), log(2^{10}), length.out = 20)),
+                    lambda0 = exp(seq(log(2^{-29}), log(2^{-23}), length.out = 8)),
+                    lambda_theta = exp(seq(log(2^{-16}), log(2^{-2}), length.out = 40)),
                     gamma = 0.95,
                     one.std = FALSE)
 {

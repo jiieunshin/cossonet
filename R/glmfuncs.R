@@ -42,14 +42,23 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(U) %*% (y - mean(y)))
       
       ## 1-step IRLS
-      ff <- U %*% c.init
-      mu <- ff
-      w <- rep(1, n)
-      z <- ff + (y-ff)
+      # ff <- U %*% c.init
+      # mu <- ff
+      # w <- rep(1, n)
+      # z <- ff + (y-ff)
+      # 
+      # zw <- z * sqrt(w)
+      # Uw <- U * w
+      # sw <- sqrt(w)
       
-      zw <- z * sqrt(w)
-      Uw <- U * w
-      sw <- sqrt(w)
+      ff = U %*% c.init
+      mu = obj$linkinv(ff)
+      w = as.vector(obj$variance(mu))
+      z = ff + (y - mu) / w
+
+      zw = z * sqrt(w)
+      Uw = U * w
+      sw = sqrt(w)
       
       fit <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
                    n, nbasis, n*cand.lambda[k], PACKAGE="cossonet")
@@ -57,14 +66,20 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       c.new <- fit$c.new
       b.new <- fit$b.new
       f.new <- as.vector(b.new + U%*%c.new)
+      mu.new = obj$linkinv(f.new)
+      w.new = as.vector(obj$variance(mu.new))
       
       ## GCV df
-      XtX <- crossprod(pseudoX)
-      S <- pseudoX %*% solve(XtX + cand.lambda[k] * diag(nbasis)) %*% t(pseudoX)
-      df <- sum(diag(S))
-      
-      rss <- sum((y - f.new)^2)
-      measure[k] <- (rss/n) / (1 - df/n)^2
+      # XtX <- crossprod(pseudoX)
+      # S <- pseudoX %*% solve(XtX + cand.lambda[k] * diag(nbasis)) %*% t(pseudoX)
+      # df <- sum(diag(S))
+      # 
+      # rss <- sum((y - f.new)^2)
+      # measure[k] <- (rss/n) / (1 - df/n)^2
+      err = n * sum(w.new * (y - f.new)^2)
+      inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
+      df = sum(diag(U %*% inv.mat %*% t(U)))
+      measure[k] = err / (n - df)^2
     }
     
     optlambda <- cand.lambda[ which.min(measure) ]
@@ -226,7 +241,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
                          n*lambda_theta[k]*(1-gamma),
                          PACKAGE = "cossonet")
       
-      theta.adj <- ifelse(theta.new <= 1e-6, 0, theta.new)
+      theta.adj <- ifelse(theta.new <= 1e-10, 0, theta.new)
       
       ## update U
       U <- wsGram(Uv, theta.adj / mscale^2)
