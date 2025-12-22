@@ -55,7 +55,7 @@ SEXP wls_c_step(SEXP zw, SEXP Uw, SEXP Qw, SEXP cw, SEXP sw, SEXP tr_n, SEXP N, 
   double b_new = 0.0;
 
   // outer loop
-  for (iter = 0; iter < 40; ++iter) {
+  for (iter = 0; iter < 500; ++iter) {
     avg_diff = 0.0;
 
     // update cw
@@ -181,7 +181,7 @@ SEXP wls_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
   double *diff = (double *)malloc(dc * sizeof(double));
   double avg_diff;
 
-  for(iter = 0; iter < 40; ++iter) {
+  for(iter = 0; iter < 500; ++iter) {
     avg_diff = 0;  // Initialize avg_diff for averaging
 
     for(int j = 0; j < dc; ++j) { // iterate by column
