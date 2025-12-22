@@ -129,7 +129,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     obj      = obj
   )
   
-  # theta.new = rescale_theta(nng_fit$theta.new)
+  theta.new = rescale_theta(nng_fit$theta.new)
   
   ## --------------------------
   ## (F) second theta refinement
