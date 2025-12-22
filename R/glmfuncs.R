@@ -38,7 +38,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       # fit.glm <- glmnet(pseudoX, y, alpha=0, family=obj$family,
       #                   lambda = cand.lambda[k], standardize=FALSE)
       # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
-      
+     
       c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(U) %*% (y - mean(y)))
       
       ## 1-step IRLS
@@ -101,7 +101,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
         #                   lambda=cand.lambda[k], standardize=FALSE)
         # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
         
-        c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(Utr) %*% (y[tr] - mean(y[tr])))
+        c.init = solve(t(Utr) %*% Utr + 2 * ntr * cand.lambda[k] + Q, t(Utr) %*% (y[tr] - mean(y[tr])))
         
         ## IRLS update
         ff <- Utr %*% c.init
@@ -152,9 +152,11 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
   }
   
   ## ---- Final fit using optlambda ----
-  fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
-                    lambda=optlambda, standardize=FALSE)
-  c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
+  # fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
+  #                   lambda=optlambda, standardize=FALSE)
+  # c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
+  
+  c.init = solve(t(U) %*% U + 2 * n * optlambda + Q, t(U) %*% (y - mean(y)))
   
   ff <- U %*% c.init
   mu <- obj$linkinv(ff)
@@ -314,7 +316,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   }
   
     plot(log(lambda_theta), mean_m, pch=15,
-         xlab="log(theta)", ylab=paste0(nfold,"-CV"))
+         xlab="log(theta)", ylab=paste0(nfold,"-CV"), col = "red")
     arrows(log(lambda_theta), mean_m-se_m,
            log(lambda_theta), mean_m+se_m,
            angle=90, code=3, length=0.08)
