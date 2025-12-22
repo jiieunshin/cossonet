@@ -87,7 +87,7 @@ cossonet.predict = function(model, testx)
   te_n <- dim(testx)[1]
 
   if(class(testx)[1] == "data.frame") testx = matrix(unlist(testx), nrow = te_n)
-  # testx = apply(testx, 2, rescale)
+  testx = apply(testx, 2, rescale)
 
   K = make_anovaKernel(testx, model$data$x[model$data$basis.id, ], model$data$kernel, model$data$kparam)
   d = K$numK
