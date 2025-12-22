@@ -215,22 +215,25 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   ## Precompute Uv for prediction
   Uv <- model$Uv
   Q <- model$Q
-  
-  ## Penalty components h_j = c^T Q_j c
-  h <- numeric(d)
-  for(j in 1:d){
-    Qj <- K$K[[j]][basis.id, basis.id]
-    h[j] <- t(model$c.new) %*% Qj %*% model$c.new
-  }
-  
-  ## Working residual uw
-  uw <- model$zw.new - model$sw.new
-  
+
   ## Gw_j = w-scaled Gram direction
   Gw <- matrix(0, n, d)
   for(j in 1:d){
     Gw[,j] <- ((Uv[,,j] * sqrt(model$w.new)) %*% model$c.new) * (mscale[j]^(-2))
   }
+  
+  ## Working residual uw
+  uw = model$zw.new - model$sw.new
+  
+  ## Penalty components h_j = c^T Q_j c
+  h <- numeric(d)
+  for (j in 1:d) {
+    h[j] = n * lambda0 * ((t(model$c.new) %*% model$Uv[basis.id, , j]) %*% model$c.new)
+  }
+  # for(j in 1:d){
+  #   Qj <- K$K[[j]][basis.id, basis.id]
+  #   h[j] <- t(model$c.new) %*% Qj %*% model$c.new
+  # }
   
   ## ---- CV ----
   if(cv == "GCV"){
@@ -311,7 +314,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
         ntr*lambda_theta[k]*(1-gamma),
         PACKAGE="cossonet"
       )
-      theta.adj <- ifelse(theta.new<1e-6,0,theta.new)
+      theta.adj <- ifelse(theta.new < 1e-8, 0, theta.new)
       
       ## Weighted gram for prediction
       Ute.w <- wsGram(Ute, theta.adj/mscale^2)
