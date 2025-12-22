@@ -169,7 +169,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
   }
   
   ## ---- Final fit using optlambda ----
-  if(nfold == 1) optlambda = lambda0
+  if(nfold == 1) optlambda = cand.lambda
   
   if(is.null(c.init)){
     # fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
