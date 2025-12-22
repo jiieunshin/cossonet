@@ -189,7 +189,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
   mu.new = obj$linkinv(f.new)
   w.new = as.vector(obj$variance(mu.new))
   sw.new = sqrt(w.new)
-  z.new = f.new + (y.new - mu.new) / w.new
+  z.new = f.new + (y - mu.new) / w.new
   zw.new = z.new * sqrt(w.new)
   
   out <- list(
