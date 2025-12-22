@@ -185,10 +185,17 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
   final <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
                  n, nbasis, n*optlambda, PACKAGE="cossonet")
   
+  f.new <- as.vector(final$b.new + U %*% final$c.new)
+  mu.new = obj$linkinv(f.new)
+  w.new = as.vector(obj$variance(mu.new))
+  sw.new = sqrt(w.new)
+  z.new = f.new + (y.new - mu.new) / w.new
+  zw.new = z.new * sqrt(w.new)
+  
   out <- list(
-    cv_error = measure, Uv = Uv, Q=Q,
-    w.new = w, sw.new = sw, mu.new = mu,
-    z.new = z, zw.new = zw,
+    cv_error = measure, Uv = Uv, Q = Q,
+    w.new = w.new, sw.new = sw, mu.new = mu.new,
+    z.new = z.new, zw.new = zw.new,
     opt_lambda0 = optlambda,
     b.new = final$b.new,
     c.new = final$c.new

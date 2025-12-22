@@ -143,7 +143,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     obj      = obj,
     type     = type,
     cv       = "GCV",
-    nfold    = nfold,
+    nfold    = 1,
     one.std  = one.std,
     show     = FALSE
   )
