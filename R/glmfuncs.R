@@ -210,11 +210,12 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   
   ## ---- CV ----
   if(cv == "GCV"){
-    init.theta <- rep(1, d)
     len <- length(lambda_theta)
     measure <- numeric(len)
     
     for(k in 1:len){
+      init.theta <- rep(1, d)
+      
       ## theta update: weighted least squares step
       theta.new <- .Call("wls_theta_step",
                          Gw, uw, h/2, n, d,
