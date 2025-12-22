@@ -39,7 +39,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
       #                   lambda = cand.lambda[k], standardize=FALSE)
       # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
       
-      c.init = solve(U %*% t(U) + 2 * n * cand.lambda[k] + Q, U %*% (y - mean(y)))
+      c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(U) %*% (y - mean(y)))
       
       ## 1-step IRLS
       ff <- U %*% c.init
@@ -101,7 +101,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale,
         #                   lambda=cand.lambda[k], standardize=FALSE)
         # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
         
-        c.init = solve(U %*% t(U) + 2 * n * cand.lambda[k] + Q, U %*% (y[tr] - mean(y[tr])))
+        c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(Utr) %*% (y[tr] - mean(y[tr])))
         
         ## IRLS update
         ff <- Utr %*% c.init
