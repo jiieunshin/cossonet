@@ -96,8 +96,9 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
   ## =========================================================
   ## 2) MSE Cross-validation option
   ## =========================================================
-  if(cv == "mse"){
-    fold <- cvsplitID(n, nfold, y, family=obj$family)
+  if(cv == "mse" & nfold > 1){
+    
+    fold <- cvsplitID(n, nfold, y, family = obj$family)
     measure <- matrix(NA, nfold, len)
     
     for(fid in 1:nfold){
@@ -144,7 +145,6 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         if(obj$family=="poisson") measure[fid,k] <- mean((ftest - y[te])^2)
       }
     }
-    
     mean_m <- colMeans(measure, na.rm=TRUE)
     se_m <- apply(measure,2,sd, na.rm=TRUE)/sqrt(nfold)
     
@@ -165,15 +165,16 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
              log(cand.lambda), mean_m+se_m,
              angle=90, code=3, length=0.08)
       abline(v=log(optlambda), col="darkgray", lty=2)
-    }
+    } 
   }
   
   ## ---- Final fit using optlambda ----
+  if(nfold == 1) optlambda = lambda0
+  
   if(is.null(c.init)){
     # fit.glm <- glmnet(pseudoX, y, alpha=1, family=obj$family,
     #                   lambda=optlambda, standardize=FALSE)
     # c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
-    
     
     c.init = solve(t(U) %*% U + 2 * n * optlambda + Q, t(U) %*% (y - mean(y)))
   }
