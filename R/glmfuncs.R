@@ -139,10 +139,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         ftest <- as.vector(b.new + Ute %*% c.new)
         mutest <- obj$linkinv(ftest)
         
-        ## Loss
-        if(obj$family=="gaussian") measure[fid,k] <- mean((ftest - y[te])^2)
-        if(obj$family=="binomial") measure[fid,k] <- mean( (mutest < 0.5) != y[te] )
-        if(obj$family=="poisson") measure[fid,k] <- mean((ftest - y[te])^2)
+        measure[fid,k] <- loss(y[te], ftest, obj$family)
       }
     }
     mean_m <- colMeans(measure, na.rm=TRUE)
@@ -197,6 +194,8 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
   sw.new = sqrt(w.new)
   z.new = f.new + (y - mu.new) / w.new
   zw.new = z.new * sqrt(w.new)
+  
+  measure <- loss(y, f.new, obj$family)
   
   out <- list(
     cv_error = measure, Uv = Uv, Q = Q,
@@ -325,11 +324,8 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       ## Weighted gram for prediction
       Ute.w <- wsGram(Ute, theta.adj/mscale^2)
       ftest <- as.vector(Ute.w %*% model$c.new + model$b.new)
-      mutest <- obj$linkinv(ftest)
-      
-      if(obj$family=="gaussian") measure[fid,k] <- mean((ftest - y[te])^2)
-      if(obj$family=="binomial") measure[fid,k] <- mean( (mutest<0.5) != y[te] )
-      if(obj$family=="poisson") measure[fid,k] <- mean((ftest - y[te])^2)
+
+      measure[fid,k] <- loss(y[te], ftest, obj$family)
     }
   }
   

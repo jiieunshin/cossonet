@@ -289,6 +289,12 @@ KL = function(f, mu, obj){
   return(mean(-(mu * f) + B))
 }
 
+loss = function(true, est, family){
+  if(family=="gaussian") m <- mean((est - true)^2)
+  if(family=="binomial") m <- mean( ((exp(est)/(1 + exp(est))) < 0.5) != true )
+  if(family=="poisson") m <- mean((est - true)^2)
+  return(m)  
+}
 
 # SKL = function(f, fhat){
 #   return(mean(f * log(f / fhat)))
