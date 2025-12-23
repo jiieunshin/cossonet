@@ -288,7 +288,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       
       ## GCV score
       err <- n * sum(testw * (y - testf)^2)
-      inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda_theta[k] * model$Q)
+      inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
       df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
       measure[k] <- err / (n - df)^2
       # Aid = theta.adj > 0

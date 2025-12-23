@@ -104,8 +104,8 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     cand.lambda = lambda0,
     obj     = obj,
     type    = type,
-    cv      = cv,
-    nfold   = "mse",
+    cv      = "mse",
+    nfold   = nfold,
     one.std = one.std,
     show    = TRUE
   )

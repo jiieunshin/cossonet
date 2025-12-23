@@ -54,7 +54,7 @@ cossonet = function (x,
                     kernel = c("linear", "gaussian", "poly", "spline"),
                     effect = c("main", "interaction"),
                     cv = c("GCV", "mse"),
-                    nfold = 5,
+                    nfold,
                     kparam = 1,
                     lambda0 = exp(seq(log(2^{-29}), log(2^{-23}), length.out = 8)),
                     lambda_theta = exp(seq(log(2^{-16}), log(2^{-2}), length.out = 40)),
@@ -86,6 +86,8 @@ cossonet = function (x,
 
   if(missing(cv))
     cv = 'GCV'
+  
+  if(missing(nfold) & cv == "mse") nfold = 5
   
   if(effect == "interaction") type = paste0(kernel, "2")
 
