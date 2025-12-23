@@ -255,8 +255,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   h <- numeric(d)
   for (j in 1:d) {
     Qj <- K$K[[j]][basis.id, basis.id]
-    print(lambda0 * t(model$c.new) %*% Qj %*% model$c.new)
-    h[j] = lambda0 * t(model$c.new) %*% Qj %*% model$c.new
+    h[j] = as.numeric(lambda0 * t(model$c.new) %*% Qj %*% model$c.new)
   }
   # for(j in 1:d){
   #   Qj <- K$K[[j]][basis.id, basis.id]
