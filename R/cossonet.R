@@ -88,6 +88,7 @@ cossonet = function (x,
     cv = 'GCV'
   
   if(missing(nfold) & cv == "mse") nfold = 5
+  if(missing(nfold) & cv == "GCV") nfold = 1
   
   if(effect == "interaction") type = paste0(kernel, "2")
 
