@@ -85,7 +85,26 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       rm(Uw.new)
     }
     
-    optlambda <- cand.lambda[ which.min(measure) ]
+    # optlambda <- cand.lambda[ which.min(measure) ]
+    
+    ## 1) local minima 찾기
+    locMinid <- find_local_min(measure)
+    
+    ## 2) 너무 작은 λ 영역 제거 (COSSO와 동일한 취지)
+    ##    → 뒤쪽 2/3 구간만 사용
+    if (length(locMinid) > 0) {
+      locMinid <- locMinid[locMinid > floor(length(measure) * 2 / 3)]
+    }
+    
+    ## 3) local minimum 중 최적 선택
+    if (length(locMinid) > 0) {
+      opt_id <- locMinid[ which.min(measure[locMinid]) ]
+    } else {
+      ## fallback: global min
+      opt_id <- which.min(measure)
+    }
+    
+    optlambda <- cand.lambda[opt_id]
     
     if(show){
       plot(log(cand.lambda), measure, type="b", pch=15, col = "red",
@@ -265,19 +284,20 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       testf <- c(U %*% model$c.new + model$b.new)
       testmu = obj$linkinv(testf)
       testw = as.vector(obj$variance(testmu))
+      Uw = U * sqrt(testw)
       
       ## GCV score
-      # err <- n * sum(testw * (y - testf)^2)
-      # inv.mat <- ginv(t(U) %*% U + n * lambda_theta[k] * model$Q)
-      # df      <- sum(diag(U %*% inv.mat %*% t(U)))
-      # measure[k] <- err / (n - df)^2
-      Aid = theta.adj > 0
-      G_A = Gw[, Aid]
-      rss_theta = sum((uw - Gw %*% theta.adj )^2)
-      df = sum(diag( G_A %*% solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% t(G_A) ))
-      measure[k] = n * rss_theta / (n - df)^2
+      err <- n * sum(testw * (y - testf)^2)
+      inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda_theta[k] * model$Q)
+      df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
+      measure[k] <- err / (n - df)^2
+      # Aid = theta.adj > 0
+      # G_A = Gw[, Aid]
+      # rss_theta = sum((uw - Gw %*% theta.adj )^2)
+      # df = sum(diag( G_A %*% solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% t(G_A) ))
+      # measure[k] = n * rss_theta / (n - df)^2
       
-      rm(G_A)
+      # rm(G_A)
     }
     
     ## choose lambda minimizing GCV

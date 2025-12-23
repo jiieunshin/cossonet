@@ -105,7 +105,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     obj     = obj,
     type    = type,
     cv      = cv,
-    nfold   = nfold,
+    nfold   = "mse",
     one.std = one.std,
     show    = TRUE
   )
@@ -144,7 +144,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     cand.lambda = sspline_cvfit$opt_lambda0,
     obj      = obj,
     type     = type,
-    cv       = cv,
+    cv       = "mse",
     nfold    = 1,
     one.std  = one.std,
     show     = FALSE

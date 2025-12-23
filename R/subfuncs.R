@@ -296,6 +296,14 @@ loss = function(true, est, family){
   return(m)  
 }
 
+find_local_min <- function(cvm) {
+  n <- length(cvm)
+  which(
+    cvm[2:(n-1)] < cvm[1:(n-2)] &
+      cvm[2:(n-1)] < cvm[3:n]
+  ) + 1
+}
+
 # SKL = function(f, fhat){
 #   return(mean(f * log(f / fhat)))
 # }
