@@ -373,7 +373,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   # }
   
   if(one.std){
-    cand_ids = which( mean_m <= mean_m[min_id] + measure_se[min_id] )
+    cand_ids = which( mean_m <= mean_m[min_id] + se_m[min_id] )
     cand_ids = cand_ids[cand_ids >= min_id]
     std_id = min(cand_ids)
     opt_lambda_theta = lambda_theta[std_id]
