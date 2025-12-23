@@ -273,7 +273,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       # measure[k] <- err / (n - df)^2
       Aid = theta.adj > 0
       G_A = Gw[, Aid]
-      rss_theta = sum((uw - Gw %*% lambda_theta[k] )^2)
+      rss_theta = sum((uw - Gw %*% theta.adj )^2)
       df = sum(diag( G_A %*% solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% t(G_A) ))
       measure[k] = n * rss_theta / (n - df)^2
       
