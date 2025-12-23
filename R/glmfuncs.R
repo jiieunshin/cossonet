@@ -287,15 +287,15 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       Uw = U * sqrt(testw)
       
       ## GCV score
-      err <- n * sum(testw * (y - testf)^2)
-      inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
-      df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
-      measure[k] <- err / (n - df)^2
-      # Aid = theta.adj > 0
-      # G_A = Gw[, Aid]
-      # rss_theta = sum((uw - Gw %*% theta.adj )^2)
-      # df = sum(diag( G_A %*% solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% t(G_A) ))
-      # measure[k] = n * rss_theta / (n - df)^2
+      # err <- n * sum(testw * (y - testf)^2)
+      # inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
+      # df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
+      # measure[k] <- err / (n - df)^2
+      Aid = theta.adj > 0
+      G_A = Gw[, Aid]
+      rss_theta = sum((uw - Gw %*% theta.adj )^2)
+      df = sum(diag( G_A %*% solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% t(G_A) ))
+      measure[k] = n * rss_theta / (n - df)^2
       
       # rm(G_A)
     }
@@ -319,11 +319,10 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     
   }
   
+  if(cv == "mse" & nfold == 1) stop("nfold should be >1.")
   
-  if(cv == "mse"){
+  if(cv == "mse" & nfold > 1){
     
-  if(len == 1) nfold = 1
-  
   fold <- cvsplitID(n, nfold, y, family=obj$family)
   measure <- matrix(NA, nfold, len)
   
@@ -359,17 +358,26 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   ## ---- Select θ ----
   mean_m <- colMeans(measure, na.rm=TRUE)
   se_m <- apply(measure,2,sd, na.rm=TRUE)/sqrt(nfold)
-  id <- which.min(mean_m)
+  min_id <- which.min(mean_m)
+  
+  # if(one.std){
+  #   cand <- which(mean_m <= mean_m[id] + se_m[id])
+  #   cand <- cand[cand >= id]
+  #   opt_lambda_theta <- lambda_theta[min(cand)]
+  # } else {
+  #   opt_lambda_theta <- lambda_theta[id]
+  # }
   
   if(one.std){
-    cand <- which(mean_m <= mean_m[id] + se_m[id])
-    cand <- cand[cand >= id]
-    opt_lambda_theta <- lambda_theta[min(cand)]
+    cand_ids = which( mean_m <= mean_m[min_id] + measure_se[min_id] )
+    cand_ids = cand_ids[cand_ids >= min_id]
+    std_id = min(cand_ids)
+    opt_lambda_theta = lambda_theta[std_id]
   } else {
-    opt_lambda_theta <- lambda_theta[id]
+    opt_lambda_theta = lambda_theta[min_id]
   }
   
-    plot(log(lambda_theta), mean_m, pch=15,
+  plot(log(lambda_theta), mean_m, pch=15, ylim = range(mean_m-se_m, mean_m+se_m),
          xlab="log(theta)", ylab=paste0(nfold,"-CV"), col = "red")
     arrows(log(lambda_theta), mean_m-se_m,
            log(lambda_theta), mean_m+se_m,
