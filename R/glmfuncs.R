@@ -259,8 +259,6 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
                          n*lambda_theta[k]*(1-gamma),
                          PACKAGE = "cossonet")
       
-      theta.adj <- ifelse(theta.new <= 1e-10, 0, theta.new)
-      
       ## update U
       U <- wsGram(Uv, theta.adj / mscale^2)
       testf <- c(U %*% model$c.new + model$b.new)
@@ -273,13 +271,12 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       # inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
       # df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
       # measure[k] <- err / (n - df)^2
-      Aid = theta.adj > 0
-      G_A = Gw[, Aid]
-      rss_theta = sum((uw - G_A %*% theta.adj[Aid] )^2)
+
+      rss_theta = sum((uw - Gw %*% theta.new )^2)
       df = sum(diag( 
-        G_A %*% 
-          solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% 
-          t(G_A) 
+        Gw %*% 
+          solve(t(Gw)%*%Gw + diag(n * lambda_theta[k] * (1-gamma), d)) %*% 
+          t(Gw) 
         ))
       measure[k] = n * rss_theta / (n - df)^2
       
@@ -381,7 +378,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     n*opt_lambda_theta*(1-gamma),
     PACKAGE="cossonet"
   )
-  theta.adj <- ifelse(theta.new<1e-6,0,theta.new)
+  theta.adj <- ifelse(theta.new < 1e-6,0,theta.new)
   
   out <- list(cv_error = measure, 
               optlambda_theta = opt_lambda_theta, 
