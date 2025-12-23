@@ -254,7 +254,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   ## Penalty components h_j = c^T Q_j c
   h <- numeric(d)
   for (j in 1:d) {
-    h[j] = lambda0 * ((t(model$c.new) %*% model$Uv[basis.id, , j]) %*% model$c.new)
+    h[j] = lambda0 * ((t(model$c.new) %*% K$K[[j]][basis.id, basis.id]) %*% model$c.new)
   }
   # for(j in 1:d){
   #   Qj <- K$K[[j]][basis.id, basis.id]
