@@ -39,7 +39,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         #                   lambda = cand.lambda[k], standardize=FALSE)
         # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
         
-        c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] + Q, t(U) %*% (y - mean(y)))
+        c.init = solve(t(U) %*% U + 2 * n * cand.lambda[k] * Q, t(U) %*% (y - mean(y)))
       }
       
       ## 1-step IRLS
@@ -58,7 +58,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       z = ff + (y - mu) / w
 
       zw = z * sqrt(w)
-      Uw = U * w
+      Uw = U * sqrt(w)
       sw = sqrt(w)
       
       fit <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
@@ -69,6 +69,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       f.new <- as.vector(b.new + U %*% c.new)
       mu.new = obj$linkinv(f.new)
       w.new = as.vector(obj$variance(mu.new))
+      Uw.new = U * sqrt(w)
       
       ## GCV df
       # XtX <- crossprod(pseudoX)
@@ -78,9 +79,10 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       # rss <- sum((y - f.new)^2)
       # measure[k] <- (rss/n) / (1 - df/n)^2
       err = n * sum(w.new * (y - f.new)^2)
-      inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
-      df = sum(diag(U %*% inv.mat %*% t(U)))
+      inv.mat = ginv(t(U) %*% diag(w) %*% U + n * cand.lambda[k] * Q)
+      df = sum(diag(Uw.new %*% inv.mat %*% t(Uw.new)))
       measure[k] = err / (n - df)^2
+      rm(Uw.new)
     }
     
     optlambda <- cand.lambda[ which.min(measure) ]
@@ -118,7 +120,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
           #                   lambda=cand.lambda[k], standardize=FALSE)
           # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
           
-          c.init = solve(t(Utr) %*% Utr + 2 * ntr * cand.lambda[k] + Q, t(Utr) %*% (y[tr] - mean(y[tr])))
+          c.init = solve(t(Utr) %*% Utr + 2 * ntr * cand.lambda[k] * Q, t(Utr) %*% (y[tr] - mean(y[tr])))
         }
         
         ## IRLS update
@@ -128,7 +130,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         z <- ff + (y[tr] - mu) / w
         
         zw <- z * sqrt(w)
-        Uw <- Utr * w
+        Uw <- Utr * sqrt(w)
         sw <- sqrt(w)
         
         fit <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
@@ -173,7 +175,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
     #                   lambda=optlambda, standardize=FALSE)
     # c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
     
-    c.init = solve(t(U) %*% U + 2 * n * optlambda + Q, t(U) %*% (y - mean(y)))
+    c.init = solve(t(U) %*% U + 2 * n * optlambda * Q, t(U) %*% (y - mean(y)))
   }
   
   ff <- U %*% c.init
@@ -181,8 +183,8 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
   w <- obj$variance(mu)
   z <- ff + (y - mu) / w
   
-  zw <- z*sqrt(w)
-  Uw <- U*w
+  zw <- z * sqrt(w)
+  Uw <- U * sqrt(w)
   sw <- sqrt(w)
   
   final <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
@@ -261,16 +263,21 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       ## update U
       U <- wsGram(Uv, theta.adj / mscale^2)
       testf <- c(U %*% model$c.new + model$b.new)
-      
-      ## squared error weighted
-      err <- n * sum(model$w.new * (y - testf)^2)
-      
-      ## effective degrees of freedom
-      inv.mat <- ginv(t(U) %*% U + lambda_theta[k] * model$Q)
-      df      <- sum(diag(U %*% inv.mat %*% t(U)))
+      testmu = obj$linkinv(testf)
+      testw = as.vector(obj$variance(testmu))
       
       ## GCV score
-      measure[k] <- err / (n - df)^2
+      # err <- n * sum(testw * (y - testf)^2)
+      # inv.mat <- ginv(t(U) %*% U + n * lambda_theta[k] * model$Q)
+      # df      <- sum(diag(U %*% inv.mat %*% t(U)))
+      # measure[k] <- err / (n - df)^2
+      Aid = theta.adj > 0
+      G_A = Gw[, Aid]
+      rss_theta = sum((uw - Gw %*% theta)^2)
+      df = sum(diag( G_A %*% solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% t(G_A) ))
+      measure[k] = n * rss_theta / (n - df)^2
+      
+      rm(G_A)
     }
     
     ## choose lambda minimizing GCV
