@@ -260,7 +260,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
                          PACKAGE = "cossonet")
       
       ## update U
-      U <- wsGram(Uv, theta.adj / mscale^2)
+      U <- wsGram(Uv, theta.new / mscale^2)
       testf <- c(U %*% model$c.new + model$b.new)
       testmu = obj$linkinv(testf)
       testw = as.vector(obj$variance(testmu))
@@ -328,10 +328,10 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
         ntr*lambda_theta[k]*(1-gamma),
         PACKAGE="cossonet"
       )
-      theta.adj <- ifelse(theta.new < 1e-8, 0, theta.new)
+      # theta.adj <- ifelse(theta.new < 1e-8, 0, theta.new)
       
       ## Weighted gram for prediction
-      Ute.w <- wsGram(Ute, theta.adj/mscale^2)
+      Ute.w <- wsGram(Ute, theta.new/mscale^2)
       ftest <- as.vector(Ute.w %*% model$c.new + model$b.new)
 
       measure[fid,k] <- loss(y[te], ftest, obj$family)
