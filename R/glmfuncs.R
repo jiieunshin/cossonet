@@ -249,12 +249,12 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   }
   
   ## Working residual uw
-  uw = model$zw.new - model$sw.new
+  uw = model$zw.new - model$sw.new * model$b.new
   
   ## Penalty components h_j = c^T Q_j c
   h <- numeric(d)
   for (j in 1:d) {
-    h[j] = n * lambda0 * ((t(model$c.new) %*% model$Uv[basis.id, , j]) %*% model$c.new)
+    h[j] = lambda0 * ((t(model$c.new) %*% model$Uv[basis.id, , j]) %*% model$c.new)
   }
   # for(j in 1:d){
   #   Qj <- K$K[[j]][basis.id, basis.id]
@@ -271,7 +271,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       
       ## theta update: weighted least squares step
       theta.new <- .Call("wls_theta_step",
-                         Gw, uw, h/2, n, d,
+                         Gw, uw, n * h/2, n, d,
                          init.theta,
                          n*lambda_theta[k]*gamma/2,
                          n*lambda_theta[k]*(1-gamma),
@@ -293,8 +293,12 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       # measure[k] <- err / (n - df)^2
       Aid = theta.adj > 0
       G_A = Gw[, Aid]
-      rss_theta = sum((uw - Gw %*% theta.adj )^2)
-      df = sum(diag( G_A %*% solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% t(G_A) ))
+      rss_theta = sum((uw - G_A %*% theta.adj[Aid] )^2)
+      df = sum(diag( 
+        G_A %*% 
+          solve(t(G_A)%*%G_A + diag(n * lambda_theta[k] * (1-gamma), sum(Aid))) %*% 
+          t(G_A) 
+        ))
       measure[k] = n * rss_theta / (n - df)^2
       
       # rm(G_A)
@@ -338,7 +342,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       
       theta.new <- .Call(
         "wls_theta_step",
-        Gw[tr,], uw[tr], h/2,
+        Gw[tr,], uw[tr], ntr * h/2,
         ntr, d,
         rep(1,d),
         ntr*lambda_theta[k]*gamma/2,
