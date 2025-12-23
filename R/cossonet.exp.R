@@ -106,7 +106,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     type    = type,
     cv      = "mse",
     nfold   = nfold,
-    one.std = one.std,
+    one.std = FALSE,
     show    = TRUE
   )
   
@@ -146,11 +146,12 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     type     = type,
     cv       = "mse",
     nfold    = 1,
-    one.std  = one.std,
+    one.std  = FALSE,
     show     = FALSE
   )
   
   rm(sspline_cvfit)
+  par(mfrow = c(1,1))
   
   ## --------------------------
   ## (G) save structure
