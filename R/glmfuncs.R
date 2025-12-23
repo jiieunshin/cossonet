@@ -340,7 +340,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   
   ## ---- Select θ ----
   mean_m <- colMeans(measure, na.rm=TRUE)
-  se_m <- apply(measure,2,sd, na.rm=TRUE)/sqrt(nfold)
+  se_m <- apply(measure, 2, sd, na.rm=TRUE)/sqrt(nfold)
   min_id <- which.min(mean_m)
   
   # if(one.std){
@@ -354,7 +354,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   if(one.std){
     cand_ids = which( mean_m <= mean_m[min_id] + se_m[min_id] )
     cand_ids = cand_ids[cand_ids >= min_id]
-    std_id = min(cand_ids)
+    std_id = max(cand_ids)
     opt_lambda_theta = lambda_theta[std_id]
   } else {
     opt_lambda_theta = lambda_theta[min_id]
