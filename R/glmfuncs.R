@@ -217,7 +217,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
   zw.new = z.new * sqrt(w.new)
   
   measure <- loss(y, f.new, obj$family)
-  
+  print(optlambda)
   out <- list(
     cv_error = measure, Uv = Uv, Q = Q,
     w.new = w.new, sw.new = sw, mu.new = mu.new,
