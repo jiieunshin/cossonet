@@ -85,26 +85,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       rm(Uw.new)
     }
     
-    # optlambda <- cand.lambda[ which.min(measure) ]
-    
-    ## 1) local minima 찾기
-    locMinid <- find_local_min(measure)
-    
-    ## 2) 너무 작은 λ 영역 제거 (COSSO와 동일한 취지)
-    ##    → 뒤쪽 2/3 구간만 사용
-    if (length(locMinid) > 0) {
-      locMinid <- locMinid[locMinid > floor(length(measure) * 2 / 3)]
-    }
-    
-    ## 3) local minimum 중 최적 선택
-    if (length(locMinid) > 0) {
-      opt_id <- locMinid[ which.min(measure[locMinid]) ]
-    } else {
-      ## fallback: global min
-      opt_id <- which.min(measure)
-    }
-    
-    optlambda <- cand.lambda[opt_id]
+    optlambda <- cand.lambda[ which.min(measure) ]
     
     if(show){
       plot(log(cand.lambda), measure, type="b", pch=15, col = "red",
@@ -217,7 +198,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
   zw.new = z.new * sqrt(w.new)
   
   measure <- loss(y, f.new, obj$family)
-  print(optlambda)
+
   out <- list(
     cv_error = measure, Uv = Uv, Q = Q,
     w.new = w.new, sw.new = sw, mu.new = mu.new,
