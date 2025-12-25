@@ -124,7 +124,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         }
         
         ## IRLS update
-        ff <- Utr %*% c.init
+        ff <- as.vector(Utr %*% c.init)
         mu <- obj$linkinv(ff)
         w <- obj$variance(mu)
         z <- ff + (y[tr] - mu) / w
