@@ -52,9 +52,9 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       # Uw <- U * w
       # sw <- sqrt(w)
       
-      ff = U %*% c.init
+      ff = as.vector(U %*% c.init)
       mu = obj$linkinv(ff)
-      w = as.vector(obj$variance(mu))
+      w = obj$variance(mu)
       z = ff + (y - mu) / w
 
       zw = z * sqrt(w)
@@ -62,7 +62,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       sw = sqrt(w)
       
       fit <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
-                   n, nbasis, n*cand.lambda[k], PACKAGE="cossonet")
+                   as.integer(n), as.integer(nbasis), n * cand.lambda[k], PACKAGE="cossonet")
       
       c.new <- fit$c.new
       b.new <- fit$b.new
@@ -178,7 +178,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
     c.init = solve(t(U) %*% U + 2 * n * optlambda * Q, t(U) %*% (y - mean(y)))
   }
   
-  ff <- U %*% c.init
+  ff <- as.vector(U %*% c.init)
   mu <- obj$linkinv(ff)
   w <- obj$variance(mu)
   z <- ff + (y - mu) / w
@@ -188,7 +188,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
   sw <- sqrt(w)
   
   final <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
-                 n, nbasis, n*optlambda, PACKAGE="cossonet")
+                 as.integer(n), as.integer(nbasis), n * optlambda, PACKAGE="cossonet")
   
   f.new <- as.vector(final$b.new + U %*% final$c.new)
   mu.new = obj$linkinv(f.new)
