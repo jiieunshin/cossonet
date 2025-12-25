@@ -134,7 +134,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         sw <- sqrt(w)
         
         fit <- .Call("wls_c_step", zw, Uw, Q, c.init, sw,
-                     ntr, nbasis, ntr*cand.lambda[k], PACKAGE="cossonet")
+                     as.integer(ntr), as.integer(nbasis), ntr*cand.lambda[k], PACKAGE="cossonet")
         
         b.new <- fit$b.new
         c.new <- fit$c.new
