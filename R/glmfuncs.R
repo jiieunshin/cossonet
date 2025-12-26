@@ -39,7 +39,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         #                   lambda = cand.lambda[k], standardize=FALSE)
         # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
         
-        c.init = ginv(t(U) %*% U + 2 * n * cand.lambda[k] * Q, t(U) %*% (y - mean(y)))
+        c.init = ginv(t(U) %*% U + 2 * n * cand.lambda[k] * Q) %*% (t(U) %*% (y - mean(y)))
       }
       
       ## 1-step IRLS
@@ -120,7 +120,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
           #                   lambda=cand.lambda[k], standardize=FALSE)
           # c.init <- as.numeric(coef(fit.glm, s=cand.lambda[k]))[-1]
           
-          c.init = ginv(t(Utr) %*% Utr + 2 * ntr * cand.lambda[k] * Q, t(Utr) %*% (y[tr] - mean(y[tr])))
+          c.init = ginv(t(Utr) %*% Utr + 2 * ntr * cand.lambda[k] * Q) %*% (t(Utr) %*% (y[tr] - mean(y[tr])))
         }
         
         ## IRLS update
@@ -175,7 +175,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
     #                   lambda=optlambda, standardize=FALSE)
     # c.init <- as.numeric(coef(fit.glm, s=optlambda))[-1]
     
-    c.init = ginv(t(U) %*% U + 2 * n * optlambda * Q, t(U) %*% (y - mean(y)))
+    c.init = ginv(t(U) %*% U + 2 * n * optlambda * Q) %*% (t(U) %*% (y - mean(y)))
   }
   
   ff <- as.vector(U %*% c.init)
