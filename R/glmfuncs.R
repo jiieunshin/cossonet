@@ -267,18 +267,18 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       Uw = U * sqrt(testw)
       
       ## GCV score
-      # err <- n * sum(testw * (y - testf)^2)
-      # inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
-      # df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
-      # measure[k] <- err / (n - df)^2
+      err <- n * sum(testw * (y - testf)^2)
+      inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
+      df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
+      measure[k] <- err / (n - df)^2
 
-      rss_theta = sum((uw - Gw %*% theta.new )^2)
-      df = sum(diag( 
-        Gw %*% 
-          ginv(t(Gw)%*%Gw + diag(n * lambda_theta[k] * (1-gamma), d)) %*% 
-          t(Gw) 
-        ))
-      measure[k] = n * rss_theta / (n - df)^2
+      # rss_theta = sum((uw - Gw %*% theta.new )^2)
+      # df = sum(diag( 
+      #   Gw %*% 
+      #     ginv(t(Gw)%*%Gw + diag(n * lambda_theta[k] * (1-gamma), d)) %*% 
+      #     t(Gw) 
+      #   ))
+      # measure[k] = n * rss_theta / (n - df)^2
       
       # rm(G_A)
     }
