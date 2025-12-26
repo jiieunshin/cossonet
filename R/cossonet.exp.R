@@ -94,7 +94,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
   on.exit(par(op))
   # par(mfrow = c(1,2))
   
-  sspline_cvfit = cv.sspline.subset(
+  sspline_cvfit = cossonet:::cv.sspline.subset(
     K       = K,
     y       = y,
     nbasis  = nbasis,
@@ -104,16 +104,16 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
     cand.lambda = lambda0,
     obj     = obj,
     type    = type,
-    cv      = "mse",
+    cv      = cv,
     nfold   = nfold,
     one.std = FALSE,
-    show    = FALSE
+    show    = TRUE
   )
   
   ## --------------------------
   ## (E) CV for (b, c) (2nd step)
   ## --------------------------
-  nng_fit = cv.nng.subset(
+  nng_fit = cossonet:::cv.nng.subset(
     sspline_cvfit,
     K        = K,
     y        = y,
