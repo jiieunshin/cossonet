@@ -52,12 +52,23 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       # Uw <- U * w
       # sw <- sqrt(w)
       
-      ff = as.vector(U %*% c.init)
-      mu = obj$linkinv(ff)
-      w = obj$variance(mu)
-      w[min(w)] = 1e-4
-      z = ff + (y - mu) / w
-      z[max(z)] = 10
+      # ff = as.vector(U %*% c.init)
+      # mu = obj$linkinv(ff)
+      # w = obj$variance(mu)
+      # w[min(w)] = 1e-4
+      # z = ff + (y - mu) / w
+      # z[max(z)] = 10
+      
+      ff <- as.vector(U %*% c.init)         # ff 대신 eta라고 부르는게 정확
+      mu  <- obj$linkinv(ff)
+      
+      mu_eta <- obj$mu.eta(ff)              # dmu/deta
+      mu_eta <- pmax(mu_eta, 1e-8)
+      var_mu <- obj$variance(mu)             # Var(Y|mu)
+      
+      w <- (mu_eta^2) / var_mu               # IRLS weights
+      w <- pmax(w, 1e-8)  
+      z <- ff + (y - mu) / mu_eta           # working response
       
       zw = z * sqrt(w)
       Uw = U * sqrt(w)
@@ -126,10 +137,21 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
         }
         
         ## IRLS update
-        ff <- as.vector(Utr %*% c.init)
-        mu <- obj$linkinv(ff)
-        w <- obj$variance(mu)
-        z <- ff + (y[tr] - mu) / w
+        # ff <- as.vector(Utr %*% c.init)
+        # mu <- obj$linkinv(ff)
+        # w <- obj$variance(mu)
+        # z <- ff + (y[tr] - mu) / w
+        
+        ff <- as.vector(Utr %*% c.init)         # ff 대신 eta라고 부르는게 정확
+        mu  <- obj$linkinv(ff)
+        
+        mu_eta <- obj$mu.eta(ff)              # dmu/deta
+        mu_eta <- pmax(mu_eta, 1e-8)
+        var_mu <- obj$variance(mu)             # Var(Y|mu)
+        
+        w <- (mu_eta^2) / var_mu               # IRLS weights
+        w <- pmax(w, 1e-8)  
+        z <- ff + (y[tr] - mu) / mu_eta           # working response
         
         zw <- z * sqrt(w)
         Uw <- Utr * sqrt(w)
