@@ -55,8 +55,10 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       ff = as.vector(U %*% c.init)
       mu = obj$linkinv(ff)
       w = obj$variance(mu)
+      w[min(w) = 1e-4
       z = ff + (y - mu) / w
-
+      z[max(z)] = 10
+      
       zw = z * sqrt(w)
       Uw = U * sqrt(w)
       sw = sqrt(w)
@@ -249,12 +251,11 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     measure <- numeric(len)
     
     for(k in 1:len){
-      init.theta <- rep(.1, d)
       
       ## theta update: weighted least squares step
       theta.new <- .Call("wls_theta_step",
                          Gw, uw, n * h/2, n, d,
-                         init.theta,
+                         rep(1, d),
                          n*lambda_theta[k]*gamma/2,
                          n*lambda_theta[k]*(1-gamma),
                          PACKAGE = "cossonet")
@@ -264,21 +265,21 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
       testf <- c(U %*% model$c.new + model$b.new)
       testmu = obj$linkinv(testf)
       testw = as.vector(obj$variance(testmu))
-      Uw = U * sqrt(testw)
+      # Uw = U * sqrt(testw)
       
       ## GCV score
-      err <- n * sum(testw * (y - testf)^2)
-      inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
-      df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
-      measure[k] <- err / (n - df)^2
+      # err <- n * sum(testw * (y - testf)^2)
+      # inv.mat <- ginv(t(U) %*% diag(testw) %*% U + n * lambda0 * model$Q)
+      # df      <- sum(diag(Uw %*% inv.mat %*% t(Uw)))
+      # measure[k] <- err / (n - df)^2
 
-      # rss_theta = sum((uw - Gw %*% theta.new )^2)
-      # df = sum(diag( 
-      #   Gw %*% 
-      #     ginv(t(Gw)%*%Gw + diag(n * lambda_theta[k] * (1-gamma), d)) %*% 
-      #     t(Gw) 
-      #   ))
-      # measure[k] = n * rss_theta / (n - df)^2
+      rss_theta = sum((uw - Gw %*% theta.new )^2)
+      df = sum(diag(
+        Gw %*%
+          ginv(t(Gw)%*%Gw + diag(n * lambda_theta[k] * (1-gamma), d)) %*%
+          t(Gw)
+        ))
+      measure[k] = n * rss_theta / (n - df)^2
       
       # rm(G_A)
     }

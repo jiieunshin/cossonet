@@ -213,6 +213,10 @@ SEXP wls_theta_step(SEXP Gw, SEXP uw, SEXP h, SEXP n, SEXP d, SEXP theta, SEXP r
         break;
       }
 
+      if ((theta_new > 0) & (diff[j] > 100)) {
+        break;
+      }
+
       // Update theta with the new value
       theta_c[j] = theta_new;
     }
