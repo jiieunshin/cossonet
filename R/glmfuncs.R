@@ -55,7 +55,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       ff = as.vector(U %*% c.init)
       mu = obj$linkinv(ff)
       w = obj$variance(mu)
-      w[min(w) = 1e-4
+      w[min(w)] = 1e-4
       z = ff + (y - mu) / w
       z[max(z)] = 10
       
