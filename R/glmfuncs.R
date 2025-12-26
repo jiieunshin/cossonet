@@ -249,7 +249,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     measure <- numeric(len)
     
     for(k in 1:len){
-      init.theta <- rep(1, d)
+      init.theta <- rep(.1, d)
       
       ## theta update: weighted least squares step
       theta.new <- .Call("wls_theta_step",
