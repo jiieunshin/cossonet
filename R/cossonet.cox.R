@@ -50,7 +50,6 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
     mscale  = rep(1, d)/mscale^2,
     c.init  = NULL,
     cand.lambda = lambda0,
-    obj     = obj,
     type    = type,
     cv      = 'mse',
     nfold   = nfold,

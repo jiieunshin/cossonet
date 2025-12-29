@@ -48,12 +48,14 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       c.new = fit$c.new
       
       f.new = as.vector(U %*% c.new)
-      mu.new = obj$linkinv(f.new)
-      w.new = as.vector(obj$variance(mu.new))
-      Uw.new = U * sqrt(w)
+      coxgrad.new = coxgrad(exp(f.new), response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
+      w.new = - attributes(coxgrad.new)$diag_hessian
+      # mu.new = obj$linkinv(f.new)
+      # w.new = as.vector(obj$variance(mu.new))
+      Uw.new = U * sqrt(w.new)
       
-      err = n * sum(w.new * (y - f.new)^2)
-      inv.mat = ginv(t(U) %*% diag(w) %*% U + n * cand.lambda[k] * Q)
+      err = n * sum(w.new * (time - f.new)^2)
+      inv.mat = ginv(t(U) %*% diag(w.new) %*% U + n * cand.lambda[k] * Q)
       df = sum(diag(Uw.new %*% inv.mat %*% t(Uw.new)))
       measure[k] = err / (n - df)^2
       rm(Uw.new)
@@ -166,7 +168,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
     rm(pseudoXtr)
   }
   
-    ## ---- Final fit using optlambda ----
+  ## ---- Final fit using optlambda ----
   if(nfold == 1) optlambda = cand.lambda
   
   if(is.null(c.init)){
@@ -188,11 +190,11 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   final = .Call("wls_c_step", zw, Uw, Q, c.init, sw, as.integer(n), as.integer(nbasis), 
                 n * optlambda, PACKAGE = "cossonet")
   
-  f.new = as.vector(U %*% final$c.new)
-  mu.new = obj$linkinv(f.new)
-  w.new = as.vector(obj$variance(mu.new))
+  f.new = as.vector(U %*% c.new)
+  coxgrad.new = coxgrad(exp(f.new), response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
+  w.new = - attributes(coxgrad.new)$diag_hessian
   sw.new = sqrt(w.new)
-  z.new = f.new + (y - mu.new) / w.new
+  z.new = (exp(f.new) - 0) - ifelse(w.new != 0, -coxgrad.new/w.new, 0)
   zw.new = z.new * sqrt(w.new)
   
   out = list(cv_error = measure, RS = RS, Uv = Uv, Q = Q, 
