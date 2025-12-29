@@ -84,7 +84,6 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       if (!is.finite(denom) || denom <= 1e-8) denom <- 1e-8
       measure[k] <- err / (denom^2)
       
-      c.init <- c.new
       # err = n * sum(w * (time - f.new)^2)
       # inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
       # df = sum(diag(U %*% inv.mat %*% t(U)))
@@ -171,7 +170,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                                          mscale, cand.lambda[k], RSte)
         UHU = Ute %*% My_solve(GHte$H, t(Ute))
         ACV_pen = sum(status[te] == 1)/nte^2 * (sum(diag(UHU))/(nte - 1) - sum(UHU)/(nte^2 - nte))
-        measure[fid, k] =  PartialLik(time[te], status[te], RSte, Ute %*% fit$c.new) + ACV_pen
+        measure[fid, k] =  PartialLik(time[te], status[te], RSte, Ute %*% c.new) + ACV_pen
       }
       # if(cv == "ACV"){
       #   te_RS = RiskSet(time[te_id], status[te_id])
@@ -237,6 +236,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   final = .Call("wls_c_step", zw, Uw, Q, c.init, sw, as.integer(n), as.integer(nbasis), 
                 n * optlambda, PACKAGE = "cossonet")
   
+  c.new = final$c.new
   f.new = as.vector(U %*% c.new)
   coxgrad.new = coxgrad(exp(f.new), response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w.new = - attributes(coxgrad.new)$diag_hessian
