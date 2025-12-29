@@ -29,15 +29,34 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
     measure = numeric(len)
     
     for (k in 1:len){
+      
       if(is.null(c.init)){
         response <- survival::Surv(time = time, event = status)
-        c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+        fit0 <- glmnet(pseudoX, response,
+                       family = "cox",
+                       alpha = 0,
+                       standardize = TRUE)
+        
+        c.init <- as.vector(coef(fit0, s = max(fit0$lambda)))
+        c.init <- pmin(pmax(c.init, -1), 1)
+        # c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 60, alpha = 0, standardize = TRUE)$beta)
       }
       
-      eta = as.vector(exp(U %*% c.init))
+      # eta = as.vector(exp(U %*% c.init))
+      f.init <- as.vector(U %*% c.init)
+      f.init <- pmin(pmax(f.init, -3), 3)         # clip threshold는 3~5 사이에서 실험 가능
+      eta <- exp(f.init)
       coxgrad_results = coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
-      w = - attributes(coxgrad_results)$diag_hessian
-      z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+      w <- -attr(coxgrad_results, "diag_hessian")
+      # z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+      
+      # NaN/Inf/<=0 처리 + floor
+      w[!is.finite(w) | w <= 0] <- 0
+      w_floor <- 1e-6
+      w[w < w_floor] <- w_floor
+      g <- coxgrad_results
+      g[!is.finite(g)] <- 0
+      z <- f.init - g / w
       
       zw = z * sqrt(w)
       Uw = U * sqrt(w)
@@ -48,15 +67,24 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       c.new = fit$c.new
       
       f.new = as.vector(U %*% c.new)
-      coxgrad.new = coxgrad(exp(f.new), response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
-      w.new = - attributes(coxgrad.new)$diag_hessian
+      f.new = pmin(pmax(f.new, -3), 3)
+      eta.new <- exp(f.new)
+      coxgrad.new = coxgrad(eta.new, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
+      w.new <- -attr(coxgrad.new, "diag_hessian")
+      w.new[!is.finite(w.new) | w.new <= 0] <- 0
+      w.new[w.new < w_floor] <- w_floor
+      
       Uw.new = U * sqrt(w.new)
       
       err = n * sum(w.new * (time - f.new)^2)
       inv.mat = ginv(t(U) %*% diag(w.new) %*% U + n * cand.lambda[k] * Q)
       df = sum(diag(Uw.new %*% inv.mat %*% t(Uw.new)))
-      measure[k] = err / (n - df)^2
-      rm(Uw.new)
+      # measure[k] = err / (n - df)^2
+      denom <- (n - df)
+      if (!is.finite(denom) || denom <= 1e-8) denom <- 1e-8
+      measure[k] <- err / (denom^2)
+      
+      c.init <- c.new
       # err = n * sum(w * (time - f.new)^2)
       # inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
       # df = sum(diag(U %*% inv.mat %*% t(U)))
@@ -78,7 +106,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   ## =========================================================
   if(cv == "mse" & nfold > 1){
     
-    fold = cvsplitID(n, nfold, y, family = "gaussian")
+    fold = cvsplitID(n, nfold, time, family = "gaussian")
     measure = matrix(NA, nfold, len)
     
     for(fid in 1:nfold){
@@ -105,13 +133,29 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         
         if(is.null(c.init)){
           response <- survival::Surv(time = time[tr], event = status[tr])
-          c.init = as.vector(glmnet(pseudoXtr, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+          fit0 <- glmnet(pseudoXtr, response,
+                         family = "cox",
+                         alpha = 0,
+                         standardize = TRUE)
+          
+          c.init <- as.vector(coef(fit0, s = max(fit0$lambda)))
+          c.init <- pmin(pmax(c.init, -1), 1)
+          # c.init = as.vector(glmnet(pseudoXtr, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
         }
         
-        eta = as.vector(exp(Utr %*% c.init))
+        # eta = as.vector(exp(Utr %*% c.init))
+        f.init = as.vector(Utr %*% c.init)
+        f.init = pmin(pmax(f.init, -3), 3)
+        eta = exp(f.init)
         coxgrad_results = coxgrad(eta, response, rep(1, ntr), std.weights = FALSE, diag.hessian = TRUE)
-        w = - attributes(coxgrad_results)$diag_hessian
-        z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+        w = -attr(coxgrad_results, "diag_hessian")
+        # z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+        w[!is.finite(w) | w <= 0] = 0
+        w_floor = 1e-6
+        w[w < w_floor] = w_floor
+        g <- coxgrad_results
+        g[!is.finite(g)] = 0
+        z = f.init - g / w
         
         zw = z * sqrt(w)
         Uw = Utr * sqrt(w)
@@ -202,7 +246,6 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
              c.new = final$c.new
              )
   
-  rm(K)
   rm(Uv)
   rm(U)
   rm(Qv)
@@ -239,7 +282,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   
   ## ---- CV ----
   if(cv == "GCV"){
-    init.theta = rep(1, d)
     len = length(lambda_theta)
     
     for (k in 1:len) {

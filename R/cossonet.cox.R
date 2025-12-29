@@ -56,7 +56,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
     one.std = FALSE,
     show    = TRUE
   )
-  
+
   ## --------------------------
   ## (E) CV for (b, c) (2nd step)
   ## --------------------------
@@ -75,7 +75,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
     nfold    = nfold,
     one.std  = one.std
   )
-  
+
   theta.new = rescale_theta(theta_cvfit$theta.new)
   
   ## --------------------------
