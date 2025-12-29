@@ -26,7 +26,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
   
   if(cv == "GCV"){
-    measure = numeric(len)
+    measure = rep(0, len)
     
     for (k in 1:len){
       
@@ -244,11 +244,17 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   z.new = (exp(f.new) - 0) - ifelse(w.new != 0, -coxgrad.new/w.new, 0)
   zw.new = z.new * sqrt(w.new)
   
+  GH.new = cosso::gradient.Hessian.C(c.new, U, Q, time, status, 
+                                     mscale, optlambda, RS)
+  UHU = U %*% My_solve(GH.new$H, t(U))
+  ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
+  measure =  PartialLik(time, status, RS, U %*% c.new) + ACV_pen
+  
   out = list(cv_error = measure, RS = RS, Uv = Uv, Q = Q, 
              w.new = w.new, sw.new = sw, 
              z.new = z.new, zw.new = zw.new,
              opt_lambda0 = optlambda,
-             c.new = final$c.new
+             c.new = c.new
              )
   
   rm(Uv)
@@ -256,6 +262,8 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   rm(Qv)
   rm(Q)
   rm(RS)
+  rm(coxgrad_results)
+  rm(GH.new)
   return(out)
 }
 
