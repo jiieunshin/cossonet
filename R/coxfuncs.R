@@ -106,7 +106,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   ## =========================================================
   if(cv == "mse" & nfold > 1){
     
-    fold = cvsplitID(n, nfold, time, family = "gaussian")
+    fold = cvsplitID(n, nfold, family = "gaussian")
     measure = matrix(NA, nfold, len)
     
     for(fid in 1:nfold){
@@ -275,18 +275,20 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   }
   
   ## Working residual uw
-  uw = model$zw.new - model$sw.new * model$b.new
+  uw = model$zw.new
   
   ## Penalty components h_j = c^T Q_j c
   h <- rep(0, d)
   for (j in 1:d) {
     Qj <- K$K[[j]][basis.id, basis.id]
-    h[j] = c(lambda0 * t(model$c.new) %*% Qj %*% model$c.new)
+    if(j == 1) print(as.vector(lambda0 * t(model$c.new) %*% Qj %*% model$c.new))
+    h[j] = as.vector(lambda0 * t(model$c.new) %*% Qj %*% model$c.new)
   }
   
   ## ---- CV ----
   if(cv == "GCV"){
     len = length(lambda_theta)
+    measure = numeric(len)
     
     for (k in 1:len) {
       theta.new = .Call("wls_theta_step", Gw, uw, n * h/2, n, d, 
@@ -311,9 +313,11 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       # measure[k] = err / (n - df)^2
     }
     
-    ylab <- expression("GCV(" * lambda * ")")
+    opt_lambda_theta <- lambda_theta[which.min(measure)]
+    
+    ylab <- expression("GCV(" * lambda[theta] * ")")
     plot(log(lambda_theta), measure,
-         main = ttl,
+         main = "Cox family",
          xlab = expression("log(" * lambda * ")"),
          ylab = ylab,
          type="b", pch=15, col="red")
@@ -325,7 +329,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   
   if(cv == "mse" & nfold > 1){
     
-    fold <- cvsplitID(n, nfold, y, family="gaussian")
+    fold <- cvsplitID(n, nfold, family="gaussian")
     measure <- matrix(NA, nfold, len)
     
     for(fid in 1:nfold){
