@@ -161,10 +161,14 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         Uw = Utr * sqrt(w)
         sw = sqrt(w)
         
-        fit = .Call("wls_c_step", zw, Uw, Q, c.init, sw, ntr, nbasis, ntr * cand.lambda[k], PACKAGE = "cossonet")
+        fit = .Call("wls_c_step", zw, Uw, Q, c.init, sw, as.integer(ntr), as.integer(nbasis),
+                    ntr * cand.lambda[k], PACKAGE = "cossonet")
         
+        c.new = fit$c.new
+        f.te = as.vector(Ute %*% c.new)
         RSte = RiskSet(time[te], status[te])
-        GHte = cosso::gradient.Hessian.C(fit$c.new, Ute, Q, time[te], status[te], mscale, cand.lambda[k], RSte)
+        GHte = cosso::gradient.Hessian.C(c.new, Ute, Q, time[te], status[te], 
+                                         mscale, cand.lambda[k], RSte)
         UHU = Ute %*% My_solve(GHte$H, t(Ute))
         ACV_pen = sum(status[te] == 1)/nte^2 * (sum(diag(UHU))/(nte - 1) - sum(UHU)/(nte^2 - nte))
         measure[fid, k] =  PartialLik(time[te], status[te], RSte, Ute %*% fit$c.new) + ACV_pen
