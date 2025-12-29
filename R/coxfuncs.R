@@ -281,7 +281,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   h <- rep(0, d)
   for (j in 1:d) {
     Qj <- K$K[[j]][basis.id, basis.id]
-    if(j == 1) print(as.vector(lambda0 * t(model$c.new) %*% Qj %*% model$c.new))
     h[j] = as.vector(lambda0 * t(model$c.new) %*% Qj %*% model$c.new)
   }
   
