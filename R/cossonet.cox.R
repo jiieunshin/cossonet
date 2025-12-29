@@ -51,7 +51,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
     c.init  = NULL,
     cand.lambda = lambda0,
     type    = type,
-    cv      = 'mse',
+    cv      = cv,
     nfold   = nfold,
     one.std = FALSE,
     show    = TRUE
@@ -97,7 +97,7 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
     show     = FALSE
   )
   
-  rm(sspline_cvfit)
+  rm(getc_cvfit)
   # par(mfrow = c(1,1))
 
   ## --------------------------

@@ -244,7 +244,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   zw.new = z.new * sqrt(w.new)
   
   out = list(cv_error = measure, RS = RS, Uv = Uv, Q = Q, 
-             w.new = w.new, sw.new = sw, mu.new = mu.new,
+             w.new = w.new, sw.new = sw, 
              z.new = z.new, zw.new = zw.new,
              opt_lambda0 = optlambda,
              c.new = final$c.new
