@@ -103,7 +103,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
     if(show){
       plot(log(cand.lambda), measure, type="b", pch=15, col = "red",
            xlab="log(lambda)", ylab="GCV",
-           main="Gaussian – GCV")
+           main="")
       abline(v=log(optlambda), col="darkgray", lty=2)
     }
   }
