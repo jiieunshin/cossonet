@@ -130,9 +130,9 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       pseudoXtr = Utr %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
       
       for (k in 1:len){
+        response <- survival::Surv(time = time[tr], event = status[tr])
         
         if(is.null(c.init)){
-          response <- survival::Surv(time = time[tr], event = status[tr])
           fit0 <- glmnet(pseudoXtr, response,
                          family = "cox",
                          alpha = 0,
@@ -217,8 +217,9 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   ## ---- Final fit using optlambda ----
   if(nfold == 1) optlambda = cand.lambda
   
+  response <- survival::Surv(time = time, event = status)
+  
   if(is.null(c.init)){
-    response <- survival::Surv(time = time, event = status)
     c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
   }
   
