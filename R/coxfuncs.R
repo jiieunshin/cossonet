@@ -50,8 +50,6 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       f.new = as.vector(U %*% c.new)
       coxgrad.new = coxgrad(exp(f.new), response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
       w.new = - attributes(coxgrad.new)$diag_hessian
-      # mu.new = obj$linkinv(f.new)
-      # w.new = as.vector(obj$variance(mu.new))
       Uw.new = U * sqrt(w.new)
       
       err = n * sum(w.new * (time - f.new)^2)
@@ -80,7 +78,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   ## =========================================================
   if(cv == "mse" & nfold > 1){
     
-    fold = cvsplitID(n, nfold, y, family = obj$family)
+    fold = cvsplitID(n, nfold, y, family = "gaussian")
     measure = matrix(NA, nfold, len)
     
     for(fid in 1:nfold){
@@ -252,10 +250,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
                         PACKAGE = "cossonet")
       
       ## update U
-      U <- wsGram(Uv, theta.new / mscale^2)
-      testf <- as.vector(U %*% model$c.new)
-      testmu = obj$linkinv(testf)
-      testw = as.vector(obj$variance(testmu))
       
       rss_theta = sum((uw - Gw %*% theta.new )^2)
       df = sum(diag(
@@ -285,7 +279,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   
   if(cv == "mse" & nfold > 1){
     
-    fold <- cvsplitID(n, nfold, y, family=obj$family)
+    fold <- cvsplitID(n, nfold, y, family="gaussian")
     measure <- matrix(NA, nfold, len)
     
     for(fid in 1:nfold){
