@@ -59,16 +59,16 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       # z = ff + (y - mu) / w
       # z[max(z)] = 10
       
-      ff <- as.vector(U %*% c.init)         # ff 대신 eta라고 부르는게 정확
+      ff <- as.vector(U %*% c.init) 
       mu  <- obj$linkinv(ff)
       
-      mu_eta <- obj$mu.eta(ff)              # dmu/deta
+      mu_eta <- obj$mu.eta(ff)      
       mu_eta <- pmax(mu_eta, 1e-8)
-      var_mu <- obj$variance(mu)             # Var(Y|mu)
+      var_mu <- obj$variance(mu)    
       
-      w <- (mu_eta^2) / var_mu               # IRLS weights
+      w <- (mu_eta^2) / var_mu      
       w <- pmax(w, 1e-8)  
-      z <- ff + (y - mu) / mu_eta           # working response
+      z <- ff + (y - mu) / mu_eta   
       
       zw = z * sqrt(w)
       Uw = U * sqrt(w)
@@ -102,7 +102,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
     
     if(show){
       plot(log(cand.lambda), measure, type="b", pch=15, col = "red",
-           xlab="log(lambda)", ylab="GCV",
+           xlab="log(lambda0)", ylab="GCV",
            main="")
       abline(v=log(optlambda), col="darkgray", lty=2)
     }
@@ -391,6 +391,7 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
     abline(v=log(opt_lambda_theta), col="darkgray", lty=2)
   
   }
+  
   ## ---- Final theta ----
   theta.new <- .Call(
     "wls_theta_step",

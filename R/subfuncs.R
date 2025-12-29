@@ -190,11 +190,15 @@ make_anovaKernel = function(x, y, type, kparam)
   return(list(x = x, K = anova_kernel, coord = kernelCoord, numK = numK, kernel = type, kparam = kparam))
 }
 
-rescale = function (x)
+RiskSet = function (time, status)
 {
-  if (length(unique(x)) > 6)
-    return((x - min(x))/(max(x) - min(x)))
-  else return(x)
+  uniqTime = sort(unique(time[status == 1]))
+  RiskSet = matrix(0, ncol = length(uniqTime), nrow = length(time))
+  for (k in 1:length(uniqTime)) {
+    risk.id = which(time >= uniqTime[k])
+    RiskSet[risk.id, k] = risk.id
+  }
+  return(RiskSet)
 }
 
 combine_kernel = function (Gramat, mscale)
@@ -205,6 +209,13 @@ combine_kernel = function (Gramat, mscale)
   KK <- matrix(0, n1, n2)
   for (j in 1:d) KK = KK + mscale[j] * Gramat[, , j]
   return(KK)
+}
+
+rescale = function (x)
+{
+  if (length(unique(x)) > 6)
+    return((x - min(x))/(max(x) - min(x)))
+  else return(x)
 }
 
 rescale_theta = function (x)
@@ -303,6 +314,11 @@ find_local_min <- function(cvm) {
       cvm[2:(n-1)] < cvm[3:n]
   ) + 1
 }
+
+soft_threshold = function(a, b){
+  return(ifelse(a > 0 & b < abs(a), a - b, 0))
+}
+
 
 # SKL = function(f, fhat){
 #   return(mean(f * log(f / fhat)))
