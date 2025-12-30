@@ -40,7 +40,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                        alpha = 0,
                        standardize = TRUE)
         
-        c.init <- as.vector(coef(fit0, s = fit0$lambda[ceiling(length(lambda)*0.8)]))
+        c.init <- as.vector(coef(fit0, s = fit0$lambda[ceiling(length(fit0$lambda)*0.8)]))
         c.init[!is.finite(c.init)] <- 0
         c.init <- pmin(pmax(c.init, -1), 1)
         lp0 <- as.vector(U %*% c.init)
