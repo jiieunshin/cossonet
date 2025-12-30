@@ -94,7 +94,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       # if (!is.finite(denom) || denom <= 1e-8) denom <- 1e-8
       # measure[k] <- err / (denom^2)
       
-      err = n * sum(w * (time - f.new)^2)
+      err = n * sum(w.new * (time - f.new)^2)
       inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
       df = sum(diag(U %*% inv.mat %*% t(U)))
       measure[k] = err / (n - df)^2
