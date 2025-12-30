@@ -170,7 +170,6 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       pseudoX = Utr %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
       
       rm(Utrv)
-      rm(Utr)
       # rm(Ute)
 
       for (k in 1:len){
@@ -237,6 +236,9 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         measure[fid, k] <- PartialLik(time[te], status[te], RSte, Ute %*% c.new) + ACV_pen
         
         c.init <- NULL
+        rm(Utr)
+        rm(Utev)
+        rm(Ute)
         # f.te <- as.vector(Ute %*% c.use)
         # f.te = pmin(pmax(f.te, -3), 3)
         # RSte = cossonet:::RiskSet(time[te], status[te])
