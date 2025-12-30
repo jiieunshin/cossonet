@@ -129,7 +129,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   ## =========================================================
   if(cv == "mse" & nfold > 1){
   
-    fold = cossonet:::cvsplitID(n, nfold, status, family = "binomial")
+    fold = (n, nfold, status, family = "binomial")
     measure = matrix(0, nfold, len)
     c.init0 <- c.init
     
@@ -381,9 +381,9 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
                         n * lambda_theta[k] * (1-gamma),
                         PACKAGE = "cossonet")
       
-      Ute.w = wsGram(Uv, theta.new/mscale^2)
-      ftest = as.vector(Ute.w %*% model$c.new)
-      measure[k] =  cosso::PartialLik(time[te], status[te], RiskSet(time[te], status[te]), ftest) + model$ACV_pen
+      U.new = wsGram(Uv, theta.new/mscale^2)
+      f.new = as.vector(U.new %*% model$c.new + model$b.new)
+      measure[k] =  cosso::PartialLik(time, status, RiskSet(time, status), f.new) + model$ACV_pen
       
       ## update U
       
@@ -452,7 +452,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
         # theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
         
         Ute.w = wsGram(Utev, theta.new/mscale^2)
-        ftest = as.vector(Ute.w %*% model$c.new)
+        ftest = as.vector(Ute.w %*% model$c.new + model$b.new)
         measure[fid, k] =  cosso::PartialLik(time[te], status[te], RiskSet(time[te], status[te]), ftest) + model$ACV_pen
         
         # if(cv == "ACV") {
