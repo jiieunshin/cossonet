@@ -133,7 +133,7 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       for(j in 1:d){
         Utev[, , j] = K$K[[j]][te, basis.id]
       }
-      
+      Ute = combine_kernel(Utev, mscale)
       # pseudo_tr <- pseudoX[tr, , drop=FALSE]
       
       for(k in 1:len){

@@ -40,16 +40,16 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                        alpha = 0,
                        standardize = TRUE)
         
-        c.init <- as.vector(coef(fit0, s = fit0$lambda[ceiling(length(fit0$lambda)*0.8)]))
-        c.init[!is.finite(c.init)] <- 0
-        c.init <- pmin(pmax(c.init, -1), 1)
-        lp0 <- as.vector(U %*% c.init)
-        cap_lp <- 3
-        maxlp <- max(abs(lp0), na.rm = TRUE)
-        if (is.finite(maxlp) && maxlp > cap_lp) {
-          c.init <- c.init * (cap_lp / maxlp)
-        }
-        # c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 60, alpha = 0, standardize = TRUE)$beta)
+        # c.init <- as.vector(coef(fit0, s = fit0$lambda[ceiling(length(fit0$lambda)*0.8)]))
+        # c.init[!is.finite(c.init)] <- 0
+        # c.init <- pmin(pmax(c.init, -1), 1)
+        # lp0 <- as.vector(U %*% c.init)
+        # cap_lp <- 3
+        # maxlp <- max(abs(lp0), na.rm = TRUE)
+        # if (is.finite(maxlp) && maxlp > cap_lp) {
+        #   c.init <- c.init * (cap_lp / maxlp)
+        # }
+        c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 60, alpha = 0, standardize = TRUE)$beta)
       }
       
       # eta = as.vector(exp(U %*% c.init))
@@ -156,7 +156,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         Utev[, , j] = K$K[[j]][te, basis.id]
       }
       
-      Ute <- combine_kernel(Ute, mscale)
+      Ute <- combine_kernel(Utev, mscale)
       
       loop = 0
       EigQ = eigen(Q)
@@ -328,7 +328,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
              w.new = w.new, sw.new = sw, 
              z.new = z.new, zw.new = zw.new,
              opt_lambda0 = optlambda, ACV_pen = ACV_pen,
-             c.new = c.new
+             c.new = c.new, b.new = b.new
              )
   
   rm(Uv)
@@ -358,7 +358,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   }
   
   ## Working residual uw
-  uw = model$zw.new
+  uw = model$zw.new - model$sw.new * model$b.new
   
   ## Penalty components h_j = c^T Q_j c
   h <- rep(0, d)
@@ -381,18 +381,20 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       
       ## update U
       
-      rss_theta = sum((uw - Gw %*% theta.new )^2)
-      df = sum(diag(
-        Gw %*%
-          ginv(t(Gw)%*%Gw + diag(n * lambda_theta[k] * (1-gamma), d)) %*%
-          t(Gw)
-      ))
-      measure[k] = n * rss_theta / (n - df)^2
-      
-      # err = n * sum(model$w.new * (y - testf)^2)
-      # inv.mat = ginv(t(U) %*% U + lambda_theta[k] * model$Q)
-      # df = sum(diag(U %*% inv.mat %*% t(U)))
-      # measure[k] = err / (n - df)^2
+      # rss_theta = sum((uw - Gw %*% theta.new )^2)
+      # df = sum(diag(
+      #   Gw %*%
+      #     ginv(t(Gw)%*%Gw + diag(n * lambda_theta[k] * (1-gamma), d)) %*%
+      #     t(Gw)
+      # ))
+      # measure[k] = n * rss_theta / (n - df)^2
+      theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
+      U = wsGram(Uv, theta.adj/mscale^2)
+      testf = c(U %*% model$c.new + model$b.new
+      err = n * sum(model$w.new * (y - testf)^2)
+      inv.mat = ginv(t(U) %*% U + lambda_theta[k] * model$Q)
+      df = sum(diag(U %*% inv.mat %*% t(U)))
+      measure[k] = err / (n - df)^2
     }
     
     opt_lambda_theta <- lambda_theta[which.min(measure)]
