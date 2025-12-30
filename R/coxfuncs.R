@@ -94,21 +94,21 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       # if (!is.finite(denom) || denom <= 1e-8) denom <- 1e-8
       # measure[k] <- err / (denom^2)
       
-      # err = n * sum(w * (time - f.new)^2)
-      # inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
-      # df = sum(diag(U %*% inv.mat %*% t(U)))
-      # measure[k] = err / (n - df)^2
+      err = n * sum(w * (time - f.new)^2)
+      inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
+      df = sum(diag(U %*% inv.mat %*% t(U)))
+      measure[k] = err / (n - df)^2
       
-      # calculate ACV -----  
-      RS = RiskSet(time, status)
-      GH = cosso:::gradient.Hessian.C(
-        c.new, Uv, Qv,
-        time, status, mscale, cand.lambda[k], RS)
-      UHU <- U %*% cosso:::My_solve(GH$H, t(U))
-      ACV_pen <- sum(status == 1) / n^2 *
-        (sum(diag(UHU)) / (n - 1) - sum(UHU) / (n^2 - n))
-
-      measure[k] = PartialLik(time, status, RS, U %*% c.new) + ACV_pen
+      # # calculate ACV -----  
+      # RS = RiskSet(time, status)
+      # GH = cosso:::gradient.Hessian.C(
+      #   c.new, Uv, Qv,
+      #   time, status, mscale, cand.lambda[k], RS)
+      # UHU <- U %*% cosso:::My_solve(GH$H, t(U))
+      # ACV_pen <- sum(status == 1) / n^2 *
+      #   (sum(diag(UHU)) / (n - 1) - sum(UHU) / (n^2 - n))
+      # 
+      # measure[k] = PartialLik(time, status, RS, U %*% c.new) + ACV_pen
       
     }
     
@@ -156,7 +156,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         Utev[, , j] = K$K[[j]][te, basis.id]
       }
       
-      # Ute <- combine_kernel(Ute, mscale)
+      Ute <- combine_kernel(Ute, mscale)
       
       loop = 0
       EigQ = eigen(Q)
@@ -236,9 +236,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         measure[fid, k] <- PartialLik(time[te], status[te], RSte, Ute %*% c.new) + ACV_pen
         
         c.init <- NULL
-        rm(Utr)
-        rm(Utev)
-        rm(Ute)
+
         # f.te <- as.vector(Ute %*% c.use)
         # f.te = pmin(pmax(f.te, -3), 3)
         # RSte = cossonet:::RiskSet(time[te], status[te])
@@ -329,7 +327,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   out = list(cv_error = measure, RS = RS, Uv = Uv, Q = Q, 
              w.new = w.new, sw.new = sw, 
              z.new = z.new, zw.new = zw.new,
-             opt_lambda0 = optlambda,
+             opt_lambda0 = optlambda, ACV_pen = ACV_pen,
              c.new = c.new
              )
   
@@ -421,8 +419,11 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
       te <- na.omit(as.vector(fold[, fid]))
       ntr <- length(tr); nte <- length(te)
       
-      for(j in 1:d) Ute[,,j] <- K$K[[j]][te, basis.id]
-
+      Utev = array(NA, c(nte, nbasis, d))
+      for(j in 1:d){
+        Utev[, , j] = K$K[[j]][te, basis.id]
+      }
+      
       for (k in 1:len) {
         
         theta.new <- .Call(
@@ -443,7 +444,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
         # theta.new = .Call("wls_theta_step", Gw[tr_id,], uw[tr_id], h/2, tr_n, d, init.theta, tr_n * lambda_theta[k] * gamma / 2, tr_n * lambda_theta[k] * (1-gamma), PACKAGE = "cossonet")
         # theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
         
-        Ute.w = wsGram(Ute, theta.new/mscale^2)
+        Ute.w = wsGram(Utev, theta.new/mscale^2)
         ftest = as.vector(Ute.w %*% model$c.new)
         measure[fid, k] =  cosso::PartialLik(time[te], status[te], RiskSet(time[te], status[te]), ftest) + model$ACV_pen
         
@@ -467,7 +468,6 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
     } else {
       opt_lambda_theta = lambda_theta[min_id]
     }
-    
     
     plot(log(lambda_theta), mean_m, pch=15, ylim = range(mean_m-se_m, mean_m+se_m),
          xlab="log(theta)", ylab=paste0(nfold,"-CV"), col = "red")
