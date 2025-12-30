@@ -14,21 +14,24 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   for(j in 1:d) Qv[,,j] <- K$K[[j]][basis.id, basis.id]
   Q <- combine_kernel(Qv, mscale)
   
-  ## ---- Stabilize Q ----
-  EigQ <- eigen(Q)
-  loop <- 0
-  while(min(EigQ$values) < 1e-10 && loop < 10){
-    Q <- Q + 1e-8 * diag(nbasis)
-    EigQ <- eigen(Q)
-    loop <- loop + 1
-  }
-  EigQ$values[EigQ$values < 0] = 1e-08
-  pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
-  
   if(cv == "GCV"){
+    
+    ## ---- Stabilize Q ----
+    EigQ <- eigen(Q)
+    loop <- 0
+    while(min(EigQ$values) < 1e-10 && loop < 10){
+      Q <- Q + 1e-8 * diag(nbasis)
+      EigQ <- eigen(Q)
+      loop <- loop + 1
+    }
+    EigQ$values[EigQ$values < 0] = 1e-08
+    pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
+    
     measure = rep(0, len)
+    c.init0 = c.init
     
     for (k in 1:len){
+      c.init = c.init0
       
       if(is.null(c.init)){
         response <- survival::Surv(time = time, event = status)
@@ -37,8 +40,15 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                        alpha = 0,
                        standardize = TRUE)
         
-        c.init <- as.vector(coef(fit0, s = max(fit0$lambda)))
+        c.init <- as.vector(coef(fit0, s = fit0$lambda[ceiling(length(lambda)*0.8)]))
+        c.init[!is.finite(c.init)] <- 0
         c.init <- pmin(pmax(c.init, -1), 1)
+        lp0 <- as.vector(U %*% c.init)
+        cap_lp <- 3
+        maxlp <- max(abs(lp0), na.rm = TRUE)
+        if (is.finite(maxlp) && maxlp > cap_lp) {
+          c.init <- c.init * (cap_lp / maxlp)
+        }
         # c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 60, alpha = 0, standardize = TRUE)$beta)
       }
       
@@ -88,6 +98,18 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       # inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
       # df = sum(diag(U %*% inv.mat %*% t(U)))
       # measure[k] = err / (n - df)^2
+      
+      # calculate ACV -----  
+      # RS = RiskSet(time, status)
+      # GH = cosso:::gradient.Hessian.C(
+      #   c.new, Uv, Qv,
+      #   time, status, mscale, cand.lambda[k], RS)
+      # UHU <- U %*% cosso:::My_solve(GH$H, t(U))
+      # ACV_pen <- sum(status == 1) / n^2 *
+      #   (sum(diag(UHU)) / (n - 1) - sum(UHU) / (n^2 - n))
+      # 
+      # measure[k] = PartialLik(time, status, RS, U %*% c.new) + ACV_pen
+      
     }
     
     optlambda <- cand.lambda[ which.min(measure) ]
@@ -104,9 +126,10 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   ## 2) MSE Cross-validation option
   ## =========================================================
   if(cv == "mse" & nfold > 1){
-    
-    fold = cvsplitID(n, nfold, family = "gaussian")
-    measure = matrix(NA, nfold, len)
+  
+    fold = cossonet:::cvsplitID(n, nfold, status, family = "binomial")
+    measure = matrix(0, nfold, len)
+    c.init0 <- c.init
     
     for(fid in 1:nfold){
       
@@ -114,8 +137,26 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       te <- na.omit(as.vector(fold[, fid]))
       ntr <- length(tr); nte <- length(te)
       
-      Utr <- U[tr, , drop=FALSE]
-      Ute <- U[te, , drop=FALSE]
+      ## fold 안전성: event가 없으면 skip (PartialLik/ACV 불가)
+      if (sum(status[tr] == 1) == 0 || sum(status[te] == 1) == 0) {
+        measure[fid, ] <- NA_real_
+        next
+      }
+      
+      # train test split
+      Utrv = array(NA, c(ntr, nbasis, d))
+      for(j in 1:d){
+        Utrv[, , j] = K$K[[j]][tr, basis.id]
+      }
+      
+      Utr = combine_kernel(Utrv, mscale)
+      
+      Utev = array(NA, c(nte, nbasis, d))
+      for(j in 1:d){
+        Utev[, , j] = K$K[[j]][te, basis.id]
+      }
+      
+      # Ute <- combine_kernel(Ute, mscale)
       
       loop = 0
       EigQ = eigen(Q)
@@ -126,35 +167,52 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       }
       if (loop == 10)
         EigQ$values[EigQ$values < 0] = 1e-08
-      pseudoXtr = Utr %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
+      pseudoX = Utr %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
       
+      rm(Utrv)
+      rm(Utr)
+      # rm(Ute)
+
       for (k in 1:len){
         response <- survival::Surv(time = time[tr], event = status[tr])
+        c.init <- c.init0
         
         if(is.null(c.init)){
-          fit0 <- glmnet(pseudoXtr, response,
-                         family = "cox",
-                         alpha = 0,
-                         standardize = TRUE)
+          fit0 <- glmnet(
+            pseudoXtr, response,
+            family = "cox",
+            alpha = 0,
+            standardize = TRUE
+          )
           
-          c.init <- as.vector(coef(fit0, s = max(fit0$lambda)))
+          idx <- ceiling(length(fit0$lambda) * 0.8)
+          lam_init <- fit0$lambda[idx]
+          
+          c.init <- as.vector(coef(fit0, s = lam_init))
+          c.init[!is.finite(c.init)] <- 0
           c.init <- pmin(pmax(c.init, -1), 1)
-          # c.init = as.vector(glmnet(pseudoXtr, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
+          
+          # fit0 <- glmnet(pseudoXtr, response,
+          #                family = "cox",
+          #                alpha = 0,
+          #                standardize = TRUE)
+          # 
+          # c.init <- as.vector(coef(fit0, s = max(fit0$lambda)))
+          # c.init <- pmin(pmax(c.init, -1), 1)
+          # # c.init = as.vector(glmnet(pseudoXtr, response, family = "cox", lambda = cand.lambda[k], alpha = 1, standardize = FALSE)$beta)
         }
         
         # eta = as.vector(exp(Utr %*% c.init))
         f.init = as.vector(Utr %*% c.init)
-        f.init = pmin(pmax(f.init, -3), 3)
+        # f.init = pmin(pmax(f.init, -3), 3)
         eta = exp(f.init)
-        coxgrad_results = coxgrad(eta, response, rep(1, ntr), std.weights = FALSE, diag.hessian = TRUE)
+        
+        coxgrad_results = coxgrad(eta, response, rep(1, ntr), 
+                                  std.weights = FALSE, diag.hessian = TRUE
+                                  )
+        
         w = -attr(coxgrad_results, "diag_hessian")
-        # z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
-        w[!is.finite(w) | w <= 0] = 0
-        w_floor = 1e-6
-        w[w < w_floor] = w_floor
-        g <- coxgrad_results
-        g[!is.finite(g)] = 0
-        z = f.init - g / w
+        z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
         
         zw = z * sqrt(w)
         Uw = Utr * sqrt(w)
@@ -164,13 +222,29 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                     ntr * cand.lambda[k], PACKAGE = "cossonet")
         
         c.new = fit$c.new
-        f.te = as.vector(Ute %*% c.new)
+        
+        # calculate ACV -----  
         RSte = RiskSet(time[te], status[te])
-        GHte = cosso::gradient.Hessian.C(c.new, Ute, Q, time[te], status[te], 
-                                         mscale, cand.lambda[k], RSte)
-        UHU = Ute %*% My_solve(GHte$H, t(Ute))
-        ACV_pen = sum(status[te] == 1)/nte^2 * (sum(diag(UHU))/(nte - 1) - sum(UHU)/(nte^2 - nte))
-        measure[fid, k] =  PartialLik(time[te], status[te], RSte, Ute %*% c.new) + ACV_pen
+        GHte = cosso:::gradient.Hessian.C(
+          c.new, Utev, Qv,
+          time[te], status[te],
+          mscale, cand.lambda[k], RSte
+        )
+        UHU <- Ute %*% cosso:::My_solve(GHte$H, t(Ute))
+        ACV_pen <- sum(status[te] == 1) / nte^2 *
+          (sum(diag(UHU)) / (nte - 1) - sum(UHU) / (nte^2 - nte))
+        
+        measure[fid, k] <- PartialLik(time[te], status[te], RSte, Ute %*% c.new) + ACV_pen
+        
+        c.init <- NULL
+        # f.te <- as.vector(Ute %*% c.use)
+        # f.te = pmin(pmax(f.te, -3), 3)
+        # RSte = cossonet:::RiskSet(time[te], status[te])
+        # GHte = cosso::gradient.Hessian.C(c.new, Ute, Q, time[te], status[te], 
+        #                                  mscale, cand.lambda[k], RSte)
+        # UHU = Ute %*% cosso:::My_solve(GH$H, t(Ute))
+        # ACV_pen = sum(status[te] == 1)/nte^2 * (sum(diag(UHU))/(nte - 1) - sum(UHU)/(nte^2 - nte))
+        # measure[fid, k] =  PartialLik(time[te], status[te], RSte, Ute %*% c.new) + ACV_pen
       }
       # if(cv == "ACV"){
       #   te_RS = RiskSet(time[te_id], status[te_id])
@@ -244,7 +318,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   z.new = (exp(f.new) - 0) - ifelse(w.new != 0, -coxgrad.new/w.new, 0)
   zw.new = z.new * sqrt(w.new)
   
-  GH.new = cosso::gradient.Hessian.C(c.new, U, Q, time, status, 
+  GH.new = cosso::gradient.Hessian.C(c.new, Uv, Qv, time, status, 
                                      mscale, optlambda, RS)
   UHU = U %*% My_solve(GH.new$H, t(U))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))

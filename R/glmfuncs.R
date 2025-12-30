@@ -121,8 +121,19 @@ cv.sspline.subset <- function(K, y, nbasis, basis.id, mscale, c.init,
       te <- na.omit(as.vector(fold[, fid]))
       ntr <- length(tr); nte <- length(te)
       
-      Utr <- U[tr, , drop=FALSE]
-      Ute <- U[te, , drop=FALSE]
+      # train test split
+      Utrv = array(NA, c(ntr, nbasis, d))
+      for(j in 1:d){
+        Utrv[, , j] = K$K[[j]][tr, basis.id]
+      }
+      
+      Utr = combine_kernel(Utrv, mscale)
+      
+      Utev = array(NA, c(nte, nbasis, d))
+      for(j in 1:d){
+        Utev[, , j] = K$K[[j]][te, basis.id]
+      }
+      
       # pseudo_tr <- pseudoX[tr, , drop=FALSE]
       
       for(k in 1:len){
@@ -330,6 +341,20 @@ cv.nng.subset <- function(model, K, y, nbasis, basis.id,
   if(cv == "mse" & nfold > 1){
     
   fold <- cvsplitID(n, nfold, y, family=obj$family)
+  
+  # train test split
+  Utrv = array(NA, c(ntr, nbasis, d))
+  for(j in 1:d){
+    Utrv[, , j] = K$K[[j]][tr, basis.id]
+  }
+  
+  Utr = combine_kernel(Utrv, mscale)
+  
+  Utev = array(NA, c(nte, nbasis, d))
+  for(j in 1:d){
+    Utev[, , j] = K$K[[j]][te, basis.id]
+  }
+  
   measure <- matrix(NA, nfold, len)
   
   for(fid in 1:nfold){
