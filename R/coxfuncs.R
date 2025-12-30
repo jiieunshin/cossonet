@@ -86,13 +86,13 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       
       Uw.new = U * sqrt(w.new)
       
-      err = n * sum(w.new * (time - f.new)^2)
-      inv.mat = ginv(t(U) %*% diag(w.new) %*% U + n * cand.lambda[k] * Q)
-      df = sum(diag(Uw.new %*% inv.mat %*% t(Uw.new)))
-      # measure[k] = err / (n - df)^2
-      denom <- (n - df)
-      if (!is.finite(denom) || denom <= 1e-8) denom <- 1e-8
-      measure[k] <- err / (denom^2)
+      # err = n * sum(w.new * (time - f.new)^2)
+      # inv.mat = ginv(t(U) %*% diag(w.new) %*% U + n * cand.lambda[k] * Q)
+      # df = sum(diag(Uw.new %*% inv.mat %*% t(Uw.new)))
+      # # measure[k] = err / (n - df)^2
+      # denom <- (n - df)
+      # if (!is.finite(denom) || denom <= 1e-8) denom <- 1e-8
+      # measure[k] <- err / (denom^2)
       
       # err = n * sum(w * (time - f.new)^2)
       # inv.mat = ginv(t(U) %*% U + cand.lambda[k] * Q)
@@ -100,15 +100,15 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       # measure[k] = err / (n - df)^2
       
       # calculate ACV -----  
-      # RS = RiskSet(time, status)
-      # GH = cosso:::gradient.Hessian.C(
-      #   c.new, Uv, Qv,
-      #   time, status, mscale, cand.lambda[k], RS)
-      # UHU <- U %*% cosso:::My_solve(GH$H, t(U))
-      # ACV_pen <- sum(status == 1) / n^2 *
-      #   (sum(diag(UHU)) / (n - 1) - sum(UHU) / (n^2 - n))
-      # 
-      # measure[k] = PartialLik(time, status, RS, U %*% c.new) + ACV_pen
+      RS = RiskSet(time, status)
+      GH = cosso:::gradient.Hessian.C(
+        c.new, Uv, Qv,
+        time, status, mscale, cand.lambda[k], RS)
+      UHU <- U %*% cosso:::My_solve(GH$H, t(U))
+      ACV_pen <- sum(status == 1) / n^2 *
+        (sum(diag(UHU)) / (n - 1) - sum(UHU) / (n^2 - n))
+
+      measure[k] = PartialLik(time, status, RS, U %*% c.new) + ACV_pen
       
     }
     
@@ -179,7 +179,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         
         if(is.null(c.init)){
           fit0 <- glmnet(
-            pseudoXtr, response,
+            pseudoX, response,
             family = "cox",
             alpha = 0,
             standardize = TRUE
