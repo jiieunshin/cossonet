@@ -78,7 +78,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       c.new = fit$c.new
       b.new = fit$b.new
       
-      f.new = as.vector(U %*% c.new)
+      f.new = as.vector(U %*% c.new + b.new)
       f.new = pmin(pmax(f.new, -3), 3)
       eta.new <- exp(f.new)
       coxgrad.new = coxgrad(eta.new, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
@@ -223,6 +223,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                     ntr * cand.lambda[k], PACKAGE = "cossonet")
         
         c.new = fit$c.new
+        b.new = fit$b.new
         
         # calculate ACV -----  
         RSte = RiskSet(time[te], status[te])
@@ -235,7 +236,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         ACV_pen <- sum(status[te] == 1) / nte^2 *
           (sum(diag(UHU)) / (nte - 1) - sum(UHU) / (nte^2 - nte))
         
-        measure[fid, k] <- PartialLik(time[te], status[te], RSte, Ute %*% c.new) + ACV_pen
+        measure[fid, k] <- PartialLik(time[te], status[te], RSte, Ute %*% c.new + b.new) + ACV_pen
         
         c.init <- NULL
 
@@ -313,7 +314,9 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                 n * optlambda, PACKAGE = "cossonet")
   
   c.new = final$c.new
-  f.new = as.vector(U %*% c.new)
+  b.new = final$b.new
+  
+  f.new = as.vector(U %*% c.new + b.new)
   coxgrad.new = coxgrad(exp(f.new), response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w.new = - attributes(coxgrad.new)$diag_hessian
   sw.new = sqrt(w.new)
@@ -324,7 +327,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                                      mscale, optlambda, RS)
   UHU = U %*% My_solve(GH.new$H, t(U))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-  measure =  PartialLik(time, status, RS, U %*% c.new) + ACV_pen
+  measure =  PartialLik(time, status, RS, U %*% c.new + b.new) + ACV_pen
   
   out = list(cv_error = measure, RS = RS, Uv = Uv, Q = Q, 
              w.new = w.new, sw.new = sw, 
