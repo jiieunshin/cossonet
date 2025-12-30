@@ -129,7 +129,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   ## =========================================================
   if(cv == "mse" & nfold > 1){
   
-    fold = (n, nfold, status, family = "binomial")
+    fold = cvsplitID(n, nfold, status, family = "binomial")
     measure = matrix(0, nfold, len)
     c.init0 <- c.init
     
