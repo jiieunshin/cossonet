@@ -28,9 +28,9 @@ data_generation = function(n, p, rho, SNR,
   
   if(response == "binary"){
     f1 = function(t) 3 * t
-    f2 = function(t) pi * sin(pi * t) * 2
-    f3 = function(t) 8 * t^3
-    f4 = function(t) 4/ (exp(1) - 1) * exp(t)
+    f2 = function(t) pi * sin(pi * t)
+    f3 = function(t) 8 * t^5
+    f4 = function(t) 2/ (exp(1) - 1) * exp(t)
   } else{
     f1 = function(t) t
     f2 = function(t) (2 * t - 1)^2
@@ -50,15 +50,14 @@ data_generation = function(n, p, rho, SNR,
   if(missing(SNR)) SNR = 8
   
   if(p <= 4) stop("dimension size should be larger than 4.")
-  
   t = 2
   pp = ifelse(interaction, 3, 4)
-  W = matrix(runif(n * pp), n, pp)
+  W = matrix(runif(n * 4), n, 4)
   U = runif(n)
   
-  x_sig = matrix(0, n, pp)
-  for (j in 1:pp) {
-    x_sig[, j] = (W[, j] + t * U) / (1 + t)
+  x = matrix(0, n, 4)
+  for (j in 1:4) {
+    x[, j] = (W[, j] + t * U) / (1 + t)
   }
   
   # Set the outer margins
@@ -74,13 +73,14 @@ data_generation = function(n, p, rho, SNR,
   
   if(response == "continuous"){
     if(!interaction){
-      f = (1) * f1(x_sig[,1]) + (1) * f2(x_sig[,2]) + (2) * f3(x_sig[,3]) + (3) * f4(x_sig[,4])
-      V_sig = var(f)
-      sigma = sqrt(V_sig / SNR)
-      y = f + rnorm(n, sd = sigma)
+      f_true = (5) * f1(x[,1]) + (3) * f2(x[,2]) + (4) * f3(x[,3]) + (6) * f4(x[,4])
+      
+      sigma = sqrt(var(f_true) / SNR)
+      y = f_true + rnorm(n, sd = sigma)
+      
       x_nois = matrix(runif(n * (p - 4)), n, p - 4)
-      x = cbind(x_sig, x_nois)
-      out = list(x = x, f = f, y = f)
+      x = cbind(x, x_nois)
+      out = list(x = x, f = f_true, y = y)
     }
     else{
       V_sig = var(f2(x[,1])) + var(f3(x[,2])) + var(f4(x[,3])) +
@@ -97,13 +97,15 @@ data_generation = function(n, p, rho, SNR,
   
   if(response == "binary"){
     if(!interaction){
-      f = 1 * f1(x_sig[,1]) + f2(x_sig[,2]) + f3(x_sig[,3]) + f4(x_sig[,4]) - 11
+      f_true = f1(x[,1]) + f2(x[,2]) + f3(x[,3]) + f4(x[,4]) - 6
+      
+      prob = exp(f_true)/(exp(f_true) + 1)
+      y = rbinom(n, 1, prob)
       
       x_nois = matrix(runif(n * (p-4), 0, 1), n, (p-4))
-      x = cbind(x_sig, x_nois)
-      prob = exp(f)/(exp(f) + 1)
-      y = rbinom(n, 1, prob)
-      out = list(x = x, f = f, y = y)
+      x = cbind(x, x_nois)
+      
+      out = list(x = x, f = f_true, y = y)
     }
     else{
       
@@ -142,21 +144,15 @@ data_generation = function(n, p, rho, SNR,
   
   if(response == "count"){
     if(!interaction){
-      # V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
-      # sd = sqrt(V_sig / SNR)
-      # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4])
-      
-      f = (2/4) * f1(x_sig[,1]) + (3/4) * f2(x_sig[,2]) + (4/4) * f5(x_sig[,3]) + (5/4) * f6(x_sig[,4])
-      V_sig = var(f)
-      sigma = sqrt(V_sig / SNR)
-      x_nois = matrix(runif(n * (p - pp)), n, p - pp)
-      x = cbind(x_sig, x_nois)
-      
-      mu = exp(f)
+      f_true = 1.2 * f1(x[,1]) + 1.2 * f2(x[,2]) + 1.2 * f3(x[,3]) + 1.2 * f4(x[,4])
+      mu = exp(f_true/1.8)
       y = rpois(n, mu)
       
-      out = list(x = x, f = f, y = y)
-    }
+      x_nois = matrix(runif(n * (p - 4)), n, p - 4)
+      x = cbind(x, x_nois)      
+      
+      out = list(x = x, f = f_true, y = y)    
+      }
     else{
       V_sig = var(f2(x[,1])) + var(f3(x[,2])) + var(f4(x[,3])) +
         var(0.5 *  f2(x[, 1] * x[, 2]) ) + var(.1 * f2(x[, 1] * x[, 3])) + var(.2 * f3(x[, 2] * x[, 3]))
@@ -191,19 +187,17 @@ data_generation = function(n, p, rho, SNR,
   if(response == 'survival'){
     
     if(!interaction){
-      V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,4]))
-      sd = sqrt(V_sig / SNR)
-      # f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4]) + rnorm(n, 0, sd)
-      f = 1 * f1(x[,1]) + 1 * f2(x[,2]) + 2 * f3(x[,3]) + 3 * f4(x[,4])
+      f_true = (5) * f1(x[,1]) + (3) * f2(x[,2]) + (4) * f3(x[,3]) + (6) * f4(x[,4])
       
-      x_nois = matrix(runif(n * (p - pp), 0, 1), n, (p - pp))
+      surTime = rexp(n, exp(f_true))
+      cenTime = rexp(n, exp(-f_true) * runif(1, 4, 6))
+      y = cbind(time = apply(cbind(surTime, cenTime), 1, 
+                             min), status = 1 * (surTime < cenTime))
+      
+      x_nois = matrix(runif(n * (p - 4)), n, p - 4)
       x = cbind(x, x_nois)
-      surTime = rexp(n, exp(f))
-      cenTime = rexp(n, exp(-f) * runif(1, 4, 6))
       
-      y = cbind(time = apply(cbind(surTime, cenTime), 1, min), status = 1 * (surTime < cenTime))
-      
-      out = list(x = x, f = f, y = y)
+      out = list(x = x, f = f_true, y = y)
     }
     else{
       V_sig = var(1 * f1(x[,1])) + var(1 * f2(x[,2])) + var(2 * f3(x[,3])) + var(3 * f4(x[,1]))
