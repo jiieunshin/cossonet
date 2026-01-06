@@ -296,7 +296,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   response <- survival::Surv(time = time, event = status)
   
   if(is.null(c.init)){
-    c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = optlambda, alpha = 1, standardize = FALSE)$beta)
+    c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 60, alpha = 0, standardize = TRUE)$beta)
   }
   
   RS = RiskSet(time, status)
