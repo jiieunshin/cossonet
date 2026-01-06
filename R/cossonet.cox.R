@@ -69,35 +69,35 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
     basis.id = basis.id,
     mscale   = rep(1, d)/mscale^2,
     lambda0 = getc_cvfit$opt_lambda0,
-    lambda_theta = lambda_theta,
+    lambda_theta = lambda_theta_seq,
     gamma    = gamma,
     cv       = cv,
     nfold    = nfold,
     one.std  = one.std
   )
 
-  theta.new = rescale_theta(theta_cvfit$theta.new)
+  theta.new = cossonet:::rescale_theta(theta_cvfit$theta.new)
   
   ## --------------------------
   ## (F) second theta refinement
   ## --------------------------
-  getc_cvfit2 = cv.getc.subset(
-    K       = K,
-    time    = time,
-    status  = status,
-    nbasis  = nbasis,
-    basis.id = basis.id,
-    mscale  = theta.new/mscale^2,
-    c.init  = getc_cvfit$c.new,
-    cand.lambda = getc_cvfit$opt_lambda0,
-    type     = type,
-    cv       = "mse",
-    nfold    = 1,
-    one.std  = FALSE,
-    show     = FALSE
-  )
-  
-  rm(getc_cvfit)
+  # getc_cvfit2 = cossonet:::cv.getc.subset(
+  #   K       = K,
+  #   time    = time,
+  #   status  = status,
+  #   nbasis  = nbasis,
+  #   basis.id = basis.id,
+  #   mscale  = theta.new/mscale^2,
+  #   c.init  = getc_cvfit$c.new,
+  #   cand.lambda = getc_cvfit$opt_lambda0,
+  #   type     = type,
+  #   cv       = "mse",
+  #   nfold    = 1,
+  #   one.std  = FALSE,
+  #   show     = FALSE
+  # )
+  # 
+  # rm(getc_cvfit)
   # par(mfrow = c(1,1))
 
   ## --------------------------
@@ -110,14 +110,14 @@ cossonet.cox = function (x, time, status, nbasis, basis.id, wt, lambda0, lambda_
       status    = status,
       coord     = K$coord,
       basis.id  = basis.id,
-      ristset   = getc_cvfit2$RS,
+      ristset   = getc_cvfit$RS,
       wt        = mscale,
       kernel    = type,
       nfold     = nfold,
       kparam    = kparam
     ),
     tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-    c_step = getc_cvfit2,
+    c_step = getc_cvfit,
     theta_step = theta_cvfit,
     family = "Cox"
   )
