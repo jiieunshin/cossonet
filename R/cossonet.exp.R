@@ -134,23 +134,23 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
   ## --------------------------
   ## (F) second theta refinement
   ## --------------------------
-  # sspline_cvfit2 = cv.sspline.subset(
-  #   K        = K,
-  #   y        = y,
-  #   nbasis   = nbasis,
-  #   basis.id = basis.id,
-  #   mscale   = nng_fit$theta.new/mscale^2,
-  #   c.init   = sspline_cvfit$c.new,
-  #   cand.lambda = sspline_cvfit$opt_lambda0,
-  #   obj      = obj,
-  #   type     = type,
-  #   cv       = "GCV",
-  #   nfold    = 1,
-  #   one.std  = FALSE,
-  #   show     = FALSE
-  # )
-  
-  # rm(sspline_cvfit)
+  # # sspline_cvfit2 = cv.sspline.subset(
+  # #   K        = K,
+  # #   y        = y,
+  # #   nbasis   = nbasis,
+  # #   basis.id = basis.id,
+  # #   mscale   = nng_fit$theta.new/mscale^2,
+  # #   c.init   = sspline_cvfit$c.new,
+  # #   cand.lambda = sspline_cvfit$opt_lambda0,
+  # #   obj      = obj,
+  # #   type     = type,
+  # #   cv       = "GCV",
+  # #   nfold    = 1,
+  # #   one.std  = FALSE,
+  # #   show     = FALSE
+  # # )
+  # 
+  # # rm(sspline_cvfit)
   # par(mfrow = c(1,1))
   
   ## --------------------------
@@ -167,7 +167,7 @@ cossonet.exp = function (x, y, wt, nbasis, basis.id,
       kparam    = kparam
     ),
     tune = list(lambda0 = lambda0, lambda_theta = lambda_theta, gamma = gamma),
-    c_step = sspline_cvfit,
+    c_step = sspline_cvfit2,
     theta_step = nng_fit,
     family = obj$family
   )
