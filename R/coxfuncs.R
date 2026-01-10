@@ -14,6 +14,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   for(j in 1:d) Qv[,,j] <- K$K[[j]][basis.id, basis.id]
   Q <- combine_kernel(Qv, mscale)
   
+  c.init0 = c.init
   if(cv == "GCV"){
     
     ## ---- Stabilize Q ----
@@ -28,7 +29,6 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
     pseudoX = U %*% EigQ$vectors %*% diag(sqrt(1/EigQ$values))
     
     measure = rep(0, len)
-    c.init0 = c.init
     
     for (k in 1:len){
       c.init = c.init0
