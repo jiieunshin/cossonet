@@ -295,7 +295,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   
   response <- survival::Surv(time = time, event = status)
   
-  if(is.null(c.init)){
+  if(is.null(c.init0)){
     c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 2^{-20}, alpha = 0, standardize = TRUE)$beta)
   }
   
