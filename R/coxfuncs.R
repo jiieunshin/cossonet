@@ -78,7 +78,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       c.new = fit$c.new
       b.new = fit$b.new
       
-      f.new = as.vector(U %*% c.new + b.new)
+      f.new = as.vector(U %*% c.new)
       f.new = pmin(pmax(f.new, -3), 3)
       eta.new <- exp(f.new)
       coxgrad.new = coxgrad(eta.new, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
@@ -110,7 +110,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
       ACV_pen <- sum(status == 1) / n^2 *
         (sum(diag(UHU)) / (n - 1) - sum(UHU) / (n^2 - n))
 
-      measure[k] = PartialLik(time, status, RS, U %*% c.new + b.new) + ACV_pen
+      measure[k] = PartialLik(time, status, RS, U %*% c.new) + ACV_pen
       
     }
     
@@ -236,7 +236,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         ACV_pen <- sum(status[te] == 1) / nte^2 *
           (sum(diag(UHU)) / (nte - 1) - sum(UHU) / (nte^2 - nte))
         
-        measure[fid, k] <- PartialLik(time[te], status[te], RSte, Ute %*% c.new + b.new) + ACV_pen
+        measure[fid, k] <- PartialLik(time[te], status[te], RSte, Ute %*% c.new ) + ACV_pen
         
         c.init <- NULL
 
@@ -331,7 +331,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   c.new = final$c.new
   b.new = final$b.new
   
-  f.new = as.vector(U %*% c.new + b.new)
+  f.new = as.vector(U %*% c.new)
   coxgrad.new = coxgrad(exp(f.new), response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
   w.new = - attributes(coxgrad.new)$diag_hessian
   sw.new = sqrt(w.new)
@@ -342,7 +342,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
                                      mscale, optlambda, RS)
   UHU = U %*% My_solve(GH.new$H, t(U))
   ACV_pen = sum(status == 1)/n^2 * (sum(diag(UHU))/(n - 1) - sum(UHU)/(n^2 - n))
-  measure =  PartialLik(time, status, RS, U %*% c.new + b.new) + ACV_pen
+  measure =  PartialLik(time, status, RS, U %*% c.new) + ACV_pen
   
   out = list(cv_error = measure, RS = RS, Uv = Uv, Q = Q, 
              w.new = w.new, sw.new = sw, 
@@ -378,7 +378,8 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
   }
   
   ## Working residual uw
-  uw = model$zw.new - model$sw.new * model$b.new
+  uw = model$zw.new
+  # uw = model$zw.new - model$sw.new * model$b.new
   
   ## Penalty components h_j = c^T Q_j c
   h <- rep(0, d)
@@ -400,7 +401,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
                         PACKAGE = "cossonet")
       
       U.new = wsGram(Uv, theta.new/mscale^2)
-      f.new = as.vector(U.new %*% model$c.new + model$b.new)
+      f.new = as.vector(U.new %*% model$c.new)
       measure[k] =  cosso::PartialLik(time, status, RiskSet(time, status), f.new) + model$ACV_pen
       
       ## update U
@@ -470,7 +471,7 @@ cv.gettheta.subset = function (model, K, time, status, nbasis, basis.id, mscale,
         # theta.adj = ifelse(theta.new <= 1e-6, 0, theta.new)
         
         Ute.w = wsGram(Utev, theta.new/mscale^2)
-        ftest = as.vector(Ute.w %*% model$c.new + model$b.new)
+        ftest = as.vector(Ute.w %*% model$c.new )
         measure[fid, k] =  cosso::PartialLik(time[te], status[te], RiskSet(time[te], status[te]), ftest) + model$ACV_pen
         
         # if(cv == "ACV") {
