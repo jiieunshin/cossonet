@@ -49,7 +49,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         # if (is.finite(maxlp) && maxlp > cap_lp) {
         #   c.init <- c.init * (cap_lp / maxlp)
         # }
-        c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 10, alpha = 0, standardize = TRUE)$beta)
+        c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = .1, alpha = 0, standardize = TRUE)$beta)
       }
       
       # eta = as.vector(exp(U %*% c.init))
@@ -296,7 +296,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   response <- survival::Surv(time = time, event = status)
   
   if(is.null(c.init)){
-    c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 10, alpha = 0, standardize = TRUE)$beta)
+    c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 0.1, alpha = 0, standardize = TRUE)$beta)
   }
   
   RS = RiskSet(time, status)
