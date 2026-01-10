@@ -49,7 +49,7 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
         # if (is.finite(maxlp) && maxlp > cap_lp) {
         #   c.init <- c.init * (cap_lp / maxlp)
         # }
-        c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 60, alpha = 0, standardize = TRUE)$beta)
+        c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 10, alpha = 0, standardize = TRUE)$beta)
       }
       
       # eta = as.vector(exp(U %*% c.init))
@@ -296,15 +296,30 @@ cv.getc.subset = function(K, time, status,  nbasis, basis.id, mscale, c.init,
   response <- survival::Surv(time = time, event = status)
   
   if(is.null(c.init)){
-    c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 60, alpha = 0, standardize = TRUE)$beta)
+    c.init = as.vector(glmnet(pseudoX, response, family = "cox", lambda = 10, alpha = 0, standardize = TRUE)$beta)
   }
   
   RS = RiskSet(time, status)
   
-  eta = as.vector(exp(U %*% c.init))
+  f.init <- as.vector(U %*% c.init)
+  f.init <- pmin(pmax(f.init, -3), 3)         # clip threshold는 3~5 사이에서 실험 가능
+  eta <- exp(f.init)
   coxgrad_results = coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
-  w = - attributes(coxgrad_results)$diag_hessian
-  z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+  w <- -attr(coxgrad_results, "diag_hessian")
+  # z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
+  
+  # NaN/Inf/<=0 처리 + floor
+  w[!is.finite(w) | w <= 0] <- 0
+  w_floor <- 1e-6
+  w[w < w_floor] <- w_floor
+  g <- coxgrad_results
+  g[!is.finite(g)] <- 0
+  z <- f.init - g / w
+  
+  # eta = as.vector(exp(U %*% c.init))
+  # coxgrad_results = coxgrad(eta, response, rep(1, n), std.weights = FALSE, diag.hessian = TRUE)
+  # w = - attributes(coxgrad_results)$diag_hessian
+  # z = (eta - 0) - ifelse(w != 0, -coxgrad_results/w, 0)
   
   zw = z * sqrt(w)
   Uw = U * sqrt(w)
